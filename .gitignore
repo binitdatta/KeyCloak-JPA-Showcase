@@ -200,3 +200,4 @@ Desktop.ini
 # Keycloak realm JSON exports (after removing secrets)
 # Keycloak custom themes and provider source code
 
+/archive/
