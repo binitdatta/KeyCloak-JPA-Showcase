@@ -1,0 +1,202 @@
+
+# ============================================================
+# KeyCloak-JPA-Showcase
+# Multi-Application Java Repository
+# Spring Boot | Quarkus | Keycloak | JPA | Maven | Gradle
+# ============================================================
+
+# ------------------------------------------------------------
+# 1. Java compiled artifacts
+# ------------------------------------------------------------
+*.class
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.orig
+*.rej
+
+# ------------------------------------------------------------
+# 2. Maven build output
+# ------------------------------------------------------------
+**/target/
+**/dependency-reduced-pom.xml
+**/pom.xml.tag
+**/pom.xml.releaseBackup
+**/pom.xml.versionsBackup
+**/release.properties
+**/.flattened-pom.xml
+
+# Preserve Maven Wrapper
+!**/.mvn/wrapper/maven-wrapper.jar
+
+# ------------------------------------------------------------
+# 3. Gradle build output
+# ------------------------------------------------------------
+**/.gradle/
+**/build/
+**/out/
+**/gradle-app.setting
+**/.gradletasknamecache
+
+# Preserve Gradle Wrapper
+!**/gradle/wrapper/gradle-wrapper.jar
+
+# ------------------------------------------------------------
+# 4. IntelliJ IDEA
+# ------------------------------------------------------------
+.idea/
+**/.idea/
+*.iml
+*.ipr
+*.iws
+
+# ------------------------------------------------------------
+# 5. Eclipse / Spring Tool Suite
+# ------------------------------------------------------------
+**/.classpath
+**/.project
+**/.settings/
+**/.metadata/
+**/.springBeans
+**/.factorypath
+**/.recommenders/
+
+# ------------------------------------------------------------
+# 6. Visual Studio Code
+# ------------------------------------------------------------
+**/.vscode/
+**/*.code-workspace
+
+# ------------------------------------------------------------
+# 7. Quarkus
+# ------------------------------------------------------------
+**/.quarkus/
+**/.quarkus-build/
+**/quarkus.log
+
+# ------------------------------------------------------------
+# 8. Keycloak runtime artifacts
+# ------------------------------------------------------------
+**/keycloak-*/data/
+**/keycloak-*/lib/quarkus/
+**/keycloak-*/tmp/
+**/keycloak-*/logs/
+**/keycloak-*/conf/keycloak.conf
+
+# ------------------------------------------------------------
+# 9. Application logs
+# ------------------------------------------------------------
+**/logs/
+**/log/
+*.log.*
+**/application.log
+**/spring.log
+**/debug.log
+
+# ------------------------------------------------------------
+# 10. Environment files and secrets
+# ------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.sample
+
+**/application-local.yml
+**/application-local.yaml
+**/application-local.properties
+
+**/application-secret.yml
+**/application-secret.yaml
+**/application-secret.properties
+
+**/secrets/
+**/credentials/
+**/.secrets/
+
+# ------------------------------------------------------------
+# 11. Certificates, keys, keystores
+# ------------------------------------------------------------
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.kdb
+*.asc
+
+# ------------------------------------------------------------
+# 12. Local databases
+# ------------------------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+*.h2.db
+*.mv.db
+*.trace.db
+**/data/h2/
+
+# ------------------------------------------------------------
+# 13. Docker local overrides
+# ------------------------------------------------------------
+**/docker-compose.override.yml
+**/docker-compose.override.yaml
+
+# ------------------------------------------------------------
+# 14. Operating system files
+# ------------------------------------------------------------
+.DS_Store
+**/.DS_Store
+Thumbs.db
+Desktop.ini
+.Spotlight-V100
+.Trashes
+._*
+
+# ------------------------------------------------------------
+# 15. Test reports and coverage
+# ------------------------------------------------------------
+**/coverage/
+**/jacoco.exec
+**/jacoco/
+**/surefire-reports/
+**/failsafe-reports/
+**/test-results/
+
+# ------------------------------------------------------------
+# 16. Temporary directories
+# ------------------------------------------------------------
+**/tmp/
+**/temp/
+**/.cache/
+
+# ------------------------------------------------------------
+# 17. Generated documentation
+# ------------------------------------------------------------
+**/site/
+**/generated-docs/
+
+# ------------------------------------------------------------
+# IMPORTANT: Keep source code and configuration templates
+# ------------------------------------------------------------
+# Do NOT ignore:
+# src/
+# pom.xml
+# build.gradle
+# settings.gradle
+# application.yml
+# application.properties
+# Dockerfile
+# docker-compose.yml
+# README.md
+# .mvn/
+# mvnw
+# mvnw.cmd
+# gradlew
+# gradlew.bat
+# Keycloak realm JSON exports (after removing secrets)
+# Keycloak custom themes and provider source code
+

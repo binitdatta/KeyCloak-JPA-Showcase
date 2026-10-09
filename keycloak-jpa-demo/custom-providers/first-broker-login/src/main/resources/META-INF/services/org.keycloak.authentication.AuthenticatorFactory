@@ -1,0 +1,2 @@
+com.rollingstone.kc.fbl.ExtendedCreateUserIfUniqueAuthenticatorFactory
+com.rollingstone.kc.fbl.PostLoginRoleGroupAuthenticatorFactory

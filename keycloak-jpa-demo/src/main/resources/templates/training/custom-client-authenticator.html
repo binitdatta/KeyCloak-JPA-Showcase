@@ -1,0 +1,3387 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Custom Client Authenticator | Training</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/bright-blue.css}">
+
+    <style>
+
+        :root {
+            --ca-navy: #06142f;
+            --ca-navy-2: #0b2455;
+            --ca-blue: #315df1;
+            --ca-electric: #19c9f5;
+            --ca-white: #ffffff;
+            --ca-panel: rgba(255,255,255,.97);
+            --ca-text: #17243d;
+            --ca-heading: #102b69;
+            --ca-muted: #5d6c80;
+            --ca-border: #dbe6f2;
+            --ca-code: #061536;
+            --ca-green: #15945d;
+            --ca-red: #d63c4c;
+            --ca-yellow: #eba900;
+            --ca-purple: #7256d8;
+        }
+
+
+        /* =========================================================
+           CONTINUOUS PAGE BACKGROUND
+           ========================================================= */
+
+        html {
+            min-height: 100%;
+            background: #06142f;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: white;
+
+            background:
+                radial-gradient(
+                    circle at 92% 12%,
+                    rgba(39,103,246,.92) 0,
+                    rgba(39,103,246,.44) 24%,
+                    transparent 44%
+                ),
+                radial-gradient(
+                    circle at 82% 54%,
+                    rgba(24,112,244,.44) 0,
+                    transparent 37%
+                ),
+                linear-gradient(
+                    112deg,
+                    #06142f 0%,
+                    #0b2150 34%,
+                    #173a91 66%,
+                    #315df1 100%
+                );
+
+            background-attachment: fixed;
+        }
+
+        .navbar {
+            position: relative;
+            z-index: 100;
+        }
+
+        .ca-page {
+            position: relative;
+            overflow: hidden;
+            background: transparent !important;
+        }
+
+        .ca-layer {
+            position: relative;
+            z-index: 2;
+        }
+
+        .ca-section {
+            padding: 5rem 0;
+            background: transparent !important;
+        }
+
+        .ca-section + .ca-section {
+            border-top: 1px solid rgba(255,255,255,.09);
+        }
+
+
+        /* =========================================================
+           TYPOGRAPHY
+           ========================================================= */
+
+        .ca-kicker {
+            color: #45d6ff;
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .19em;
+            text-transform: uppercase;
+        }
+
+        .ca-section-title {
+            color: white;
+            font-size: clamp(2rem,3vw,3.1rem);
+            font-weight: 800;
+            letter-spacing: -.035em;
+            margin-bottom: 1rem;
+        }
+
+        .ca-section-lead {
+            max-width: 1000px;
+            color: rgba(255,255,255,.80);
+            font-size: 1.08rem;
+            line-height: 1.8;
+        }
+
+        .ca-electric {
+            color: #22c8f3;
+        }
+
+
+        /* =========================================================
+           HERO
+           ========================================================= */
+
+        .ca-hero {
+            padding: 2.5rem 0 5.5rem;
+            background: transparent !important;
+        }
+
+        .ca-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            margin-bottom: 4rem;
+            color: #8ae4ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .ca-back-link:hover {
+            color: white;
+        }
+
+        .ca-hero-title {
+            color: white;
+            font-size: clamp(3rem,5vw,5.1rem);
+            font-weight: 800;
+            line-height: .99;
+            letter-spacing: -.045em;
+        }
+
+        .ca-hero-lead {
+            max-width: 780px;
+            color: rgba(255,255,255,.82);
+            font-size: 1.14rem;
+            line-height: 1.75;
+        }
+
+        .ca-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .45rem .88rem;
+            color: white;
+            font-size: .78rem;
+            font-weight: 700;
+            border: 1px solid #21c9f5;
+            border-radius: 999px;
+            background: rgba(4,21,55,.42);
+        }
+
+
+        /* =========================================================
+           ARCHITECTURE PANEL
+           ========================================================= */
+
+        .ca-architecture {
+            padding: 1.6rem;
+            background: rgba(7,30,77,.72);
+            border: 1px solid #1bc9f5;
+            border-radius: 21px;
+            box-shadow: 0 25px 65px rgba(0,0,0,.18);
+            backdrop-filter: blur(8px);
+        }
+
+        .ca-architecture-title {
+            color: white;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .ca-architecture-subtitle {
+            color: rgba(255,255,255,.70);
+        }
+
+        .ca-arch-node {
+            padding: 1.15rem;
+            text-align: center;
+            color: white;
+            background: rgba(255,255,255,.055);
+            border: 1px solid rgba(255,255,255,.70);
+            border-radius: 16px;
+        }
+
+        .ca-arch-node.highlight {
+            border-color: #20c9f4;
+        }
+
+        .ca-arrow {
+            color: #1ed0fa;
+            font-size: 1.7rem;
+        }
+
+
+        /* =========================================================
+           CARDS
+           ========================================================= */
+
+        .ca-card {
+            height: 100%;
+            color: var(--ca-text);
+            background: var(--ca-panel);
+            border: 1px solid var(--ca-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 45px rgba(1,15,45,.16);
+            overflow: hidden;
+        }
+
+        .ca-card-accent {
+            border-color: #32c7f2;
+        }
+
+        .ca-card-body {
+            padding: 1.8rem;
+        }
+
+        .ca-card-title {
+            color: #111b2e;
+            font-weight: 800;
+        }
+
+        .ca-card p,
+        .ca-card li {
+            color: #4f5d70;
+        }
+
+        .ca-label {
+            font-size: .71rem;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+        .ca-icon {
+            width: 54px;
+            height: 54px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-size: 1.55rem;
+        }
+
+        .ca-icon-blue {
+            color: #1479df;
+            background: #e9f7ff;
+        }
+
+        .ca-icon-green {
+            color: #148e59;
+            background: #eaf9f1;
+        }
+
+        .ca-icon-red {
+            color: #d93e4e;
+            background: #fff0f2;
+        }
+
+        .ca-icon-yellow {
+            color: #e5a600;
+            background: #fff6d9;
+        }
+
+        .ca-icon-purple {
+            color: #7256d8;
+            background: #f0ecff;
+        }
+
+
+        /* =========================================================
+           CODE
+           ========================================================= */
+
+        .ca-code {
+            margin: 0;
+            padding: 1.2rem 1.35rem;
+            color: #f8fbff;
+            background: var(--ca-code);
+            border: 1px solid rgba(66,203,255,.24);
+            border-radius: 12px;
+            font-size: .84rem;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .ca-inline-code {
+            color: #0b4a92;
+            background: #eaf4ff;
+            border: 1px solid #cfe6fa;
+            border-radius: 6px;
+            padding: .12rem .38rem;
+            font-family: monospace;
+        }
+
+
+        /* =========================================================
+           STRIPED GRID
+           ========================================================= */
+
+        .ca-striped-grid {
+            overflow: hidden;
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--ca-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 42px rgba(0,0,0,.14);
+        }
+
+        .ca-striped-grid table {
+            margin: 0;
+            --bs-table-bg: transparent;
+            --bs-table-color: #27344a;
+            --bs-table-border-color: #e1e8f1;
+        }
+
+        .ca-striped-grid thead th {
+            padding: 1.2rem;
+            color: white;
+            background: #0b285f;
+            border: 0;
+        }
+
+        .ca-striped-grid tbody td,
+        .ca-striped-grid tbody th {
+            padding: 1.05rem 1.2rem;
+            vertical-align: middle;
+        }
+
+        .ca-striped-grid tbody tr:nth-child(even) {
+            background: #f1f6fc;
+        }
+
+
+        /* =========================================================
+           FLOW
+           ========================================================= */
+
+        .ca-flow-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .ca-flow-node {
+            min-height: 165px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1.3rem;
+            text-align: center;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--ca-border);
+            border-radius: 17px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .ca-flow-arrow {
+            color: #34d5fb;
+            font-size: 2rem;
+        }
+
+
+        /* =========================================================
+           PROTOCOL / EXECUTION TIMELINE
+           ========================================================= */
+
+        .ca-protocol-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .ca-protocol-row {
+            position: relative;
+            display: grid;
+            grid-template-columns: 58px 1fr;
+            gap: 1.2rem;
+            padding: .8rem 0;
+        }
+
+        .ca-protocol-row:not(:last-child)::before {
+            content: "";
+            position: absolute;
+            left: 27px;
+            top: 60px;
+            bottom: -8px;
+            width: 2px;
+            background: linear-gradient(
+                #30d0f7,
+                rgba(255,255,255,.22)
+            );
+        }
+
+        .ca-number {
+            position: relative;
+            z-index: 2;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            background: linear-gradient(135deg,#1765e8,#18c8f4);
+            border: 4px solid rgba(255,255,255,.95);
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(0,0,0,.18);
+        }
+
+        .ca-protocol-card {
+            padding: 1.45rem;
+            color: var(--ca-text);
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--ca-border);
+            border-radius: 17px;
+            box-shadow: 0 12px 32px rgba(0,0,0,.10);
+        }
+
+        .ca-protocol-card h4 {
+            color: #10275d;
+            font-weight: 800;
+        }
+
+        .ca-protocol-card p,
+        .ca-protocol-card li {
+            color: #536276;
+        }
+
+
+        /* =========================================================
+           ACCORDION
+           ========================================================= */
+
+        .ca-accordion {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 18px 45px rgba(0,0,0,.14);
+        }
+
+        .ca-accordion .accordion-item {
+            border-color: #dbe5f0;
+        }
+
+        .ca-accordion .accordion-button {
+            padding: 1.25rem 1.4rem;
+            color: #15233e;
+            background: rgba(255,255,255,.98);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .ca-accordion .accordion-button:not(.collapsed) {
+            color: #0d347a;
+            background: #e9f4ff;
+            box-shadow: none;
+        }
+
+        .ca-accordion .accordion-button:focus {
+            box-shadow: none;
+        }
+
+        .ca-accordion .accordion-body {
+            padding: 1.6rem;
+            color: #4e5c70;
+            background: white;
+            line-height: 1.7;
+        }
+
+        .ca-accordion-number {
+            min-width: 37px;
+            height: 37px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: .9rem;
+            color: white;
+            background: linear-gradient(135deg,#1765e8,#18c8f4);
+            border-radius: 50%;
+            font-size: .78rem;
+            font-weight: 800;
+        }
+
+
+        /* =========================================================
+           SPECIAL PANELS
+           ========================================================= */
+
+        .ca-callout {
+            padding: 1.6rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .ca-takeaway {
+            padding: 2.7rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid #36cef5;
+            border-radius: 22px;
+            box-shadow: 0 22px 55px rgba(0,0,0,.16);
+        }
+
+
+        @media (max-width: 991.98px) {
+
+            .ca-flow-arrow {
+                transform: rotate(90deg);
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+
+<div class="ca-page">
+    <div class="ca-layer">
+
+
+        <!-- =========================================================
+             HERO
+             ========================================================= -->
+
+        <header class="ca-hero">
+
+            <div class="container">
+
+                <a href="/training/ciba"
+                   class="ca-back-link">
+
+                    <i class="bi bi-arrow-left"></i>
+                    Back: OIDC CIBA Grant
+
+                </a>
+
+
+                <div class="row align-items-center g-5">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ca-kicker mb-4">
+                            Episode F1 • Keycloak 26 • SPI • Client Authentication
+                        </div>
+
+
+                        <h1 class="ca-hero-title mb-4">
+
+                            Custom Client
+
+                            <span class="d-block ca-electric">
+                        Authenticator.
+                    </span>
+
+                        </h1>
+
+
+                        <p class="ca-hero-lead">
+
+                            Keycloak already provides several client authentication
+                            mechanisms. But its Service Provider Interface allows us
+                            to extend the server with our own
+                            <strong>ClientAuthenticator</strong> implementation.
+
+                        </p>
+
+
+                        <p class="ca-hero-lead">
+
+                            In this POC, the client sends its shared secret through
+                            the custom
+
+                            <code class="text-info">
+                                X-rollingstone-Client-Key
+                            </code>
+
+                            HTTP header rather than through the standard
+
+                            <code class="text-info">
+                                client_secret
+                            </code>
+
+                            form parameter.
+
+                        </p>
+
+
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+
+                    <span class="ca-pill">
+                        <i class="bi bi-shield-lock"></i>
+                        Keycloak 26
+                    </span>
+
+                            <span class="ca-pill">
+                        <i class="bi bi-plug"></i>
+                        SPI
+                    </span>
+
+                            <span class="ca-pill">
+                        <i class="bi bi-box"></i>
+                        Provider JAR
+                    </span>
+
+                            <span class="ca-pill">
+                        <i class="bi bi-braces"></i>
+                        Java
+                    </span>
+
+                            <span class="ca-pill">
+                        <i class="bi bi-key"></i>
+                        Custom Header
+                    </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ca-architecture">
+
+                            <div class="ca-architecture-title">
+                                Custom Authentication Path
+                            </div>
+
+                            <div class="ca-architecture-subtitle small mb-4">
+                                Client → HTTP Header → Keycloak SPI → Client Validation
+                            </div>
+
+
+                            <div class="ca-arch-node highlight">
+
+                                <i class="bi bi-laptop text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    OAuth Client
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Owns Client ID + Shared Secret
+                                </small>
+
+                            </div>
+
+
+                            <div class="text-center">
+                                <div class="ca-arrow">↓</div>
+                                <small class="text-white-50">
+                                    X-rollingstone-Client-Key
+                                </small>
+                            </div>
+
+
+                            <div class="ca-arch-node">
+
+                                <i class="bi bi-shield-lock-fill text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Keycloak 26
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Token Endpoint
+                                </small>
+
+                            </div>
+
+
+                            <div class="text-center">
+                                <div class="ca-arrow">↓</div>
+                                <small class="text-white-50">
+                                    ClientAuthenticator SPI
+                                </small>
+                            </div>
+
+
+                            <div class="ca-arch-node">
+
+                                <i class="bi bi-cpu-fill text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    rollingstone Secret Header
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Custom Provider
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =========================================================
+             GOAL
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Objective
+                </div>
+
+                <h2 class="ca-section-title">
+                    What Are We Building?
+                </h2>
+
+                <p class="ca-section-lead mb-5">
+
+                    The goal is to add another option to Keycloak's Client
+                    Authenticator selection by implementing a custom Keycloak
+                    provider.
+
+                    The OAuth client still has a shared secret, but the mechanism
+                    used to deliver and validate that secret is controlled by our
+                    custom Java code.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ca-card">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-blue mb-3">
+                                    <i class="bi bi-box-arrow-in-right"></i>
+                                </div>
+
+                                <div class="ca-label text-primary">
+                                    Input
+                                </div>
+
+                                <h4 class="ca-card-title mt-2">
+                                    Custom HTTP Header
+                                </h4>
+
+                                <p>
+
+                                    Instead of receiving:
+
+                                </p>
+
+                                <pre class="ca-code"><code>client_secret=&lt;secret&gt;</code></pre>
+
+                                <p class="mt-3">
+
+                                    the provider reads:
+
+                                </p>
+
+                                <pre class="ca-code"><code>X-rollingstone-Client-Key: &lt;secret&gt;</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ca-card ca-card-accent">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-purple mb-3">
+                                    <i class="bi bi-cpu"></i>
+                                </div>
+
+                                <div class="ca-label"
+                                     style="color:#7256d8;">
+                                    Processing
+                                </div>
+
+                                <h4 class="ca-card-title mt-2">
+                                    Keycloak SPI
+                                </h4>
+
+                                <p>
+
+                                    Our implementation of
+
+                                    <code>
+                                        ClientAuthenticator
+                                    </code>
+
+                                    participates directly in Keycloak's client
+                                    authentication processing.
+
+                                </p>
+
+                                <p class="mb-0">
+
+                                    The provider reads the custom header, obtains the
+                                    configured client secret and evaluates whether the
+                                    credentials match.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ca-card">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-green mb-3">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+
+                                <div class="ca-label text-success">
+                                    Result
+                                </div>
+
+                                <h4 class="ca-card-title mt-2">
+                                    Success or Failure
+                                </h4>
+
+                                <p>
+
+                                    When validation succeeds, the authenticator calls:
+
+                                </p>
+
+                                <pre class="ca-code"><code>context.success();</code></pre>
+
+                                <p class="mt-3">
+
+                                    Invalid or missing credentials cause the
+                                    authentication attempt to fail.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             BUILT-IN VS CUSTOM
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Extension Point
+                </div>
+
+                <h2 class="ca-section-title">
+                    Built-In Authentication vs. Our Custom Provider
+                </h2>
+
+                <p class="ca-section-lead mb-5">
+
+                    We are not replacing Keycloak's token endpoint or OAuth
+                    processing. We are extending one specific decision point:
+                    <strong>how Keycloak authenticates the OAuth client.</strong>
+
+                </p>
+
+
+                <div class="ca-striped-grid">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+                            <tr>
+                                <th>Mechanism</th>
+                                <th>Credential</th>
+                                <th>How It Reaches Keycloak</th>
+                                <th>Validation Mechanism</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <th>Client ID and Secret</th>
+                                <td>Shared Secret</td>
+                                <td>
+                                    Standard OAuth client authentication
+                                </td>
+                                <td>
+                                    Built-in Keycloak provider
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Signed JWT</th>
+                                <td>Private Key</td>
+                                <td>
+                                    Signed client assertion
+                                </td>
+                                <td>
+                                    Built-in Keycloak provider
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>X.509 Certificate</th>
+                                <td>Private Key + Certificate</td>
+                                <td>
+                                    TLS client authentication
+                                </td>
+                                <td>
+                                    Certificate-based client authentication
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>rollingstone Secret Header</th>
+                                <td>Shared Secret</td>
+                                <td>
+                                    <code>X-rollingstone-Client-Key</code>
+                                </td>
+                                <td>
+                                    Our custom
+                                    <code>ClientAuthenticator</code>
+                                </td>
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             PROJECT STRUCTURE
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Provider Project
+                </div>
+
+                <h2 class="ca-section-title">
+                    The Custom Provider Is Its Own Maven Module
+                </h2>
+
+                <p class="ca-section-lead mb-5">
+
+                    The provider lives under
+
+                    <code>
+                        custom-providers/client-authenticator
+                    </code>.
+
+                    It is packaged as its own JAR because the code executes inside
+                    the Keycloak server runtime rather than inside the Spring Boot
+                    application.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-5">
+
+                        <div class="ca-card h-100">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-label text-primary mb-3">
+                                    Project Layout
+                                </div>
+
+                                <pre class="ca-code"><code>custom-providers/
+└── client-authenticator/
+    ├── pom.xml
+    │
+    └── src/
+        └── main/
+            ├── java/
+            │   └── ...
+            │       ├── CustomSecretHeaderClientAuthenticator.java
+            │       └── CustomSecretHeaderClientAuthenticatorFactory.java
+            │
+            └── resources/
+                └── META-INF/
+                    └── services/
+                        └── org.keycloak.authentication.ClientAuthenticatorFactory</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-7">
+
+                        <div class="ca-striped-grid h-100">
+
+                            <div class="table-responsive">
+
+                                <table class="table table-striped align-middle">
+
+                                    <thead>
+
+                                    <tr>
+                                        <th>Artifact</th>
+                                        <th>Responsibility</th>
+                                    </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                    <tr>
+
+                                        <th>
+                                            CustomSecretHeaderClientAuthenticator
+                                        </th>
+
+                                        <td>
+
+                                            Implements
+
+                                            <code>
+                                                ClientAuthenticator
+                                            </code>.
+
+                                            Reads the custom HTTP header, obtains the
+                                            client's configured secret and calls
+                                            success or failure on the authentication
+                                            context.
+
+                                        </td>
+
+                                    </tr>
+
+
+                                    <tr>
+
+                                        <th>
+                                            CustomSecretHeaderClientAuthenticatorFactory
+                                        </th>
+
+                                        <td>
+
+                                            Implements
+
+                                            <code>
+                                                ClientAuthenticatorFactory
+                                            </code>
+
+                                            and registers the provider identity used
+                                            by Keycloak.
+
+                                        </td>
+
+                                    </tr>
+
+
+                                    <tr>
+
+                                        <th>
+                                            META-INF/services/...
+                                        </th>
+
+                                        <td>
+
+                                            Java Service Provider registration that
+                                            allows Keycloak's provider discovery
+                                            process to find the factory.
+
+                                        </td>
+
+                                    </tr>
+
+
+                                    <tr>
+
+                                        <th>
+                                            pom.xml
+                                        </th>
+
+                                        <td>
+
+                                            Defines the Maven module and the Keycloak
+                                            SPI dependencies required to compile the
+                                            provider.
+
+                                        </td>
+
+                                    </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SPI COMPONENTS
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    SPI Anatomy
+                </div>
+
+                <h2 class="ca-section-title">
+                    Three Pieces Make the Provider Discoverable
+                </h2>
+
+
+                <div class="row g-4 mt-2">
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ca-card">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-blue mb-3">
+                                    <i class="bi bi-shield-check"></i>
+                                </div>
+
+                                <div class="ca-label text-primary">
+                                    Runtime Logic
+                                </div>
+
+                                <h4 class="ca-card-title mt-2">
+                                    Authenticator
+                                </h4>
+
+                                <pre class="ca-code"><code>CustomSecretHeaderClientAuthenticator
+
+implements
+
+ClientAuthenticator</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Contains the actual credential-validation
+                                    behavior.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ca-card ca-card-accent">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-purple mb-3">
+                                    <i class="bi bi-building-gear"></i>
+                                </div>
+
+                                <div class="ca-label"
+                                     style="color:#7256d8;">
+                                    Provider Metadata
+                                </div>
+
+                                <h4 class="ca-card-title mt-2">
+                                    Factory
+                                </h4>
+
+                                <pre class="ca-code"><code>CustomSecretHeaderClientAuthenticatorFactory
+
+implements
+
+ClientAuthenticatorFactory</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Tells Keycloak how to identify and instantiate
+                                    the provider.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ca-card">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-green mb-3">
+                                    <i class="bi bi-search"></i>
+                                </div>
+
+                                <div class="ca-label text-success">
+                                    Discovery
+                                </div>
+
+                                <h4 class="ca-card-title mt-2">
+                                    ServiceLoader Registration
+                                </h4>
+
+                                <pre class="ca-code"><code>META-INF/services/
+org.keycloak.authentication.
+ClientAuthenticatorFactory</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Connects the JAR to Java's provider discovery
+                                    mechanism.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             PROVIDER ID
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Provider Identity
+                </div>
+
+                <h2 class="ca-section-title">
+                    How Keycloak Knows Which Provider We Built
+                </h2>
+
+
+                <div class="ca-callout mt-4">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg-3 text-center">
+
+                            <div class="ca-icon ca-icon-purple mx-auto"
+                                 style="width:90px;height:90px;font-size:2.5rem;">
+
+                                <i class="bi bi-fingerprint"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-9">
+
+                            <div class="ca-label"
+                                 style="color:#7256d8;">
+                                Provider ID
+                            </div>
+
+                            <h2 class="fw-bold mt-2"
+                                style="color:#102b69;">
+
+                                rollingstone-secret-header
+
+                            </h2>
+
+                            <p class="text-muted mb-0">
+
+                                The factory registers the provider ID
+
+                                <code>
+                                    rollingstone-secret-header
+                                </code>.
+
+                                Once Keycloak discovers and loads the provider, its
+                                configured display name
+
+                                <strong>
+                                    rollingstone Secret Header
+                                </strong>
+
+                                becomes available as a Client Authenticator choice
+                                alongside the built-in mechanisms.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             DEPLOYMENT PIPELINE
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Build and Deployment
+                </div>
+
+                <h2 class="ca-section-title">
+                    From Java Source Code to Keycloak Provider
+                </h2>
+
+                <p class="ca-section-lead mb-5">
+
+                    Writing the classes is only the first half of the job. The
+                    provider must be packaged, copied into Keycloak and discovered by
+                    the server.
+
+                </p>
+
+
+                <div class="ca-flow-shell">
+
+                    <div class="row g-3 align-items-center">
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-filetype-java fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    Java SPI Code
+                                </strong>
+
+                                <small class="text-muted">
+                                    Authenticator + Factory
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ca-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-hammer fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    Maven Package
+                                </strong>
+
+                                <small class="text-muted">
+                                    mvn clean package
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ca-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-file-earmark-zip fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    Provider JAR
+                                </strong>
+
+                                <small class="text-muted">
+                                    target/*.jar
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ca-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-folder2-open fs-1"
+                                   style="color:#7256d8;"></i>
+
+                                <strong class="mt-2">
+                                    providers/
+                                </strong>
+
+                                <small class="text-muted">
+                                    Keycloak Installation
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ca-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-shield-lock fs-1 text-success"></i>
+
+                                <strong class="mt-2">
+                                    Keycloak
+                                </strong>
+
+                                <small class="text-muted">
+                                    Provider Available
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             STEP BY STEP DEPLOYMENT
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Deployment Sequence
+                </div>
+
+                <h2 class="ca-section-title">
+                    Build, Install and Activate the Provider
+                </h2>
+
+
+                <div class="ca-protocol-shell mt-5">
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">01</div>
+
+                        <div class="ca-protocol-card">
+
+                            <div class="ca-label text-primary">
+                                Maven
+                            </div>
+
+                            <h4>
+                                Build the Provider
+                            </h4>
+
+                            <pre class="ca-code"><code>cd custom-providers/client-authenticator
+mvn clean package</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                Maven compiles the authenticator, factory and
+                                ServiceLoader metadata into the provider JAR.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">02</div>
+
+                        <div class="ca-protocol-card">
+
+                            <div class="ca-label text-primary">
+                                Installation
+                            </div>
+
+                            <h4>
+                                Copy the JAR into Keycloak
+                            </h4>
+
+                            <pre class="ca-code"><code>cp target/*.jar \
+   $KEYCLOAK_HOME/providers/</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                The provider is installed into the Keycloak runtime,
+                                not into the Spring Boot application's classpath.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">03</div>
+
+                        <div class="ca-protocol-card">
+
+                            <div class="ca-label text-primary">
+                                Keycloak Build
+                            </div>
+
+                            <h4>
+                                Rebuild the Keycloak Runtime
+                            </h4>
+
+                            <pre class="ca-code"><code>cd $KEYCLOAK_HOME
+
+bin/kc.sh build</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                This allows the Keycloak installation to process the
+                                provider JAR as part of its server build.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">04</div>
+
+                        <div class="ca-protocol-card">
+
+                            <div class="ca-label text-primary">
+                                Runtime
+                            </div>
+
+                            <h4>
+                                Start Keycloak
+                            </h4>
+
+                            <pre class="ca-code"><code>bin/kc.sh start-dev</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">05</div>
+
+                        <div class="ca-protocol-card">
+
+                            <div class="ca-label text-success">
+                                Admin Console
+                            </div>
+
+                            <h4>
+                                Select the Custom Authenticator
+                            </h4>
+
+                            <p>
+
+                                Open the client and navigate to its Credentials
+                                configuration.
+
+                            </p>
+
+                            <div class="p-3 bg-light border rounded-3">
+
+                                <strong>Clients</strong>
+                                →
+                                <strong>Select Client</strong>
+                                →
+                                <strong>Credentials</strong>
+                                →
+                                <strong>Client Authenticator</strong>
+                                →
+                                <strong>rollingstone Secret Header</strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             RUNTIME REQUEST
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Runtime Behavior
+                </div>
+
+                <h2 class="ca-section-title">
+                    What Happens During a Token Request?
+                </h2>
+
+                <p class="ca-section-lead mb-5">
+
+                    The OAuth token endpoint remains the same. What changes is the
+                    client-authentication credential Keycloak expects and the code
+                    responsible for validating it.
+
+                </p>
+
+
+                <div class="ca-protocol-shell">
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">01</div>
+
+                        <div class="ca-protocol-card">
+
+                            <h4>
+                                Client Sends Token Request
+                            </h4>
+
+                            <pre class="ca-code"><code>POST /realms/jpa-demo-realm/protocol/openid-connect/token
+
+Content-Type: application/x-www-form-urlencoded
+
+X-rollingstone-Client-Key: &lt;CLIENT_SECRET&gt;</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">02</div>
+
+                        <div class="ca-protocol-card">
+
+                            <h4>
+                                OAuth Parameters Are Processed
+                            </h4>
+
+                            <pre class="ca-code"><code>grant_type=client_credentials
+client_id=capability-demo-client</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                Notice that the secret does not need to appear as a
+                                <code>client_secret</code> form parameter for this
+                                custom mechanism.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">03</div>
+
+                        <div class="ca-protocol-card">
+
+                            <h4>
+                                Keycloak Selects the Client Authenticator
+                            </h4>
+
+                            <p class="mb-0">
+
+                                Because the client is configured to use
+                                <strong>Havi Secret Header</strong>, Keycloak invokes
+                                the corresponding custom provider.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">04</div>
+
+                        <div class="ca-protocol-card">
+
+                            <h4>
+                                Authenticator Reads the Header
+                            </h4>
+
+                            <pre class="ca-code"><code>X-Havi-Client-Key</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                The authenticator obtains the credential from the
+                                incoming HTTP request.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">05</div>
+
+                        <div class="ca-protocol-card">
+
+                            <h4>
+                                Configured Client Secret Is Retrieved
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The provider uses Keycloak's client-authentication
+                                facilities, including
+
+                                <code>
+                                    ClientAuthenticatorUtil
+                                </code>,
+
+                                to work with the client's configured credential.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">06</div>
+
+                        <div class="ca-protocol-card">
+
+                            <h4>
+                                Credentials Are Compared
+                            </h4>
+
+                            <div class="row g-3">
+
+                                <div class="col-md-6">
+
+                                    <div class="alert alert-primary mb-0">
+
+                                        <strong>
+                                            Incoming
+                                        </strong>
+
+                                        <br>
+
+                                        X-Havi-Client-Key
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <div class="alert alert-secondary mb-0">
+
+                                        <strong>
+                                            Keycloak
+                                        </strong>
+
+                                        <br>
+
+                                        Stored Client Credential
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">07</div>
+
+                        <div class="ca-protocol-card">
+
+                            <h4>
+                                Authentication Succeeds or Fails
+                            </h4>
+
+                            <pre class="ca-code"><code>// valid credential
+context.success();
+
+// invalid / missing credential
+context.failure(...);</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ca-protocol-row">
+
+                        <div class="ca-number">08</div>
+
+                        <div class="ca-protocol-card">
+
+                            <div class="ca-label text-success">
+                                Success
+                            </div>
+
+                            <h4>
+                                Keycloak Continues Token Processing
+                            </h4>
+
+                            <p class="mb-0">
+
+                                Successful client authentication allows Keycloak to
+                                continue evaluating the requested OAuth grant and,
+                                when appropriate, issue the token response.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             STANDARD VS CUSTOM REQUEST
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Wire-Level Difference
+                </div>
+
+                <h2 class="ca-section-title">
+                    Standard Secret vs. X-Havi-Client-Key
+                </h2>
+
+
+                <div class="row g-4 mt-3">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ca-card">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-label text-primary">
+                                    Standard Example
+                                </div>
+
+                                <h4 class="ca-card-title mt-2">
+                                    Client Secret in Request Parameters
+                                </h4>
+
+                                <pre class="ca-code"><code>curl -X POST \
+  http://localhost:8080/realms/jpa-demo-realm/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=capability-demo-client" \
+  -d "client_secret=&lt;CLIENT_SECRET&gt;"</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ca-card ca-card-accent">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-label"
+                                     style="color:#7256d8;">
+                                    Custom SPI Example
+                                </div>
+
+                                <h4 class="ca-card-title mt-2">
+                                    Secret in X-Havi-Client-Key
+                                </h4>
+
+                                <pre class="ca-code"><code>curl -X POST \
+  http://localhost:8080/realms/jpa-demo-realm/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -H "X-Havi-Client-Key: &lt;CLIENT_SECRET&gt;" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=capability-demo-client"</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SERVICELOADER
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Provider Discovery
+                </div>
+
+                <h2 class="ca-section-title">
+                    Why META-INF/services Matters
+                </h2>
+
+                <p class="ca-section-lead mb-5">
+
+                    Having Java classes inside a JAR does not by itself tell the
+                    Keycloak runtime that the JAR contains a
+                    <code>ClientAuthenticatorFactory</code> implementation.
+
+                    The provider registration connects the implementation to the SPI
+                    contract.
+
+                </p>
+
+
+                <div class="ca-flow-shell">
+
+                    <div class="row g-3 align-items-center">
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-file-earmark-code fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    Service File
+                                </strong>
+
+                                <small class="text-muted">
+                                    META-INF/services
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ca-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-search fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    Provider Discovery
+                                </strong>
+
+                                <small class="text-muted">
+                                    Finds Factory
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ca-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-building-gear fs-1"
+                                   style="color:#7256d8;"></i>
+
+                                <strong class="mt-2">
+                                    Factory
+                                </strong>
+
+                                <small class="text-muted">
+                                    havi-secret-header
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ca-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-ui-checks-grid fs-1 text-success"></i>
+
+                                <strong class="mt-2">
+                                    Admin Console
+                                </strong>
+
+                                <small class="text-muted">
+                                    Havi Secret Header
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             ACCORDION: UNDERSTAND THE CLASSES
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Code Walkthrough
+                </div>
+
+                <h2 class="ca-section-title">
+                    Understand the Provider One Component at a Time
+                </h2>
+
+
+                <div class="accordion ca-accordion mt-5"
+                     id="providerAccordion">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#provider1">
+
+                        <span class="ca-accordion-number">
+                            01
+                        </span>
+
+                                CustomSecretHeaderClientAuthenticator
+
+                            </button>
+
+                        </h2>
+
+                        <div id="provider1"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#providerAccordion">
+
+                            <div class="accordion-body">
+
+                                This is the runtime authentication implementation.
+
+                                Its responsibility is deliberately narrow:
+
+                                <ul class="mt-3">
+
+                                    <li>
+                                        access the client-authentication context,
+                                    </li>
+
+                                    <li>
+                                        inspect the incoming request,
+                                    </li>
+
+                                    <li>
+                                        read
+                                        <code>X-Havi-Client-Key</code>,
+                                    </li>
+
+                                    <li>
+                                        obtain the configured client credential,
+                                    </li>
+
+                                    <li>
+                                        validate the submitted credential,
+                                    </li>
+
+                                    <li>
+                                        signal success or failure.
+                                    </li>
+
+                                </ul>
+
+                                <pre class="ca-code"><code>Client Request
+      │
+      ▼
+CustomSecretHeaderClientAuthenticator
+      │
+      ├── Read X-Havi-Client-Key
+      │
+      ├── Obtain configured secret
+      │
+      ├── Validate
+      │
+      └── context.success() / failure()</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#provider2">
+
+                        <span class="ca-accordion-number">
+                            02
+                        </span>
+
+                                CustomSecretHeaderClientAuthenticatorFactory
+
+                            </button>
+
+                        </h2>
+
+                        <div id="provider2"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#providerAccordion">
+
+                            <div class="accordion-body">
+
+                                The factory represents the provider to the Keycloak
+                                runtime.
+
+                                In this POC its provider identity is:
+
+                                <pre class="ca-code mt-3"><code>havi-secret-header</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Conceptually, the factory answers questions such
+                                    as: What is this provider? What identifier should
+                                    Keycloak use for it? How should an authenticator
+                                    instance be obtained?
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#provider3">
+
+                        <span class="ca-accordion-number">
+                            03
+                        </span>
+
+                                META-INF/services Registration
+
+                            </button>
+
+                        </h2>
+
+                        <div id="provider3"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#providerAccordion">
+
+                            <div class="accordion-body">
+
+                                The service registration file is named:
+
+                                <pre class="ca-code mt-3"><code>META-INF/services/org.keycloak.authentication.ClientAuthenticatorFactory</code></pre>
+
+                                <p class="mt-3">
+
+                                    It identifies the implementation of the factory
+                                    contract contained in the provider JAR.
+
+                                </p>
+
+                                <div class="alert alert-primary mb-0">
+
+                                    Without provider discovery, writing a perfectly
+                                    valid factory class is not sufficient to make the
+                                    custom authenticator appear in Keycloak.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#provider4">
+
+                        <span class="ca-accordion-number">
+                            04
+                        </span>
+
+                                Provider JAR
+
+                            </button>
+
+                        </h2>
+
+                        <div id="provider4"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#providerAccordion">
+
+                            <div class="accordion-body">
+
+                                The Maven build packages the implementation and its
+                                provider metadata together.
+
+                                That JAR is copied to:
+
+                                <pre class="ca-code mt-3"><code>$KEYCLOAK_HOME/providers/</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    The important architectural boundary is that this
+                                    code becomes part of the Keycloak server runtime.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECURITY
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Security Interpretation
+                </div>
+
+                <h2 class="ca-section-title">
+                    What This POC Changes — and What It Does Not
+                </h2>
+
+                <p class="ca-section-lead mb-5">
+
+                    A custom header changes the credential transport convention used
+                    by the client and the server-side validation logic. It does not
+                    transform a shared secret into an asymmetric credential.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ca-card">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-yellow mb-3">
+                                    <i class="bi bi-key-fill"></i>
+                                </div>
+
+                                <h4 class="ca-card-title">
+                                    Still a Shared Secret
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Both the client and Keycloak rely on knowledge of
+                                    the same secret value.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ca-card ca-card-accent">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-blue mb-3">
+                                    <i class="bi bi-lock-fill"></i>
+                                </div>
+
+                                <h4 class="ca-card-title">
+                                    HTTPS Is Essential
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    A secret placed in a custom HTTP header is still
+                                    sensitive credential material and must be
+                                    protected in transit.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ca-card">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-red mb-3">
+                                    <i class="bi bi-journal-text"></i>
+                                </div>
+
+                                <h4 class="ca-card-title">
+                                    Do Not Log the Header
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Application servers, reverse proxies, API
+                                    gateways and diagnostic middleware should not
+                                    expose the custom secret header in logs.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="ca-callout mt-4">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg-2 text-center">
+
+                            <div class="ca-icon ca-icon-yellow mx-auto"
+                                 style="width:82px;height:82px;font-size:2.3rem;">
+
+                                <i class="bi bi-lightbulb"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-10">
+
+                            <h4 class="fw-bold">
+                                Important Architectural Lesson
+                            </h4>
+
+                            <p class="text-muted mb-0">
+
+                                This POC is valuable because it demonstrates
+                                <strong>Keycloak extensibility</strong>.
+
+                                The important concept is not that a proprietary
+                                header is inherently stronger than the standard
+                                OAuth client-secret mechanisms. The lesson is that
+                                Keycloak exposes an SPI through which specialized
+                                client-authentication behavior can be integrated
+                                when an enterprise has a legitimate requirement for
+                                it.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TROUBLESHOOTING
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Troubleshooting
+                </div>
+
+                <h2 class="ca-section-title">
+                    When Havi Secret Header Does Not Appear
+                </h2>
+
+                <p class="ca-section-lead mb-5">
+
+                    Debug the provider from deployment outward rather than starting
+                    with the OAuth token request.
+
+                </p>
+
+
+                <div class="accordion ca-accordion"
+                     id="troubleshootingAccordion">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble1">
+
+                        <span class="ca-accordion-number">
+                            01
+                        </span>
+
+                                Did Maven Build the Provider JAR?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble1"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+<pre class="ca-code"><code>cd custom-providers/client-authenticator
+mvn clean package
+
+ls -l target/</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Confirm that the expected provider JAR actually
+                                    exists before investigating Keycloak.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble2">
+
+                        <span class="ca-accordion-number">
+                            02
+                        </span>
+
+                                Is the JAR in the Keycloak providers Directory?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble2"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                <pre class="ca-code"><code>ls -l $KEYCLOAK_HOME/providers/</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    The custom provider must be available to the
+                                    Keycloak runtime.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble3">
+
+                        <span class="ca-accordion-number">
+                            03
+                        </span>
+
+                                Is the ServiceLoader Registration File Present?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble3"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Inspect the JAR and confirm that it contains:
+
+                                <pre class="ca-code mt-3"><code>META-INF/services/
+org.keycloak.authentication.ClientAuthenticatorFactory</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    The factory class can compile successfully while
+                                    still remaining undiscoverable if the service
+                                    registration is missing or incorrect.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble4">
+
+                        <span class="ca-accordion-number">
+                            04
+                        </span>
+
+                                Was Keycloak Rebuilt and Restarted?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble4"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+<pre class="ca-code"><code>cd $KEYCLOAK_HOME
+
+bin/kc.sh build
+bin/kc.sh start-dev</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Check startup output for provider-related
+                                    exceptions before opening the Admin Console.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble5">
+
+                        <span class="ca-accordion-number">
+                            05
+                        </span>
+
+                                Provider Appears but Authentication Fails
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble5"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Verify the request in layers:
+
+                                <ul class="mt-3">
+
+                                    <li>
+                                        correct <code>client_id</code>,
+                                    </li>
+
+                                    <li>
+                                        client configured for
+                                        <strong>Havi Secret Header</strong>,
+                                    </li>
+
+                                    <li>
+                                        <code>X-Havi-Client-Key</code> actually
+                                        present,
+                                    </li>
+
+                                    <li>
+                                        correct secret value,
+                                    </li>
+
+                                    <li>
+                                        correct OAuth grant type,
+                                    </li>
+
+                                    <li>
+                                        no intermediary removing the custom header.
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble6">
+
+                        <span class="ca-accordion-number">
+                            06
+                        </span>
+
+                                Request Works Directly but Fails Through a Proxy
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble6"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Check whether the reverse proxy, ingress controller,
+                                WAF or API gateway forwards
+
+                                <code>
+                                    X-Havi-Client-Key
+                                </code>
+
+                                to Keycloak.
+
+                                <div class="alert alert-warning mt-3 mb-0">
+
+                                    Do not solve the problem by indiscriminately
+                                    logging request headers. This header contains
+                                    credential material.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             WHAT THIS TEACHES ABOUT KEYCLOAK
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Architectural Lesson
+                </div>
+
+                <h2 class="ca-section-title">
+                    What This Small POC Teaches About Keycloak
+                </h2>
+
+
+                <div class="row g-4 mt-3">
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="ca-card">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-blue mb-3">
+                                    <i class="bi bi-plug-fill"></i>
+                                </div>
+
+                                <h4 class="ca-card-title">
+                                    Extensible
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Keycloak behavior is not limited to the features
+                                    exposed by its default Admin Console.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="ca-card">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-purple mb-3">
+                                    <i class="bi bi-puzzle-fill"></i>
+                                </div>
+
+                                <h4 class="ca-card-title">
+                                    SPI Based
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Well-defined provider contracts create extension
+                                    points for specialized enterprise behavior.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="ca-card">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-yellow mb-3">
+                                    <i class="bi bi-box-seam-fill"></i>
+                                </div>
+
+                                <h4 class="ca-card-title">
+                                    Runtime Extension
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The custom provider is packaged separately and
+                                    installed into the Keycloak server.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="ca-card">
+
+                            <div class="ca-card-body">
+
+                                <div class="ca-icon ca-icon-green mb-3">
+                                    <i class="bi bi-arrow-up-right-circle-fill"></i>
+                                </div>
+
+                                <h4 class="ca-card-title">
+                                    Foundation
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    A small Client Authenticator SPI is a useful
+                                    introduction before moving into more involved
+                                    custom authentication flows.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             COMPLETE TRUST FLOW
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+                <div class="ca-kicker mb-3">
+                    Complete Runtime Flow
+                </div>
+
+                <h2 class="ca-section-title">
+                    From Custom Header to OAuth Access Token
+                </h2>
+
+
+                <div class="ca-flow-shell mt-5">
+
+                    <div class="row g-3 align-items-center">
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-laptop fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    OAuth Client
+                                </strong>
+
+                                <small class="text-muted">
+                                    Client Credentials
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ca-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-envelope-paper fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    HTTP Request
+                                </strong>
+
+                                <small class="text-muted">
+                                    X-Havi-Client-Key
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ca-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-shield-lock fs-1"
+                                   style="color:#7256d8;"></i>
+
+                                <strong class="mt-2">
+                                    Keycloak
+                                </strong>
+
+                                <small class="text-muted">
+                                    Token Endpoint
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ca-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-cpu fs-1"
+                                   style="color:#7256d8;"></i>
+
+                                <strong class="mt-2">
+                                    Custom SPI
+                                </strong>
+
+                                <small class="text-muted">
+                                    Validate Secret
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ca-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ca-flow-node">
+
+                                <i class="bi bi-file-earmark-lock fs-1 text-success"></i>
+
+                                <strong class="mt-2">
+                                    Access Token
+                                </strong>
+
+                                <small class="text-muted">
+                                    Authentication Succeeded
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TAKEAWAY
+             ========================================================= -->
+
+        <section class="ca-section">
+
+            <div class="container">
+
+
+                <div class="ca-takeaway">
+
+                    <div class="row align-items-center g-4">
+
+
+                        <div class="col-lg-2 text-center">
+
+                            <div class="ca-icon ca-icon-blue mx-auto"
+                                 style="width:90px;height:90px;font-size:2.6rem;">
+
+                                <i class="bi bi-puzzle-fill"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-10">
+
+                            <div class="ca-label text-primary mb-2">
+                                Key Takeaway
+                            </div>
+
+                            <h2 class="fw-bold"
+                                style="color:#102b69;">
+
+                                The SPI Lets Us Extend Keycloak at the
+                                Client-Authentication Boundary
+
+                            </h2>
+
+                            <p class="lead text-muted">
+
+                                We did not write our own OAuth authorization server
+                                and we did not replace Keycloak's token endpoint.
+
+                            </p>
+
+                            <p class="text-muted mb-0">
+
+                                We implemented a focused Keycloak extension:
+                                one authenticator, one factory and one provider
+                                registration.
+
+                                The client sends its shared credential through
+                                <code>X-Havi-Client-Key</code>, the custom
+                                <code>ClientAuthenticator</code> validates it, and
+                                successful validation hands control back to Keycloak
+                                through <code>context.success()</code>.
+
+                                That small extension demonstrates an important
+                                enterprise capability: when a legitimate integration
+                                requirement cannot be satisfied by a built-in
+                                mechanism, Keycloak's SPI model allows carefully
+                                scoped server-side behavior to be added without
+                                rebuilding the entire identity platform.
+
+                            </p>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+                <!-- =====================================================
+                     NAVIGATION
+                     ===================================================== -->
+
+                <div class="d-flex flex-wrap justify-content-between gap-3
+                    mt-5 pt-4"
+                     style="border-top:1px solid rgba(255,255,255,.18);">
+
+
+                    <a href="/training/ciba"
+                       class="btn btn-outline-light btn-lg px-4">
+
+                        <i class="bi bi-arrow-left me-2"></i>
+
+                        Back: OIDC CIBA Grant
+
+                    </a>
+
+
+                    <a href="/training/first-broker-login"
+                       class="btn btn-light btn-lg px-4"
+                       style="color:#12346f;">
+
+                        Next: First Broker Login
+
+                        <i class="bi bi-arrow-right ms-2"></i>
+
+                    </a>
+
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

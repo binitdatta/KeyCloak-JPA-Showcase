@@ -1,0 +1,14 @@
+server:
+  port: 8092
+
+spring:
+  application:
+    name: ciba-approval-service
+
+keycloak:
+  base-url: http://localhost:8080
+  realm: jpa-demo-realm
+
+logging:
+  level:
+    com.rollingstone.ciba: info

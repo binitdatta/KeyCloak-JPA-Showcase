@@ -1,0 +1,3377 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>First Broker Login | Training</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/bright-blue.css}">
+
+    <style>
+
+        :root {
+            --fb-navy: #06142f;
+            --fb-navy-2: #0b2455;
+            --fb-blue: #315df1;
+            --fb-electric: #19c9f5;
+            --fb-white: #ffffff;
+            --fb-panel: rgba(255,255,255,.97);
+            --fb-text: #17243d;
+            --fb-heading: #102b69;
+            --fb-muted: #5d6c80;
+            --fb-border: #dbe6f2;
+            --fb-code: #061536;
+            --fb-green: #15945d;
+            --fb-red: #d63c4c;
+            --fb-yellow: #eba900;
+            --fb-purple: #7256d8;
+        }
+
+        html {
+            min-height: 100%;
+            background: #06142f;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: white;
+
+            background:
+                radial-gradient(
+                    circle at 92% 12%,
+                    rgba(39,103,246,.92) 0,
+                    rgba(39,103,246,.44) 24%,
+                    transparent 44%
+                ),
+                radial-gradient(
+                    circle at 82% 54%,
+                    rgba(24,112,244,.44) 0,
+                    transparent 37%
+                ),
+                linear-gradient(
+                    112deg,
+                    #06142f 0%,
+                    #0b2150 34%,
+                    #173a91 66%,
+                    #315df1 100%
+                );
+
+            background-attachment: fixed;
+        }
+
+        .navbar {
+            position: relative;
+            z-index: 100;
+        }
+
+        .fb-page,
+        .fb-section,
+        .fb-hero {
+            background: transparent !important;
+        }
+
+        .fb-page {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fb-layer {
+            position: relative;
+            z-index: 2;
+        }
+
+        .fb-section {
+            padding: 5rem 0;
+        }
+
+        .fb-section + .fb-section {
+            border-top: 1px solid rgba(255,255,255,.09);
+        }
+
+        .fb-kicker {
+            color: #45d6ff;
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .19em;
+            text-transform: uppercase;
+        }
+
+        .fb-section-title {
+            color: white;
+            font-size: clamp(2rem,3vw,3.1rem);
+            font-weight: 800;
+            letter-spacing: -.035em;
+            margin-bottom: 1rem;
+        }
+
+        .fb-section-lead {
+            max-width: 1000px;
+            color: rgba(255,255,255,.80);
+            font-size: 1.08rem;
+            line-height: 1.8;
+        }
+
+        .fb-electric {
+            color: #22c8f3;
+        }
+
+        /* HERO */
+
+        .fb-hero {
+            padding: 2.5rem 0 5.5rem;
+        }
+
+        .fb-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            margin-bottom: 4rem;
+            color: #8ae4ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .fb-back-link:hover {
+            color: white;
+        }
+
+        .fb-hero-title {
+            color: white;
+            font-size: clamp(3rem,5vw,5rem);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -.045em;
+        }
+
+        .fb-hero-lead {
+            max-width: 800px;
+            color: rgba(255,255,255,.82);
+            font-size: 1.14rem;
+            line-height: 1.75;
+        }
+
+        .fb-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .45rem .88rem;
+            color: white;
+            font-size: .78rem;
+            font-weight: 700;
+            border: 1px solid #21c9f5;
+            border-radius: 999px;
+            background: rgba(4,21,55,.42);
+        }
+
+        /* ARCHITECTURE */
+
+        .fb-architecture {
+            padding: 1.6rem;
+            background: rgba(7,30,77,.72);
+            border: 1px solid #1bc9f5;
+            border-radius: 21px;
+            box-shadow: 0 25px 65px rgba(0,0,0,.18);
+            backdrop-filter: blur(8px);
+        }
+
+        .fb-architecture-title {
+            color: white;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .fb-architecture-subtitle {
+            color: rgba(255,255,255,.70);
+        }
+
+        .fb-arch-node {
+            padding: 1.05rem;
+            text-align: center;
+            color: white;
+            background: rgba(255,255,255,.055);
+            border: 1px solid rgba(255,255,255,.70);
+            border-radius: 16px;
+        }
+
+        .fb-arch-node.highlight {
+            border-color: #20c9f4;
+        }
+
+        .fb-arrow {
+            color: #1ed0fa;
+            font-size: 1.65rem;
+        }
+
+        /* CARDS */
+
+        .fb-card {
+            height: 100%;
+            color: var(--fb-text);
+            background: var(--fb-panel);
+            border: 1px solid var(--fb-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 45px rgba(1,15,45,.16);
+            overflow: hidden;
+        }
+
+        .fb-card-accent {
+            border-color: #32c7f2;
+        }
+
+        .fb-card-body {
+            padding: 1.8rem;
+        }
+
+        .fb-card-title {
+            color: #111b2e;
+            font-weight: 800;
+        }
+
+        .fb-card p,
+        .fb-card li {
+            color: #4f5d70;
+        }
+
+        .fb-label {
+            font-size: .71rem;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+        .fb-icon {
+            width: 54px;
+            height: 54px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-size: 1.55rem;
+        }
+
+        .fb-icon-blue {
+            color: #1479df;
+            background: #e9f7ff;
+        }
+
+        .fb-icon-green {
+            color: #148e59;
+            background: #eaf9f1;
+        }
+
+        .fb-icon-red {
+            color: #d93e4e;
+            background: #fff0f2;
+        }
+
+        .fb-icon-yellow {
+            color: #e5a600;
+            background: #fff6d9;
+        }
+
+        .fb-icon-purple {
+            color: #7256d8;
+            background: #f0ecff;
+        }
+
+        /* CODE */
+
+        .fb-code {
+            margin: 0;
+            padding: 1.2rem 1.35rem;
+            color: #f8fbff;
+            background: var(--fb-code);
+            border: 1px solid rgba(66,203,255,.24);
+            border-radius: 12px;
+            font-size: .84rem;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* TABLES */
+
+        .fb-striped-grid {
+            overflow: hidden;
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--fb-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 42px rgba(0,0,0,.14);
+        }
+
+        .fb-striped-grid table {
+            margin: 0;
+            --bs-table-bg: transparent;
+            --bs-table-color: #27344a;
+            --bs-table-border-color: #e1e8f1;
+        }
+
+        .fb-striped-grid thead th {
+            padding: 1.2rem;
+            color: white;
+            background: #0b285f;
+            border: 0;
+        }
+
+        .fb-striped-grid tbody td,
+        .fb-striped-grid tbody th {
+            padding: 1.05rem 1.2rem;
+            vertical-align: middle;
+        }
+
+        .fb-striped-grid tbody tr:nth-child(even) {
+            background: #f1f6fc;
+        }
+
+        /* FLOW */
+
+        .fb-flow-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .fb-flow-node {
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1.2rem;
+            text-align: center;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--fb-border);
+            border-radius: 17px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .fb-flow-arrow {
+            color: #34d5fb;
+            font-size: 2rem;
+        }
+
+        /* TIMELINE */
+
+        .fb-protocol-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .fb-protocol-row {
+            position: relative;
+            display: grid;
+            grid-template-columns: 58px 1fr;
+            gap: 1.2rem;
+            padding: .8rem 0;
+        }
+
+        .fb-protocol-row:not(:last-child)::before {
+            content: "";
+            position: absolute;
+            left: 27px;
+            top: 60px;
+            bottom: -8px;
+            width: 2px;
+            background: linear-gradient(
+                #30d0f7,
+                rgba(255,255,255,.22)
+            );
+        }
+
+        .fb-number {
+            position: relative;
+            z-index: 2;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            background: linear-gradient(135deg,#1765e8,#18c8f4);
+            border: 4px solid rgba(255,255,255,.95);
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(0,0,0,.18);
+        }
+
+        .fb-protocol-card {
+            padding: 1.45rem;
+            color: var(--fb-text);
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--fb-border);
+            border-radius: 17px;
+            box-shadow: 0 12px 32px rgba(0,0,0,.10);
+        }
+
+        .fb-protocol-card h4 {
+            color: #10275d;
+            font-weight: 800;
+        }
+
+        .fb-protocol-card p,
+        .fb-protocol-card li {
+            color: #536276;
+        }
+
+        /* ACCORDION */
+
+        .fb-accordion {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 18px 45px rgba(0,0,0,.14);
+        }
+
+        .fb-accordion .accordion-item {
+            border-color: #dbe5f0;
+        }
+
+        .fb-accordion .accordion-button {
+            padding: 1.25rem 1.4rem;
+            color: #15233e;
+            background: rgba(255,255,255,.98);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .fb-accordion .accordion-button:not(.collapsed) {
+            color: #0d347a;
+            background: #e9f4ff;
+            box-shadow: none;
+        }
+
+        .fb-accordion .accordion-button:focus {
+            box-shadow: none;
+        }
+
+        .fb-accordion .accordion-body {
+            padding: 1.6rem;
+            color: #4e5c70;
+            background: white;
+            line-height: 1.7;
+        }
+
+        .fb-accordion-number {
+            min-width: 37px;
+            height: 37px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: .9rem;
+            color: white;
+            background: linear-gradient(135deg,#1765e8,#18c8f4);
+            border-radius: 50%;
+            font-size: .78rem;
+            font-weight: 800;
+        }
+
+        .fb-callout {
+            padding: 1.6rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .fb-takeaway {
+            padding: 2.7rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid #36cef5;
+            border-radius: 22px;
+            box-shadow: 0 22px 55px rgba(0,0,0,.16);
+        }
+
+        @media (max-width: 991.98px) {
+            .fb-flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="fb-page">
+    <div class="fb-layer">
+
+
+        <!-- =========================================================
+             HERO
+             ========================================================= -->
+
+        <header class="fb-hero">
+
+            <div class="container">
+
+                <a href="/training/custom-client-authenticator"
+                   class="fb-back-link">
+
+                    <i class="bi bi-arrow-left"></i>
+                    Back: Custom Client Authenticator
+
+                </a>
+
+
+                <div class="row align-items-center g-5">
+
+                    <div class="col-lg-6">
+
+                        <div class="fb-kicker mb-4">
+                            Episode F2 • Keycloak 26 • Identity Brokering • SPI
+                        </div>
+
+                        <h1 class="fb-hero-title mb-4">
+
+                            First Broker Login
+
+                            <span class="d-block fb-electric">
+                        Extended.
+                    </span>
+
+                        </h1>
+
+                        <p class="fb-hero-lead">
+
+                            A user successfully authenticating at an external
+                            Identity Provider does not automatically mean that
+                            Keycloak should create a new local user.
+
+                        </p>
+
+                        <p class="fb-hero-lead">
+
+                            In this POC we extend Keycloak's built-in
+                            <strong>Create User If Unique</strong> step so a
+                            brokered identity must also pass validation against an
+                            external system of record before Keycloak creates the
+                            local account.
+
+                        </p>
+
+
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+
+                    <span class="fb-pill">
+                        <i class="bi bi-shield-lock"></i>
+                        Keycloak 26
+                    </span>
+
+                            <span class="fb-pill">
+                        <i class="bi bi-diagram-3"></i>
+                        Identity Broker
+                    </span>
+
+                            <span class="fb-pill">
+                        <i class="bi bi-person-plus"></i>
+                        First Login
+                    </span>
+
+                            <span class="fb-pill">
+                        <i class="bi bi-plug"></i>
+                        Custom SPI
+                    </span>
+
+                            <span class="fb-pill">
+                        <i class="bi bi-database-check"></i>
+                        External Validation
+                    </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="fb-architecture">
+
+                            <div class="fb-architecture-title">
+                                Brokered First-Login Decision
+                            </div>
+
+                            <div class="fb-architecture-subtitle small mb-4">
+                                External IdP → Keycloak → Enterprise Validation → User Creation
+                            </div>
+
+
+                            <div class="fb-arch-node">
+
+                                <i class="bi bi-person-circle text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    External Identity
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Authenticated by Brokered IdP
+                                </small>
+
+                            </div>
+
+                            <div class="text-center">
+                                <div class="fb-arrow">↓</div>
+                            </div>
+
+
+                            <div class="fb-arch-node highlight">
+
+                                <i class="bi bi-shield-lock-fill text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Keycloak Broker
+                                </h5>
+
+                                <small class="text-white-50">
+                                    First Broker Login Flow
+                                </small>
+
+                            </div>
+
+                            <div class="text-center">
+                                <div class="fb-arrow">↓</div>
+                            </div>
+
+
+                            <div class="fb-arch-node highlight">
+
+                                <i class="bi bi-puzzle-fill text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Extended Create User If Unique
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Custom Authenticator
+                                </small>
+
+                            </div>
+
+                            <div class="text-center">
+                                <div class="fb-arrow">↓</div>
+                            </div>
+
+
+                            <div class="fb-arch-node">
+
+                                <i class="bi bi-hdd-network-fill text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    /api/auth/validate
+                                </h5>
+
+                                <small class="text-white-50">
+                                    External Identity Source
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =========================================================
+             WHAT IS FIRST BROKER LOGIN
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Foundation
+                </div>
+
+                <h2 class="fb-section-title">
+                    What Is First Broker Login?
+                </h2>
+
+                <p class="fb-section-lead mb-5">
+
+                    Identity brokering allows Keycloak to delegate authentication
+                    to another Identity Provider. On the user's first successful
+                    brokered authentication, Keycloak must decide how that external
+                    identity should relate to a user in the local Keycloak realm.
+
+                </p>
+
+
+                <div class="row g-4">
+
+                    <div class="col-lg-4">
+
+                        <div class="fb-card">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-icon fb-icon-blue mb-3">
+                                    <i class="bi bi-box-arrow-in-right"></i>
+                                </div>
+
+                                <div class="fb-label text-primary">
+                                    Step 1
+                                </div>
+
+                                <h4 class="fb-card-title mt-2">
+                                    External Authentication
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The user authenticates through the external
+                                    Identity Provider configured as a broker in
+                                    Keycloak.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="fb-card fb-card-accent">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-icon fb-icon-purple mb-3">
+                                    <i class="bi bi-diagram-3-fill"></i>
+                                </div>
+
+                                <div class="fb-label"
+                                     style="color:#7256d8;">
+                                    Step 2
+                                </div>
+
+                                <h4 class="fb-card-title mt-2">
+                                    First Broker Login
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Keycloak runs its First Broker Login
+                                    authentication flow to determine how to handle
+                                    the external identity.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="fb-card">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-icon fb-icon-green mb-3">
+                                    <i class="bi bi-person-check-fill"></i>
+                                </div>
+
+                                <div class="fb-label text-success">
+                                    Step 3
+                                </div>
+
+                                <h4 class="fb-card-title mt-2">
+                                    Link or Create
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Depending on the flow outcome, Keycloak can
+                                    associate the brokered identity with a local
+                                    user or create the appropriate local user.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             PROBLEM
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Enterprise Requirement
+                </div>
+
+                <h2 class="fb-section-title">
+                    The Built-In Collision Check Is Not Enough for Our POC
+                </h2>
+
+                <p class="fb-section-lead mb-5">
+
+                    Keycloak's existing <strong>Create User If Unique</strong>
+                    behavior protects against username and email collisions.
+                    Our migration scenario introduces another question:
+                    <strong>does this identity actually exist and validate in the
+                        enterprise system of record?</strong>
+
+                </p>
+
+
+                <div class="fb-striped-grid">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+                            <tr>
+                                <th>Question</th>
+                                <th>Built-In Create User If Unique</th>
+                                <th>Our Extended Authenticator</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <th>
+                                    Is username unique?
+                                </th>
+                                <td>
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    Checked
+                                </td>
+                                <td>
+                                    Preserved through superclass behavior
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Is email unique?
+                                </th>
+                                <td>
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    Checked
+                                </td>
+                                <td>
+                                    Preserved through superclass behavior
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Does identity exist in external source?
+                                </th>
+                                <td>
+                                    Not part of this POC's built-in check
+                                </td>
+                                <td>
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    Calls /api/auth/validate
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Can external roles/groups be captured?
+                                </th>
+                                <td>
+                                    Not part of this custom requirement
+                                </td>
+                                <td>
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    Stores authentication-session notes
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Prevent orphaned migrated user?
+                                </th>
+                                <td>
+                                    No external validation
+                                </td>
+                                <td>
+                                    401 fails the flow
+                                </td>
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             EXTEND DON'T REPLACE
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Design Principle
+                </div>
+
+                <h2 class="fb-section-title">
+                    Extend the Built-In Behavior — Don't Reimplement It
+                </h2>
+
+                <p class="fb-section-lead mb-5">
+
+                    The custom provider does not attempt to reproduce Keycloak's
+                    existing Create User If Unique logic. It subclasses that
+                    authenticator, performs the additional enterprise validation,
+                    and then delegates back to the superclass.
+
+                </p>
+
+
+                <div class="fb-flow-shell">
+
+                    <div class="row g-3 align-items-center">
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-person-vcard fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    Brokered Identity
+                                </strong>
+
+                                <small class="text-muted">
+                                    Email / Username
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-puzzle-fill fs-1"
+                                   style="color:#7256d8;"></i>
+
+                                <strong class="mt-2">
+                                    Extended Authenticator
+                                </strong>
+
+                                <small class="text-muted">
+                                    Custom Validation First
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-cloud-arrow-up-fill fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    /api/auth/validate
+                                </strong>
+
+                                <small class="text-muted">
+                                    External System
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-arrow-return-right fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    super.authenticateImpl()
+                                </strong>
+
+                                <small class="text-muted">
+                                    Preserve Keycloak Logic
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-person-plus-fill fs-1 text-success"></i>
+
+                                <strong class="mt-2">
+                                    Keycloak User
+                                </strong>
+
+                                <small class="text-muted">
+                                    Created If Appropriate
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             PROJECT STRUCTURE
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Provider Project
+                </div>
+
+                <h2 class="fb-section-title">
+                    Custom Provider Structure
+                </h2>
+
+
+                <div class="row g-4 mt-3">
+
+                    <div class="col-lg-5">
+
+                        <div class="fb-card">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-label text-primary mb-3">
+                                    Module
+                                </div>
+
+                                <pre class="fb-code"><code>custom-providers/
+└── first-broker-login/
+    ├── pom.xml
+    │
+    └── src/main/
+        ├── java/
+        │   └── ...
+        │       ├── ExtendedCreateUserIfUniqueAuthenticator.java
+        │       └── ExtendedCreateUserIfUniqueAuthenticatorFactory.java
+        │
+        └── resources/
+            └── META-INF/
+                └── services/
+                    └── org.keycloak.authentication.AuthenticatorFactory</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-7">
+
+                        <div class="fb-striped-grid h-100">
+
+                            <div class="table-responsive">
+
+                                <table class="table table-striped align-middle">
+
+                                    <thead>
+                                    <tr>
+                                        <th>Component</th>
+                                        <th>Responsibility</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                    <tr>
+                                        <th>
+                                            ExtendedCreateUserIfUniqueAuthenticator
+                                        </th>
+                                        <td>
+                                            Extends Keycloak's
+                                            <code>CreateUserIfUniqueAuthenticator</code>
+                                            and inserts external validation before
+                                            delegating to the built-in logic.
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>
+                                            ExtendedCreateUserIfUniqueAuthenticatorFactory
+                                        </th>
+                                        <td>
+                                            Registers the custom provider with
+                                            provider ID
+                                            <code>rollingstone-create-user-if-unique-ext</code>.
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>
+                                            /api/auth/validate
+                                        </th>
+                                        <td>
+                                            Represents the external/pre-Keycloak
+                                            identity source used by this POC.
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>
+                                            Authentication Session Notes
+                                        </th>
+                                        <td>
+                                            Carries roles and groups forward for the
+                                            later Post-Login Flow authenticator.
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>
+                                            pom.xml
+                                        </th>
+                                        <td>
+                                            Builds the custom Keycloak provider JAR.
+                                        </td>
+                                    </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             AUTHENTICATOR LOGIC
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Runtime Logic
+                </div>
+
+                <h2 class="fb-section-title">
+                    What authenticateImpl() Adds
+                </h2>
+
+                <p class="fb-section-lead mb-5">
+
+                    The customization happens before Keycloak's normal user-creation
+                    logic. The external identity is validated first. Successful
+                    enrichment data is saved for later stages of the authentication
+                    process.
+
+                </p>
+
+
+                <div class="fb-protocol-shell">
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">01</div>
+
+                        <div class="fb-protocol-card">
+
+                            <div class="fb-label text-primary">
+                                Broker Context
+                            </div>
+
+                            <h4>
+                                Obtain the Incoming Identity
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The authenticator works with the identity information
+                                supplied through the brokered login, including the
+                                username/email needed by the external validation
+                                service.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">02</div>
+
+                        <div class="fb-protocol-card">
+
+                            <div class="fb-label text-primary">
+                                External Validation
+                            </div>
+
+                            <h4>
+                                POST to /api/auth/validate
+                            </h4>
+
+                            <pre class="fb-code"><code>POST /api/auth/validate
+
+{
+  "email": "brokered-user@example.com"
+}</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">03</div>
+
+                        <div class="fb-protocol-card">
+
+                            <div class="fb-label text-success">
+                                Successful Response
+                            </div>
+
+                            <h4>
+                                External Identity Is Recognized
+                            </h4>
+
+                            <pre class="fb-code"><code>{
+  "authenticated": true,
+  "roles": [
+    "customer"
+  ],
+  "groups": [
+    "preferred-customers"
+  ]
+}</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                The exact payload is determined by this POC's
+                                validation API. The important architectural point is
+                                that validation can also return context needed later
+                                in the authentication process.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">04</div>
+
+                        <div class="fb-protocol-card">
+
+                            <div class="fb-label"
+                                 style="color:#7256d8;">
+                                State Transfer
+                            </div>
+
+                            <h4>
+                                Store Roles and Groups as Authentication Notes
+                            </h4>
+
+                            <pre class="fb-code"><code>rollingstone.externalRoles
+rollingstone.externalGroups</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                These notes allow a later authenticator in the
+                                overall login process to consume information obtained
+                                during First Broker Login.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">05</div>
+
+                        <div class="fb-protocol-card">
+
+                            <div class="fb-label text-primary">
+                                Delegate
+                            </div>
+
+                            <h4>
+                                Return to Keycloak's Built-In Logic
+                            </h4>
+
+                            <pre class="fb-code"><code>super.authenticateImpl(context, serializedCtx, brokerContext);</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                Conceptually, this is the key to the design:
+                                custom enterprise validation is added without
+                                discarding the collision-avoidance behavior already
+                                supplied by Keycloak.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">06</div>
+
+                        <div class="fb-protocol-card">
+
+                            <div class="fb-label text-danger">
+                                Rejected Identity
+                            </div>
+
+                            <h4>
+                                A 401 Stops the Flow
+                            </h4>
+
+                            <p class="mb-0">
+
+                                If the external identity cannot be validated, this
+                                POC fails the authentication flow instead of allowing
+                                a new Keycloak user to be silently created.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SESSION NOTES
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Cross-Step State
+                </div>
+
+                <h2 class="fb-section-title">
+                    Why Store Roles and Groups as Authentication-Session Notes?
+                </h2>
+
+                <p class="fb-section-lead mb-5">
+
+                    First Broker Login is only one stage of the overall login
+                    lifecycle. Data discovered here may be needed by another
+                    authenticator later. Authentication-session notes provide the
+                    bridge between those stages in this POC.
+
+                </p>
+
+
+                <div class="fb-flow-shell">
+
+                    <div class="row g-3 align-items-center">
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-cloud-check-fill fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    Validation API
+                                </strong>
+
+                                <small class="text-muted">
+                                    Returns Roles + Groups
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-journal-code fs-1"
+                                   style="color:#7256d8;"></i>
+
+                                <strong class="mt-2">
+                                    Auth Session Notes
+                                </strong>
+
+                                <small class="text-muted">
+                                    Temporary Login State
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-person-plus-fill fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    User Creation
+                                </strong>
+
+                                <small class="text-muted">
+                                    Keycloak Continues
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-signpost-split-fill fs-1 text-success"></i>
+
+                                <strong class="mt-2">
+                                    Post-Login Flow
+                                </strong>
+
+                                <small class="text-muted">
+                                    Reads Stored Notes
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="row g-4 mt-4">
+
+                    <div class="col-lg-6">
+
+                        <div class="fb-card">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-label text-primary">
+                                    Roles
+                                </div>
+
+                                <h4 class="fb-card-title mt-2">
+                                    rollingstone.externalRoles
+                                </h4>
+
+                                <pre class="fb-code"><code>rollingstone.externalRoles</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Stores role information returned by the external
+                                    identity validation operation.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="fb-card">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-label"
+                                     style="color:#7256d8;">
+                                    Groups
+                                </div>
+
+                                <h4 class="fb-card-title mt-2">
+                                    rollingstone.externalGroups
+                                </h4>
+
+                                <pre class="fb-code"><code>havi.externalGroups</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Stores external group information so the
+                                    Post-Login Flow can use it in the next stage.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             BUILD / DEPLOY
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Provider Deployment
+                </div>
+
+                <h2 class="fb-section-title">
+                    Build the Custom Provider and Install It into Keycloak
+                </h2>
+
+
+                <div class="fb-flow-shell mt-5">
+
+                    <div class="row g-3 align-items-center">
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-filetype-java fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    Java Provider
+                                </strong>
+
+                                <small class="text-muted">
+                                    Extended Authenticator
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-hammer fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    mvn package
+                                </strong>
+
+                                <small class="text-muted">
+                                    Build JAR
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-folder2-open fs-1"
+                                   style="color:#7256d8;"></i>
+
+                                <strong class="mt-2">
+                                    providers/
+                                </strong>
+
+                                <small class="text-muted">
+                                    Copy JAR
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-gear-wide-connected fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    kc.sh build
+                                </strong>
+
+                                <small class="text-muted">
+                                    Rebuild Runtime
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-shield-check fs-1 text-success"></i>
+
+                                <strong class="mt-2">
+                                    Provider Available
+                                </strong>
+
+                                <small class="text-muted">
+                                    Configure Flow
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             KEYCLOAK CONFIGURATION ACCORDION
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Admin Console
+                </div>
+
+                <h2 class="fb-section-title">
+                    Configure the Custom First Broker Login Flow
+                </h2>
+
+                <p class="fb-section-lead mb-5">
+
+                    The provider must be installed first. Then create an editable
+                    copy of Keycloak's First Broker Login flow, substitute our
+                    extended authenticator, and tell the Identity Provider to use
+                    that flow.
+
+                </p>
+
+
+                <div class="accordion fb-accordion"
+                     id="configAccordion">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#config1">
+
+                                <span class="fb-accordion-number">01</span>
+
+                                Build the First Broker Login Provider
+
+                            </button>
+
+                        </h2>
+
+                        <div id="config1"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#configAccordion">
+
+                            <div class="accordion-body">
+
+<pre class="fb-code"><code>cd custom-providers/first-broker-login
+
+mvn clean package</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#config2">
+
+                                <span class="fb-accordion-number">02</span>
+
+                                Deploy the Provider into Keycloak
+
+                            </button>
+
+                        </h2>
+
+                        <div id="config2"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configAccordion">
+
+                            <div class="accordion-body">
+
+<pre class="fb-code"><code>cp target/*.jar \
+   $KEYCLOAK_HOME/providers/
+
+cd $KEYCLOAK_HOME
+
+bin/kc.sh build</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#config3">
+
+                                <span class="fb-accordion-number">03</span>
+
+                                Open Authentication → Flows
+
+                            </button>
+
+                        </h2>
+
+                        <div id="config3"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configAccordion">
+
+                            <div class="accordion-body">
+
+                                In the Keycloak Admin Console navigate to:
+
+                                <div class="p-3 bg-light border rounded-3 mt-3">
+
+                                    <strong>Authentication</strong>
+                                    →
+                                    <strong>Flows</strong>
+                                    →
+                                    <strong>First broker login</strong>
+
+                                </div>
+
+                                <p class="mt-3 mb-0">
+
+                                    This is the built-in flow that handles first-time
+                                    brokered identities.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#config4">
+
+                                <span class="fb-accordion-number">04</span>
+
+                                Duplicate First Broker Login
+
+                            </button>
+
+                        </h2>
+
+                        <div id="config4"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configAccordion">
+
+                            <div class="accordion-body">
+
+                                The original page specifies duplicating the built-in
+                                flow because the built-in flow is treated as
+                                read-only for this customization.
+
+                                Name the copy:
+
+                                <pre class="fb-code mt-3"><code>havi-first-broker-login</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#config5">
+
+                                <span class="fb-accordion-number">05</span>
+
+                                Replace Create User If Unique
+
+                            </button>
+
+                        </h2>
+
+                        <div id="config5"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configAccordion">
+
+                            <div class="accordion-body">
+
+                                Locate the:
+
+                                <pre class="fb-code mt-3"><code>Create User If Unique</code></pre>
+
+                                <p class="mt-3">
+
+                                    step in the duplicated flow and use the custom
+                                    provider:
+
+                                </p>
+
+                                <pre class="fb-code"><code>Havi Create User If Unique (Ext)</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Its provider ID is:
+
+                                    <code>
+                                        havi-create-user-if-unique-ext
+                                    </code>.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#config6">
+
+                                <span class="fb-accordion-number">06</span>
+
+                                Configure the Identity Provider Override
+
+                            </button>
+
+                        </h2>
+
+                        <div id="config6"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configAccordion">
+
+                            <div class="accordion-body">
+
+                                Navigate to the broker configuration:
+
+                                <div class="p-3 bg-light border rounded-3 mt-3">
+
+                                    <strong>Identity Providers</strong>
+                                    →
+                                    <strong>Your Broker</strong>
+                                    →
+                                    <strong>Advanced</strong>
+
+                                </div>
+
+                                <p class="mt-3">
+
+                                    Set:
+
+                                </p>
+
+                                <pre class="fb-code"><code>First Login Flow Override
+=
+havi-first-broker-login</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#config7">
+
+                                <span class="fb-accordion-number">07</span>
+
+                                Test with a Brand-New External Identity
+
+                            </button>
+
+                        </h2>
+
+                        <div id="config7"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configAccordion">
+
+                            <div class="accordion-body">
+
+                                Use an external identity that does not yet have the
+                                corresponding Keycloak user.
+
+                                <p class="mt-3">
+
+                                    During the first brokered login, watch the Spring
+                                    Boot application's logs and verify that the call
+                                    to:
+
+                                </p>
+
+                                <pre class="fb-code"><code>/api/auth/validate</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    occurs before the local Keycloak user is created.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             END TO END FLOW
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    End-to-End
+                </div>
+
+                <h2 class="fb-section-title">
+                    First Broker Login from Start to Finish
+                </h2>
+
+
+                <div class="fb-protocol-shell mt-5">
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">01</div>
+
+                        <div class="fb-protocol-card">
+
+                            <h4>
+                                User Chooses the External Identity Provider
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The browser begins authentication through the
+                                brokered Identity Provider.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">02</div>
+
+                        <div class="fb-protocol-card">
+
+                            <h4>
+                                External IdP Authenticates the User
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The external provider returns the authenticated
+                                identity to Keycloak through the configured broker
+                                protocol.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">03</div>
+
+                        <div class="fb-protocol-card">
+
+                            <h4>
+                                Keycloak Recognizes a First Broker Login
+                            </h4>
+
+                            <p class="mb-0">
+
+                                For the new brokered identity, Keycloak invokes the
+                                configured First Login Flow Override:
+
+                                <strong>
+                                    havi-first-broker-login
+                                </strong>.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">04</div>
+
+                        <div class="fb-protocol-card">
+
+                            <h4>
+                                Extended Create User If Unique Runs
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The custom provider receives the brokered identity
+                                before normal local-user creation proceeds.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">05</div>
+
+                        <div class="fb-protocol-card">
+
+                            <h4>
+                                Spring Boot Validation API Is Called
+                            </h4>
+
+                            <pre class="fb-code"><code>Keycloak
+   |
+   | POST email / username
+   v
+/api/auth/validate</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">06</div>
+
+                        <div class="fb-protocol-card">
+
+                            <h4>
+                                Identity Is Accepted or Rejected
+                            </h4>
+
+                            <div class="row g-3 mt-1">
+
+                                <div class="col-md-6">
+
+                                    <div class="alert alert-success mb-0">
+
+                                        <strong>200 + authenticated:true</strong>
+
+                                        <br>
+
+                                        Continue the login process.
+
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <div class="alert alert-danger mb-0">
+
+                                        <strong>401</strong>
+
+                                        <br>
+
+                                        Fail the flow.
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">07</div>
+
+                        <div class="fb-protocol-card">
+
+                            <h4>
+                                Roles and Groups Are Preserved
+                            </h4>
+
+                            <pre class="fb-code"><code>havi.externalRoles
+havi.externalGroups</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">08</div>
+
+                        <div class="fb-protocol-card">
+
+                            <h4>
+                                Built-In Create User Logic Continues
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The extension delegates back to Keycloak using
+                                <code>super.authenticateImpl()</code>, preserving the
+                                built-in uniqueness/collision behavior.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">09</div>
+
+                        <div class="fb-protocol-card">
+
+                            <div class="fb-label text-success">
+                                Result
+                            </div>
+
+                            <h4>
+                                Keycloak Creates the Validated User
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The local user is created only after the additional
+                                validation required by this POC has succeeded and the
+                                normal Keycloak flow permits creation.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="fb-protocol-row">
+
+                        <div class="fb-number">10</div>
+
+                        <div class="fb-protocol-card">
+
+                            <div class="fb-label"
+                                 style="color:#7256d8;">
+                                Next Episode
+                            </div>
+
+                            <h4>
+                                Post-Login Processing Can Consume the Notes
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The roles and groups captured earlier are available
+                                for the Post-Login Flow customization covered in the
+                                next training page.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             DECISION TABLE
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Decision Matrix
+                </div>
+
+                <h2 class="fb-section-title">
+                    What Happens for Different Validation Outcomes?
+                </h2>
+
+
+                <div class="fb-striped-grid mt-5">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+
+                            <tr>
+                                <th>External Result</th>
+                                <th>Meaning in This POC</th>
+                                <th>First Broker Login Action</th>
+                                <th>User Creation</th>
+                            </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+
+                                <th>
+                                    200 + authenticated:true
+                                </th>
+
+                                <td>
+                                    Identity validated
+                                </td>
+
+                                <td>
+                                    Save enrichment data and delegate to Keycloak
+                                </td>
+
+                                <td>
+                                    Can continue
+                                </td>
+
+                            </tr>
+
+                            <tr>
+
+                                <th>
+                                    401
+                                </th>
+
+                                <td>
+                                    Identity rejected
+                                </td>
+
+                                <td>
+                                    Fail authentication flow
+                                </td>
+
+                                <td>
+                                    Prevented
+                                </td>
+
+                            </tr>
+
+                            <tr>
+
+                                <th>
+                                    Username/email collision
+                                </th>
+
+                                <td>
+                                    Existing local identity conflict
+                                </td>
+
+                                <td>
+                                    Built-in Keycloak behavior remains responsible
+                                </td>
+
+                                <td>
+                                    Determined by Keycloak flow
+                                </td>
+
+                            </tr>
+
+                            <tr>
+
+                                <th>
+                                    Valid identity + roles/groups
+                                </th>
+
+                                <td>
+                                    External context available
+                                </td>
+
+                                <td>
+                                    Store as authentication-session notes
+                                </td>
+
+                                <td>
+                                    Data becomes available to later processing
+                                </td>
+
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             MIGRATION USE CASE
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Migration Pattern
+                </div>
+
+                <h2 class="fb-section-title">
+                    Why This Matters During Identity Migration
+                </h2>
+
+
+                <div class="row g-4 mt-3">
+
+                    <div class="col-lg-4">
+
+                        <div class="fb-card">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-icon fb-icon-yellow mb-3">
+                                    <i class="bi bi-database-fill"></i>
+                                </div>
+
+                                <h4 class="fb-card-title">
+                                    Legacy Identity Source
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Existing customer identities may still live in
+                                    a legacy database or another enterprise system
+                                    while Keycloak becomes the new identity layer.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="fb-card fb-card-accent">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-icon fb-icon-purple mb-3">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </div>
+
+                                <h4 class="fb-card-title">
+                                    Controlled Transition
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The external system can participate in the
+                                    decision before a corresponding local Keycloak
+                                    identity is created.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="fb-card">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-icon fb-icon-green mb-3">
+                                    <i class="bi bi-person-check-fill"></i>
+                                </div>
+
+                                <h4 class="fb-card-title">
+                                    Validated Provisioning
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    A successfully authenticated external user does
+                                    not automatically become a migrated local user;
+                                    the enterprise validation step must also succeed.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TROUBLESHOOTING
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Troubleshooting
+                </div>
+
+                <h2 class="fb-section-title">
+                    When the Custom First Broker Login Does Not Run
+                </h2>
+
+
+                <div class="accordion fb-accordion mt-5"
+                     id="troubleshootingAccordion">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble1">
+
+                                <span class="fb-accordion-number">01</span>
+
+                                Is the Custom Provider JAR Installed?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble1"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                <pre class="fb-code"><code>ls -l $KEYCLOAK_HOME/providers/</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Verify that the JAR generated by the
+                                    first-broker-login Maven module is actually
+                                    present in the Keycloak providers directory.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble2">
+
+                                <span class="fb-accordion-number">02</span>
+
+                                Was Keycloak Rebuilt After the Provider Was Added?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble2"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+<pre class="fb-code"><code>cd $KEYCLOAK_HOME
+
+bin/kc.sh build</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble3">
+
+                                <span class="fb-accordion-number">03</span>
+
+                                Does Havi Create User If Unique (Ext) Appear?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble3"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Confirm that the custom provider is available when
+                                editing the duplicated authentication flow.
+
+                                <p class="mt-3 mb-0">
+
+                                    If it is absent, investigate provider discovery,
+                                    the factory registration, build output and
+                                    Keycloak startup logs before troubleshooting the
+                                    external validation API.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble4">
+
+                                <span class="fb-accordion-number">04</span>
+
+                                Is the Broker Using the Correct First Login Flow?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble4"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Verify the Identity Provider configuration:
+
+                                <pre class="fb-code mt-3"><code>First Login Flow Override
+=
+havi-first-broker-login</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Creating the custom flow alone does not make the
+                                    broker use it.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble5">
+
+                                <span class="fb-accordion-number">05</span>
+
+                                Are You Testing with a Truly New Brokered Identity?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble5"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                This lesson is specifically about the
+                                <strong>First Broker Login</strong> path.
+
+                                <p class="mt-3 mb-0">
+
+                                    If the identity has already been processed and
+                                    linked, repeating login with the same account may
+                                    not exercise the same first-login path you are
+                                    trying to demonstrate.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble6">
+
+                                <span class="fb-accordion-number">06</span>
+
+                                Is /api/auth/validate Reachable from Keycloak?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble6"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Remember the caller is the
+                                <strong>Keycloak server-side provider</strong>.
+
+                                <p class="mt-3">
+
+                                    Validate network reachability, hostname
+                                    resolution, port, protocol and application
+                                    availability from the environment in which
+                                    Keycloak itself is running.
+
+                                </p>
+
+                                <div class="alert alert-primary mb-0">
+
+                                    Browser reachability to the validation service
+                                    does not prove that the Keycloak runtime can
+                                    reach it.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble7">
+
+                                <span class="fb-accordion-number">07</span>
+
+                                Are Roles and Groups Missing Later?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble7"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Verify that the successful validation path stores:
+
+                                <pre class="fb-code mt-3"><code>havi.externalRoles
+havi.externalGroups</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Then verify that the later Post-Login Flow
+                                    authenticator reads the same note names.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECURITY / DESIGN CONSIDERATIONS
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Enterprise Design Considerations
+                </div>
+
+                <h2 class="fb-section-title">
+                    The External Validation API Becomes Part of Authentication
+                </h2>
+
+                <p class="fb-section-lead mb-5">
+
+                    Once the authentication provider depends on an external
+                    validation endpoint, that dependency becomes part of the login
+                    path. It should therefore be treated as identity infrastructure,
+                    not as an ordinary convenience API.
+
+                </p>
+
+
+                <div class="row g-4">
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="fb-card">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-icon fb-icon-blue mb-3">
+                                    <i class="bi bi-shield-check"></i>
+                                </div>
+
+                                <h4 class="fb-card-title">
+                                    Secure the API
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Protect the validation service and define which
+                                    trusted component is permitted to invoke it.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="fb-card">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-icon fb-icon-yellow mb-3">
+                                    <i class="bi bi-stopwatch"></i>
+                                </div>
+
+                                <h4 class="fb-card-title">
+                                    Control Latency
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    A slow validation dependency can directly extend
+                                    the time required to complete the first login.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="fb-card">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-icon fb-icon-red mb-3">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                </div>
+
+                                <h4 class="fb-card-title">
+                                    Define Failure Behavior
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Distinguish an invalid identity from technical
+                                    failure of the external system.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="fb-card">
+
+                            <div class="fb-card-body">
+
+                                <div class="fb-icon fb-icon-green mb-3">
+                                    <i class="bi bi-journal-check"></i>
+                                </div>
+
+                                <h4 class="fb-card-title">
+                                    Audit Decisions
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Authentication, validation and provisioning
+                                    decisions should be observable without logging
+                                    unnecessary sensitive identity data.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             COMPLETE TRUST CHAIN
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-kicker mb-3">
+                    Complete Architecture
+                </div>
+
+                <h2 class="fb-section-title">
+                    Broker Authentication + Enterprise Validation + Local Provisioning
+                </h2>
+
+
+                <div class="fb-flow-shell mt-5">
+
+                    <div class="row g-3 align-items-center">
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-person-fill fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    User
+                                </strong>
+
+                                <small class="text-muted">
+                                    Starts Login
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-building-lock fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    External IdP
+                                </strong>
+
+                                <small class="text-muted">
+                                    Authenticates Identity
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-shield-lock-fill fs-1"
+                                   style="color:#7256d8;"></i>
+
+                                <strong class="mt-2">
+                                    Keycloak Broker
+                                </strong>
+
+                                <small class="text-muted">
+                                    First Login Flow
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-database-check fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    External Validation
+                                </strong>
+
+                                <small class="text-muted">
+                                    /api/auth/validate
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right fb-flow-arrow"></i>
+                        </div>
+
+                        <div class="col-lg">
+
+                            <div class="fb-flow-node">
+
+                                <i class="bi bi-person-check-fill fs-1 text-success"></i>
+
+                                <strong class="mt-2">
+                                    Keycloak User
+                                </strong>
+
+                                <small class="text-muted">
+                                    Controlled Creation
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TAKEAWAY
+             ========================================================= -->
+
+        <section class="fb-section">
+
+            <div class="container">
+
+                <div class="fb-takeaway">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg-2 text-center">
+
+                            <div class="fb-icon fb-icon-purple mx-auto"
+                                 style="width:90px;height:90px;font-size:2.6rem;">
+
+                                <i class="bi bi-diagram-3-fill"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-10">
+
+                            <div class="fb-label text-primary mb-2">
+                                Key Takeaway
+                            </div>
+
+                            <h2 class="fw-bold"
+                                style="color:#102b69;">
+
+                                Extend → Validate → Preserve Context → Delegate
+                            </h2>
+
+                            <p class="lead text-muted">
+
+                                The POC adds an enterprise identity check without
+                                throwing away Keycloak's existing First Broker Login
+                                behavior.
+
+                            </p>
+
+                            <p class="text-muted mb-0">
+
+                                <strong>ExtendedCreateUserIfUniqueAuthenticator</strong>
+                                validates the incoming brokered identity against
+                                <code>/api/auth/validate</code>. A successful result
+                                allows roles and groups to be stored as
+                                <code>havi.externalRoles</code> and
+                                <code>havi.externalGroups</code>, after which the
+                                authenticator delegates back to
+                                <code>super.authenticateImpl()</code>. A rejected
+                                identity fails the flow instead of creating an
+                                orphaned local account. The next Post-Login Flow can
+                                then consume the state preserved during this stage.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- NAVIGATION -->
+
+                <div class="d-flex flex-wrap justify-content-between gap-3
+                    mt-5 pt-4"
+                     style="border-top:1px solid rgba(255,255,255,.18);">
+
+                    <a href="/training/custom-client-authenticator"
+                       class="btn btn-outline-light btn-lg px-4">
+
+                        <i class="bi bi-arrow-left me-2"></i>
+
+                        Back: Custom Client Authenticator
+
+                    </a>
+
+
+                    <a href="/training/post-login-flow"
+                       class="btn btn-light btn-lg px-4"
+                       style="color:#12346f;">
+
+                        Next: Post-Login Flow
+
+                        <i class="bi bi-arrow-right ms-2"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

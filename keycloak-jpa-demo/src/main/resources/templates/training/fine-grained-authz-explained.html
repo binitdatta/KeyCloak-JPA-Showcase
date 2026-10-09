@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Fine-Grained Authorization — Explained — rollingstone JPA &amp; Keycloak Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/bright-blue.css}">
+    <style>
+        .authz-shot {
+            width: 100%;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .field-table th { width: 220px; white-space: nowrap; }
+        pre.authz-json {
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: #0b1229;
+            color: #d1d5db;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="landing-page">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<header class="landing-hero py-5">
+    <div class="container py-5">
+        <div class="landing-kicker">EPISODE D2 &middot; CONCEPTS &middot; SCREEN-BY-SCREEN</div>
+        <h1 class="landing-title mt-2">Fine-Grained Authorization, Explained<span>Every tab, every field, on the real admin console.</span></h1>
+        <p class="landing-subtitle mt-3">
+            Keycloak's Authorization Services let a resource server say "yes" or "no" per action,
+            per client — not just "is this token valid," but "is this client allowed to do
+            <em>this specific thing</em> to <em>this specific resource</em>." This page walks the
+            <code>capability-demo-client &rarr; Authorization</code> tab exactly as configured for
+            the <a href="/training/fine-grained-authz-demo">live demo</a>.
+        </p>
+    </div>
+</header>
+
+<section class="container py-5">
+
+    <!-- 1. Settings -->
+    <div class="card card-accent-top shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-1-circle text-primary me-2"></i>Authorization &rarr; Settings</h5>
+            <img class="authz-shot" th:src="@{/images/authorization-settings.png}" alt="Authorization Settings tab">
+            <table class="table table-sm field-table">
+                <tbody>
+                <tr>
+                    <th>Import</th>
+                    <td>Bulk-loads an entire authorization configuration (resources, scopes, policies,
+                        permissions) from a JSON file — the same shape the <strong>Export</strong> tab
+                        produces. Useful for moving this setup between realms or environments.</td>
+                </tr>
+                <tr>
+                    <th>Policy enforcement mode</th>
+                    <td><strong>Enforcing</strong> (used here): a request is denied unless an explicit
+                        Permission grants it. <strong>Permissive</strong>: requests are allowed even with
+                        no matching permission — decisions are still computed and logged, just not
+                        enforced. <strong>Disabled</strong>: authorization services are switched off for
+                        this client entirely.</td>
+                </tr>
+                <tr>
+                    <th>Decision strategy</th>
+                    <td>How this client's <em>overall</em> authorization decision is reached when several
+                        permissions apply. <strong>Unanimous</strong> (used here): every applicable
+                        permission must vote Permit. <strong>Affirmative</strong>: one Permit vote is
+                        enough. This is the client-wide default; each individual Permission can override
+                        it with its own strategy (see Permissions tab below).</td>
+                </tr>
+                <tr>
+                    <th>Remote resource management</th>
+                    <td><strong>On</strong> (used here) lets a resource server register and manage
+                        resources dynamically at runtime via Keycloak's UMA Protection API, instead of
+                        only through this admin console. Not used by this lab's demo — resources are
+                        defined statically here — but left on since it's the client default.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 2. Resources -->
+    <div class="card card-accent-top shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-2-circle text-primary me-2"></i>Authorization &rarr; Resources</h5>
+            <img class="authz-shot" th:src="@{/images/authorization-resources.png}" alt="Authorization Resources tab">
+            <p>Two resources exist: the client's built-in <code>Default Resource</code> (matches
+                everything, <code>/*</code>) and the one this episode actually uses, <code>Order Resource</code>.</p>
+            <table class="table table-sm field-table">
+                <tbody>
+                <tr>
+                    <th>Name</th>
+                    <td>The unique identifier used everywhere else — Policies, Permissions, and the
+                        <code>permission=Order Resource#order:view</code> parameter sent to Keycloak's
+                        token endpoint.</td>
+                </tr>
+                <tr>
+                    <th>Display name</th>
+                    <td>Human-friendly label shown in the console UI only; has no effect on evaluation.</td>
+                </tr>
+                <tr>
+                    <th>Type</th>
+                    <td>An arbitrary URN used to group resources of the same "shape" —
+                        <code>urn:capability-demo-client:resources:order</code>. A Permission can target
+                        a resource <em>type</em> instead of one named resource, so every future resource
+                        of that type automatically inherits the same policy without a new permission
+                        being created for each one.</td>
+                </tr>
+                <tr>
+                    <th>Owner</th>
+                    <td>Which entity owns this resource — here, the client itself
+                        (<code>capability-demo-client</code>). UMA also supports user-owned resources,
+                        where an individual end user owns and can share access to their own data.</td>
+                </tr>
+                <tr>
+                    <th>URIs</th>
+                    <td><code>/api/orders/*</code> — descriptive metadata mapping this resource to real
+                        endpoint paths. It documents intent; Keycloak's Policy Enforcer (a servlet
+                        filter/adapter, not used by this lab's demo) is what would actually intercept
+                        matching HTTP requests and check them against this resource automatically.</td>
+                </tr>
+                <tr>
+                    <th>Create permission</th>
+                    <td>Shortcut link that jumps straight to a pre-filled "Create permission" form scoped
+                        to this resource, skipping the separate Permissions tab.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 3. Scopes -->
+    <div class="card card-accent-top shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-3-circle text-primary me-2"></i>Authorization &rarr; Scopes</h5>
+            <img class="authz-shot" th:src="@{/images/authorization-scopes.png}" alt="Authorization Scopes tab">
+            <table class="table table-sm field-table">
+                <tbody>
+                <tr>
+                    <th>Name</th>
+                    <td>The scope identifier — <code>order:view</code>, <code>order:approve</code>. This
+                        is the exact string that appears after the <code>#</code> in the
+                        <code>permission=Order Resource#order:view</code> request parameter, and inside
+                        the granted RPT's <code>authorization.permissions[].scopes</code> array.</td>
+                </tr>
+                <tr>
+                    <th>Display name</th>
+                    <td>Left the same as Name here; purely cosmetic in the console.</td>
+                </tr>
+                <tr>
+                    <th>Create permission</th>
+                    <td>Same shortcut as on Resources — pre-fills a new scope-based permission for this
+                        specific scope.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 4. Policies -->
+    <div class="card card-accent-top shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-4-circle text-primary me-2"></i>Authorization &rarr; Policies</h5>
+            <img class="authz-shot" th:src="@{/images/authorization-policies.png}" alt="Authorization Policies tab">
+            <table class="table table-sm field-table">
+                <tbody>
+                <tr>
+                    <th>Name</th>
+                    <td><code>Order Viewer Policy</code> / <code>Order Approver Policy</code> — the rule's
+                        identifier, referenced by whichever Permission(s) use it.</td>
+                </tr>
+                <tr>
+                    <th>Type</th>
+                    <td><strong>Role</strong> for both — evaluates true if the requesting identity holds
+                        a given realm or client role (<code>order-viewer</code> / <code>order-approver</code>
+                        respectively). Keycloak also offers User, Group, Client, Time, JS, and Aggregated
+                        policy types for more complex conditions.</td>
+                </tr>
+                <tr>
+                    <th>Dependent permission</th>
+                    <td>Reverse-reference showing which Permission consumes this Policy — confirms the
+                        wiring: <code>Order Viewer Policy</code> &rarr; <code>View Orders Permission</code>,
+                        <code>Order Approver Policy</code> &rarr; <code>Approve Orders Permission</code>.</td>
+                </tr>
+                <tr>
+                    <th>Description</th>
+                    <td>Free-text note; not evaluated, documentation only.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 5. Permissions -->
+    <div class="card card-accent-top shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-5-circle text-primary me-2"></i>Authorization &rarr; Permissions</h5>
+            <img class="authz-shot" th:src="@{/images/authorization-permissions.png}" alt="Authorization Permissions tab">
+            <table class="table table-sm field-table">
+                <tbody>
+                <tr>
+                    <th>Name</th>
+                    <td><code>View Orders Permission</code> / <code>Approve Orders Permission</code> — the
+                        binding rule itself: this is what Keycloak's decision engine actually evaluates
+                        when a UMA ticket is requested.</td>
+                </tr>
+                <tr>
+                    <th>Type</th>
+                    <td><strong>Scope-Based</strong> for both — the permission applies to one resource
+                        plus one specific scope on it (<code>Order Resource</code> + <code>order:view</code>,
+                        and <code>Order Resource</code> + <code>order:approve</code>). Keycloak also
+                        supports Resource-Based permissions, which cover every scope on a resource at once.</td>
+                </tr>
+                <tr>
+                    <th>Associated policy</th>
+                    <td>Which Policy (or policies) must pass for this permission to grant. Each permission
+                        here has exactly one: its own role policy. If more than one policy were attached,
+                        the permission's own Decision Strategy setting (Unanimous/Affirmative, defaulting
+                        from the Settings tab) would decide how their votes combine.</td>
+                </tr>
+                <tr>
+                    <th>Description</th>
+                    <td>Free-text note; not evaluated.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 6. Evaluate -->
+    <div class="card card-accent-top shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-6-circle text-primary me-2"></i>Authorization &rarr; Evaluate</h5>
+            <img class="authz-shot" th:src="@{/images/authorization-evaluate.png}" alt="Authorization Evaluate tab">
+            <p>A built-in dry-run sandbox — runs the real decision engine without needing a live token
+                request, so misconfiguration is caught here before it ever reaches application code.</p>
+            <table class="table table-sm field-table">
+                <tbody>
+                <tr>
+                    <th>Client</th>
+                    <td>Which client's authorization settings to simulate under — pinned to
+                        <code>capability-demo-client</code> here.</td>
+                </tr>
+                <tr>
+                    <th>Users</th>
+                    <td>Optional: pick a real user to simulate as, and their actual role/group assignments
+                        are used automatically. Left empty for this test, since the real flow uses a
+                        <em>service account</em>, not a logged-in user.</td>
+                </tr>
+                <tr>
+                    <th>Roles</th>
+                    <td>Manually hand-pick which roles to simulate holding — used instead of Users when
+                        testing a service-account scenario. Set to <code>order-viewer</code> only, matching
+                        <code>capability-demo-client</code>'s actual service-account role assignment.</td>
+                </tr>
+                <tr>
+                    <th>Apply to Resource Type</th>
+                    <td>When On, evaluation runs against every resource sharing a given Type (see Resources
+                        tab) rather than one named resource instance. Off here — this test targets the
+                        named <code>Order Resource</code> directly.</td>
+                </tr>
+                <tr>
+                    <th>Resources and Scopes</th>
+                    <td>The specific resource/scope pairs to test in this run — queued here as
+                        <code>Order Resource</code> / <code>order:view</code> and <code>Order Resource</code>
+                        / <code>order:approve</code>, so one Evaluate click checks both outcomes at once.</td>
+                </tr>
+                <tr>
+                    <th>Contextual Information</th>
+                    <td>Collapsible section for injecting extra request-context attributes (time, custom
+                        claims) that a Time or JS policy could condition on. Not needed for the Role
+                        policies used in this episode.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 7. Export -->
+    <div class="card card-accent-top shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-7-circle text-primary me-2"></i>Authorization &rarr; Export</h5>
+            <img class="authz-shot" th:src="@{/images/authorization-export.png}" alt="Authorization Export tab">
+            <p class="mb-2">
+                The full authorization configuration as JSON — <code>policyEnforcementMode</code>,
+                <code>allowRemoteResourceManagement</code>, and the complete <code>resources</code> /
+                <code>policies</code> / <code>permissions</code> arrays. This is exactly the file format
+                the <strong>Import</strong> button on the Settings tab consumes, so this whole setup can
+                be version-controlled and re-applied to another realm with one click.
+            </p>
+        </div>
+    </div>
+
+    <!-- 8. UMA ticket flow recap -->
+    <div class="card card-accent-top shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-play-circle text-primary me-2"></i>What the live demo does with all of this</h5>
+            <p>
+                The <a href="/training/fine-grained-authz-demo">live demo</a> asks Keycloak's token
+                endpoint directly for permission to use a scope, via the
+                <code>urn:ietf:params:oauth:grant-type:uma-ticket</code> grant:
+            </p>
+            <pre class="authz-json">POST /realms/jpa-demo-realm/protocol/openid-connect/token
+grant_type=urn:ietf:params:oauth:grant-type:uma-ticket
+client_id=capability-demo-client
+client_secret=***
+audience=capability-demo-client
+permission=Order Resource#order:view</pre>
+            <p class="mb-0">
+                Keycloak evaluates every Permission that matches the requested resource/scope pair,
+                using the requesting client's own service-account roles. If every required Policy votes
+                yes, Keycloak issues a fresh access token — a <strong>Requesting Party Token (RPT)</strong>
+                — whose <code>authorization</code> claim lists exactly which permissions were granted. If
+                any required Policy votes no, Keycloak returns <code>403 Forbidden</code> with
+                <code>{"error":"access_denied"}</code> — no token at all. This is the identical decision
+                logic the Evaluate tab runs in its sandbox, now proven over the network with real client
+                credentials.
+            </p>
+        </div>
+    </div>
+
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

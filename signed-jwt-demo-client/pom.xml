@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.9</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.rollingstone</groupId>
+    <artifactId>signed-jwt-demo-client</artifactId>
+    <version>1.0.0</version>
+    <name>signed-jwt-demo-client</name>
+    <description>
+        Standalone Spring Boot CLI app that demonstrates Keycloak's "Signed Jwt"
+        (private_key_jwt) client authenticator: builds and RS256-signs a client
+        assertion JWT with a locally held RSA private key, exchanges it for an
+        access token via the client_credentials grant, decodes the resulting
+        token, and calls Keycloak's own userinfo endpoint with it to prove the
+        token actually works. Runs once and exits — no server component of its
+        own, no other running service required (unlike ciba-approval-service).
+    </description>
+
+    <properties>
+        <java.version>21</java.version>
+        <nimbus-jose-jwt.version>9.41.1</nimbus-jose-jwt.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <!-- RestClient / RestTemplate for the token + userinfo HTTP calls -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!-- Nimbus JOSE+JWT: builds and RS256-signs the client assertion JWT.
+             Deliberately NOT depending on any keycloak-* artifact here (unlike
+             the CIBA SPI modules) — this app is a plain OAuth2/OIDC client and
+             the JWT assertion format is spec-defined (RFC 7523), not
+             Keycloak-specific, so a general-purpose JOSE library is the right
+             tool and keeps this module free of Keycloak's server classpath. -->
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>${nimbus-jose-jwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

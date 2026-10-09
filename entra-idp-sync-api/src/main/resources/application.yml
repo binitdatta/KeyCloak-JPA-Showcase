@@ -1,0 +1,52 @@
+server:
+  port: ${API_PORT:8082}
+
+spring:
+  application:
+    name: entra-idp-sync-api
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:ecommerce_demo}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:localroot}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    # validate (not update/create) -- the schema already exists (entra-sync-schema.sql),
+    # this just fails fast at startup if the entity mappings ever drift from the real DDL.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # NOTE: this MUST equal the exact "iss" claim Keycloak actually puts in its
+          # tokens, not whichever port you *call* to get one. This realm's hostname/
+          # frontend-URL setting is pinned to the :8443 HTTPS listener (added for the
+          # X.509 mTLS episode), so every token -- from any client, on any port -- carries
+          # iss=https://localhost:8443/realms/jpa-demo-realm. Confirmed from a live
+          # JwtDecoderInitializationException log, not assumed.
+          #
+          # Because :8443 uses a self-signed dev certificate, this app's JVM must also be
+          # given a truststore that trusts it (see README.md section 4), or JWK set
+          # retrieval over HTTPS will fail at startup/first-request.
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:https://localhost:8443/realms/jpa-demo-realm}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    com.rollingstone.idpsync: INFO

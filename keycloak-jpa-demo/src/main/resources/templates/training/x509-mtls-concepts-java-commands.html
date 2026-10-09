@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>X.509 mTLS Client Authentication — Concepts, Java & Commands</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"><link rel="stylesheet" th:href="@{/css/bright-blue.css}">
+<style>:root{--p:rgba(255,255,255,.97);--t:#17243d;--b:#dbe6f2;--c:#061536}html{background:#06142f}body{min-height:100vh;color:#fff;background:radial-gradient(circle at 92% 12%,rgba(39,103,246,.92) 0,rgba(39,103,246,.44) 24%,transparent 44%),radial-gradient(circle at 82% 54%,rgba(24,112,244,.44) 0,transparent 37%),linear-gradient(112deg,#06142f 0%,#0b2150 34%,#173a91 66%,#315df1 100%);background-attachment:fixed}.hero{padding:4rem 0 5rem}.sec{padding:5rem 0;border-top:1px solid rgba(255,255,255,.09)}.kick{color:#45d6ff;font-size:.76rem;font-weight:800;letter-spacing:.19em;text-transform:uppercase}.title{font-size:clamp(3rem,5vw,5rem);font-weight:800;line-height:1;letter-spacing:-.045em}.st{font-size:clamp(2rem,3vw,3.1rem);font-weight:800}.leadx{max-width:1000px;color:rgba(255,255,255,.82);font-size:1.08rem;line-height:1.8}.cardx{height:100%;color:var(--t);background:var(--p);border:1px solid var(--b);border-radius:20px;box-shadow:0 18px 45px rgba(1,15,45,.16)}.cardx .body{padding:1.7rem}.cardx h4{color:#102b69;font-weight:800}.cardx p,.cardx li{color:#4f5d70}.code{padding:1.2rem 1.35rem;color:#dce7f5;background:var(--c);border:1px solid rgba(66,203,255,.24);border-radius:12px;font-size:.82rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}.grid{overflow:hidden;background:var(--p);border:1px solid var(--b);border-radius:20px;box-shadow:0 18px 42px rgba(0,0,0,.14)}.grid table{margin:0;--bs-table-bg:transparent;--bs-table-color:#27344a}.grid thead th{padding:1.1rem;color:#fff;background:#0b285f}.grid tbody td,.grid tbody th{padding:1rem}.grid tbody tr:nth-child(even){background:#f1f6fc}.acc{border-radius:20px;overflow:hidden}.acc .accordion-button{font-weight:700}.num{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;margin-right:.8rem;color:#fff;background:linear-gradient(135deg,#1765e8,#18c8f4);border-radius:50%}.arch{padding:1.6rem;background:rgba(7,30,77,.72);border:1px solid #1bc9f5;border-radius:21px}.node{padding:1rem;text-align:center;border:1px solid #20c9f4;border-radius:16px;background:rgba(255,255,255,.055)}.arr{text-align:center;color:#1ed0fa;font-size:1.6rem}.take{padding:2.5rem;color:#17243d;background:var(--p);border:1px solid #36cef5;border-radius:22px}</style></head><body><div th:replace="~{fragments/navbar :: navbar}"></div>
+<header class="hero"><div class="container"><div class="row g-5 align-items-center"><div class="col-lg-6"><div class="kick mb-3">Episode B • X.509 • Mutual TLS</div><h1 class="title">mTLS <span style="color:#22c8f3">Client Authentication</span></h1><p class="leadx mt-4"><strong>Mutual TLS (mTLS)</strong> is TLS in which both endpoints authenticate with certificates. Keycloak proves its server identity to the Java client, and the Java client presents its own X.509 certificate to Keycloak during the TLS handshake.</p><p class="leadx">In this POC the client certificate is the Keycloak client credential. The token request contains no <code>client_secret</code> and no <code>client_assertion</code>.</p></div><div class="col-lg-6"><div class="arch"><div class="node"><i class="bi bi-box fs-2 text-info"></i><h5>Spring Boot Client</h5><small>client cert + private key</small></div><div class="arr">⇅</div><div class="node"><strong>mTLS Handshake</strong><br><small>two-way certificate authentication</small></div><div class="arr">⇅</div><div class="node"><i class="bi bi-shield-check fs-2 text-info"></i><h5>Keycloak :8443</h5><small>server cert + client certificate validation</small></div></div></div></div></div></header>
+<section class="sec"><div class="container"><div class="kick">Concepts First</div><h2 class="st">TLS vs. mTLS</h2><div class="grid mt-4"><table class="table table-striped"><thead><tr><th>Concept</th><th>Normal TLS</th><th>mTLS</th></tr></thead><tbody><tr><th>Server certificate</th><td>Yes</td><td>Yes</td></tr><tr><th>Client validates server</th><td>Yes</td><td>Yes</td></tr><tr><th>Client certificate</th><td>Normally no</td><td><strong>Yes</strong></td></tr><tr><th>Server validates client</th><td>Normally no</td><td><strong>Yes</strong></td></tr><tr><th>This lab</th><td>Other flows can remain on :8080</td><td>X.509 token exchange uses HTTPS :8443</td></tr></tbody></table></div></div></section>
+<section class="sec"><div class="container"><div class="kick">Vocabulary</div><h2 class="st">Know These Before the Commands</h2><div class="row g-4 mt-4"><div class="col-lg-4"><div class="cardx"><div class="body"><h4>Certificate Authority</h4><p>The lab CA signs the Keycloak server certificate and the client certificate. Its certificate becomes the trust anchor.</p></div></div></div><div class="col-lg-4"><div class="cardx"><div class="body"><h4>X.509 Certificate</h4><p>Binds a public key to an identity. The client certificate uses <code>CN=x509-cert-client</code>.</p></div></div></div><div class="col-lg-4"><div class="cardx"><div class="body"><h4>Private Key</h4><p>Stays with its owner and proves possession cryptographically. It never needs to cross the network.</p></div></div></div><div class="col-lg-4"><div class="cardx"><div class="body"><h4>Keystore</h4><p>The client's PKCS12 contains its private key and certificate so Java can present them during TLS.</p></div></div></div><div class="col-lg-4"><div class="cardx"><div class="body"><h4>Truststore</h4><p>Contains trusted CA certificates. It answers “which certificate issuers do I trust?”</p></div></div></div><div class="col-lg-4"><div class="cardx"><div class="body"><h4>Subject DN</h4><p>Identifies the certificate subject. Keycloak's X.509 authenticator matches it to <code>CN=x509-cert-client</code>.</p></div></div></div></div></div></section>
+<section class="sec"><div class="container"><div class="kick">Actual application.yml</div><h2 class="st">X.509 Demo Configuration</h2><p class="leadx">These are the actual properties used by the uploaded Java implementation.</p><pre class="code"><code>x509-demo:
+  client-id: x509-cert-client
+  keystore-path: mtls/x509-cert-client-keystore.p12
+  keystore-password: changeit
+  key-alias: x509-cert-client
+  truststore-path: mtls/truststore.p12
+  truststore-password: changeit
+  token-endpoint: https://localhost:8443/realms/jpa-demo-realm/protocol/openid-connect/token
+  userinfo-endpoint: https://localhost:8443/realms/jpa-demo-realm/protocol/openid-connect/userinfo</code></pre></div></section>
+<section class="sec"><div class="container"><div class="kick">Real Java</div><h2 class="st">Build the SSLContext</h2><p class="leadx">The KeyManager supplies client identity material. The TrustManager supplies the CA trust used to validate Keycloak.</p><pre class="code"><code>public SSLContext buildSslContext() throws Exception {
+    KeyStore keyStore = KeyStore.getInstance("PKCS12");
+    try (FileInputStream fis = new FileInputStream(keystorePath)) {
+        keyStore.load(fis, keystorePassword.toCharArray());
+    }
+    KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    kmf.init(keyStore, keystorePassword.toCharArray());
+
+    KeyStore trustStore = KeyStore.getInstance("PKCS12");
+    try (FileInputStream fis = new FileInputStream(truststorePath)) {
+        trustStore.load(fis, truststorePassword.toCharArray());
+    }
+    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    tmf.init(trustStore);
+
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+    sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+    return sslContext;
+}</code></pre></div></section>
+<section class="sec"><div class="container"><div class="kick">Real Java</div><h2 class="st">Create the mTLS RestClient</h2><pre class="code"><code>HttpClient httpClient = HttpClient.newBuilder()
+        .sslContext(mtlsContextFactory.buildSslContext())
+        .connectTimeout(Duration.ofSeconds(5))
+        .build();
+
+RestClient mtlsRestClient = RestClient.builder()
+        .requestFactory(new JdkClientHttpRequestFactory(httpClient))
+        .build();</code></pre></div></section>
+<section class="sec"><div class="container"><div class="kick">Real Java</div><h2 class="st">Token Request: Notice What Is Missing</h2><pre class="code"><code>MultiValueMap&lt;String, String&gt; form = new LinkedMultiValueMap&lt;&gt;();
+form.add("grant_type", "client_credentials");
+form.add("client_id", clientId);
+form.add("scope", "openid");
+
+Map&lt;String, Object&gt; tokenResponse = mtlsRestClient.post()
+        .uri(tokenEndpoint)
+        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+        .body(form)
+        .retrieve()
+        .body(Map.class);</code></pre><div class="alert alert-info mt-4"><strong>No client_secret. No client_assertion.</strong> The X.509 certificate was already presented during the TLS handshake.</div></div></section>
+<section class="sec"><div class="container"><div class="kick">Real Java</div><h2 class="st">Use the Token at UserInfo</h2><pre class="code"><code>String userinfo = mtlsRestClient.get()
+        .uri(userinfoEndpoint)
+        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+        .retrieve()
+        .body(String.class);</code></pre><p class="leadx mt-4">Both endpoints are intentionally on <code>:8443</code> so the issuer host/port remains consistent.</p></div></section>
+<section class="sec"><div class="container"><div class="kick">Commands Explained</div><h2 class="st">Certificate Generation, Concept by Concept</h2><div class="accordion acc mt-4" id="cmds">
+<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#a1"><span class="num">1</span>Create the Lab CA</button></h2><div id="a1" class="accordion-collapse collapse show" data-bs-parent="#cmds"><div class="accordion-body"><p>The CA is the trust anchor. Its private key signs certificates; its certificate is imported as trusted CA material.</p><pre class="code"><code>openssl genrsa -out ca-key.pem 4096
+openssl req -x509 -new -nodes -key ca-key.pem -sha256 -days 3650 \
+  -out ca-cert.pem -subj "/CN=jpa-demo-lab-ca"</code></pre></div></div></div>
+<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#a2"><span class="num">2</span>Create Keycloak's Server Certificate</button></h2><div id="a2" class="accordion-collapse collapse" data-bs-parent="#cmds"><div class="accordion-body"><p>The server certificate lets the Java client authenticate Keycloak. The SAN supports hostname verification for localhost and 127.0.0.1.</p><pre class="code"><code>openssl genrsa -out kc-server-key.pem 2048
+openssl req -new -key kc-server-key.pem -out kc-server.csr -subj "/CN=localhost"
+openssl x509 -req -in kc-server.csr -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial \
+  -out kc-server-cert.pem -days 825 -sha256 \
+  -extfile &lt;(printf "subjectAltName=DNS:localhost,IP:127.0.0.1")</code></pre></div></div></div>
+<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#a3"><span class="num">3</span>Create the Client Certificate</button></h2><div id="a3" class="accordion-collapse collapse" data-bs-parent="#cmds"><div class="accordion-body"><p>This is the identity presented by the Java client. The CN intentionally matches the Keycloak client configuration.</p><pre class="code"><code>openssl genrsa -out x509-cert-client-key.pem 2048
+openssl req -new -key x509-cert-client-key.pem -out x509-cert-client.csr -subj "/CN=x509-cert-client"
+openssl x509 -req -in x509-cert-client.csr -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial \
+  -out x509-cert-client-cert.pem -days 825 -sha256</code></pre></div></div></div>
+<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#a4"><span class="num">4</span>Package Client Identity as PKCS12</button></h2><div id="a4" class="accordion-collapse collapse" data-bs-parent="#cmds"><div class="accordion-body"><p>Java needs the client private key and certificate available through a keystore.</p><pre class="code"><code>openssl pkcs12 -export -inkey x509-cert-client-key.pem -in x509-cert-client-cert.pem \
+  -certfile ca-cert.pem -name x509-cert-client \
+  -out x509-cert-client-keystore.p12 -passout pass:changeit</code></pre></div></div></div>
+<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#a5"><span class="num">5</span>Create the CA Truststore</button></h2><div id="a5" class="accordion-collapse collapse" data-bs-parent="#cmds"><div class="accordion-body"><p>The truststore contains the CA certificate, not the client's private identity key.</p><pre class="code"><code>keytool -importcert -alias jpa-demo-lab-ca -file ca-cert.pem \
+  -keystore truststore.p12 -storetype PKCS12 -storepass changeit -noprompt</code></pre></div></div></div>
+</div></div></section>
+<section class="sec"><div class="container"><div class="kick">Keycloak Configuration</div><h2 class="st">Configure the OAuth Client</h2><div class="grid mt-4"><table class="table table-striped"><thead><tr><th>Setting</th><th>Value</th><th>Purpose</th></tr></thead><tbody><tr><th>Client ID</th><td><code>x509-cert-client</code></td><td>Machine identity</td></tr><tr><th>Client authentication</th><td>On</td><td>Require client authentication</td></tr><tr><th>Standard flow</th><td>Off</td><td>No browser login</td></tr><tr><th>Direct access grants</th><td>Off</td><td>No direct password grant</td></tr><tr><th>Service account roles</th><td>On</td><td>Enable client_credentials</td></tr><tr><th>Client Authenticator</th><td>X509 Certificate</td><td>Use TLS client certificate</td></tr><tr><th>Allow regex pattern comparison</th><td>On</td><td>Enable Subject DN pattern match</td></tr><tr><th>Subject DN</th><td><code>CN=x509-cert-client</code></td><td>Match the generated client certificate</td></tr></tbody></table></div></div></section>
+<section class="sec"><div class="container"><div class="kick">Keycloak HTTPS</div><h2 class="st">Start the mTLS-Capable Listener</h2><pre class="code"><code>cd /Users/binitdatta/KeyCloak_Home/keycloak-26.2.5
+bin/kc.sh start-dev \
+  --spi-ciba-auth-channel-ciba-http-auth-channel-http-authentication-channel-uri=http://localhost:8092/ciba/notify \
+  --https-certificate-file=/Users/binitdatta/Development/KeyCloak-JPA-Showcase/keycloak-jpa-demo/mtls/kc-server-cert.pem \
+  --https-certificate-key-file=/Users/binitdatta/Development/KeyCloak-JPA-Showcase/keycloak-jpa-demo/mtls/kc-server-key.pem \
+  --https-client-auth=request \
+  --https-trust-store-file=/Users/binitdatta/Development/KeyCloak-JPA-Showcase/keycloak-jpa-demo/mtls/truststore.p12 \
+  --https-trust-store-password=changeit</code></pre><div class="grid mt-4"><table class="table table-striped"><thead><tr><th>Flag</th><th>Meaning</th></tr></thead><tbody><tr><th>https-certificate-file</th><td>Keycloak's server certificate</td></tr><tr><th>https-certificate-key-file</th><td>Server private key</td></tr><tr><th>https-client-auth=request</th><td>Ask for client certificate without requiring one for every HTTPS connection</td></tr><tr><th>https-trust-store-file</th><td>CA trust used to validate client certificates</td></tr><tr><th>CIBA flag</th><td>Unrelated to X.509; retained from the existing project startup command</td></tr></tbody></table></div></div></section>
+<section class="sec"><div class="container"><div class="kick">Real Controller</div><h2 class="st">MVC Entry Point</h2><pre class="code"><code>@Controller
+public class X509UiController {
+    private final X509DemoService x509DemoService;
+
+    public X509UiController(X509DemoService x509DemoService) {
+        this.x509DemoService = x509DemoService;
+    }
+
+    @GetMapping("/training/x509-certificate-demo")
+    public String show() {
+        return "training/x509-certificate-demo";
+    }
+
+    @PostMapping("/training/x509-certificate-demo/run")
+    public String run(Model model) {
+        X509RunResult result = x509DemoService.run();
+        model.addAttribute("result", result);
+        return "training/x509-certificate-demo";
+    }
+}</code></pre></div></section>
+<section class="sec"><div class="container"><div class="kick">Troubleshooting</div><h2 class="st">Failures Map to Trust Boundaries</h2><div class="grid mt-4"><table class="table table-striped"><thead><tr><th>Symptom</th><th>Inspect</th></tr></thead><tbody><tr><th>invalid_client</th><td>Keycloak truststore, presented client certificate, Subject DN configuration</td></tr><tr><th>401 at UserInfo after token success</th><td>Ensure token and UserInfo endpoints both use the same <code>https://localhost:8443</code> issuer</td></tr><tr><th>Subject DN mismatch</th><td>Certificate's full DN versus Keycloak's configured regex</td></tr><tr><th>Other HTTPS clients unexpectedly fail</th><td>Confirm <code>--https-client-auth=request</code>, not <code>required</code></td></tr></tbody></table></div></div></section>
+<section class="sec"><div class="container"><div class="take"><div class="kick text-primary">Key Takeaway</div><h2 class="fw-bold" style="color:#102b69">mTLS Moves Client Identity Proof into the TLS Handshake</h2><p class="text-muted mb-0">The keystore gives the Java client its certificate and private key; the truststore lets it trust Keycloak. Keycloak's HTTPS listener requests and validates the client certificate. The X.509 client authenticator maps that certificate identity to <code>x509-cert-client</code>. Only then does the application-level <code>client_credentials</code> token request proceed—with no client secret and no signed JWT assertion in the form body.</p></div></div></section>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script></body></html>

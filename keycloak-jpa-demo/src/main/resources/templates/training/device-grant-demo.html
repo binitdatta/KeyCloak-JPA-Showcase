@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Device Authorization Grant — Live Demo — rollingstone JPA &amp; Keycloak Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/bright-blue.css}">
+</head>
+<body class="landing-page">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<header class="landing-hero py-5">
+    <div class="container py-5">
+        <div class="landing-kicker">EPISODE D &middot; DEVICE AUTHORIZATION GRANT &middot; RFC 8628</div>
+        <h1 class="landing-title mt-2">Device Grant &mdash; Live Demo<span>The TV shows a code. The human approves on their phone.</span></h1>
+        <p class="landing-subtitle mt-3">
+            This page plays an input-constrained device (a TV, a CLI, a kiosk). It asks Keycloak for a device code and a
+            short user code, displays the user code, and polls the token endpoint. You play the human: log in as
+            <code>alice</code> in the second window and approve. No password is ever typed into the device.
+        </p>
+    </div>
+</header>
+
+<section class="container py-5">
+
+    <div class="card card-accent-top shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-play-circle text-primary me-2"></i>Try it live</h5>
+            <p class="card-text">Runs against your actual local Keycloak, not a mock.</p>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3"><label class="form-label">scope</label>
+                    <input id="scope" class="form-control" value="openid"></div>
+                <div class="col-md-5">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="typeIt">
+                        <label class="form-check-label" for="typeIt">Make me type the code (like a real TV).
+                            Unchecked: the link pre-fills it.</label>
+                    </div>
+                </div>
+                <div class="col-md-4 d-grid">
+                    <button id="go" type="button" class="btn btn-electric"><i class="bi bi-tv me-1"></i>Start device flow</button></div>
+            </div>
+            <div class="mt-2 small text-muted">The approval window opens on Keycloak's verification page. Allow popups for this site if it is blocked.
+                The verification URL is whatever Keycloak advertises (your realm's Frontend URL), so it may be on <code>:8443</code>.</div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-lg-6">
+            <div class="card card-accent-top shadow-sm h-100"><div class="card-body">
+                <h6 class="card-title"><i class="bi bi-1-circle text-primary me-2"></i>Device asks for codes (what curl did)</h6>
+                <pre class="dg-pre">POST <span th:text="${deviceEndpoint}"></span>
+client_id=<span th:text="${clientId}"></span>
+client_secret=********
+scope=&lt;scope&gt;</pre>
+                <div class="mt-2"><span class="badge text-bg-secondary" id="st1">not run</span></div>
+                <pre class="dg-pre mt-2" id="resp1" style="display:none"></pre>
+            </div></div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card card-accent-top shadow-sm h-100"><div class="card-body">
+                <h6 class="card-title"><i class="bi bi-2-circle text-primary me-2"></i>The "TV" screen</h6>
+                <div class="dg-tv text-center" id="tv">
+                    <div class="dg-tv-dim" id="tvIdle"><i class="bi bi-tv fs-1"></i><div class="mt-2">Waiting to start...</div></div>
+                    <div id="tvLive" style="display:none">
+                        <div class="dg-tv-small">On your phone or computer, go to</div>
+                        <div class="dg-tv-url" id="tvUrl"></div>
+                        <div class="dg-tv-small mt-3">and enter the code</div>
+                        <div class="dg-tv-code" id="tvCode"></div>
+                        <div class="dg-tv-small mt-3">Expires in <b id="countdown">-</b>s &middot; checking every <b id="intv">-</b>s</div>
+                    </div>
+                </div>
+                <div class="mt-2" id="manualLink" style="display:none">
+                    <a id="manualA" href="#" target="_blank" rel="noopener" class="small">Popup blocked? Open the verification page</a>
+                </div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="card card-accent-top shadow-sm mt-3"><div class="card-body">
+        <h6 class="card-title"><i class="bi bi-3-circle text-primary me-2"></i>Device polls the token endpoint</h6>
+        <pre class="dg-pre">POST <span th:text="${tokenEndpoint}"></span>
+grant_type=urn:ietf:params:oauth:grant-type:device_code
+device_code=&lt;from step 1&gt;
+client_id=<span th:text="${clientId}"></span>
+client_secret=********</pre>
+        <div class="mt-2"><span class="badge text-bg-secondary" id="st2">waiting</span></div>
+        <div class="dg-log mt-2" id="log"><span class="text-muted">Poll log appears here.</span></div>
+    </div></div>
+
+    <div class="mt-3" id="result" style="display:none">
+        <div id="resultMsg"></div>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="card card-accent-top shadow-sm h-100"><div class="card-body">
+                <h6 class="card-title"><i class="bi bi-4-circle text-primary me-2"></i>Access token claims (decoded)</h6>
+                <pre class="dg-pre" id="atClaims"></pre></div></div></div>
+            <div class="col-md-6"><div class="card card-accent-top shadow-sm h-100"><div class="card-body">
+                <h6 class="card-title"><i class="bi bi-5-circle text-primary me-2"></i>ID token claims (decoded)</h6>
+                <pre class="dg-pre" id="idClaims"></pre></div></div></div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .dg-pre {
+        white-space: pre-wrap; word-break: break-all;
+        background: #0b1229; color: #d1d5db;
+        padding: 0.75rem; border-radius: 6px; font-size: 0.8rem;
+        max-height: 260px; overflow-y: auto; margin: 0;
+    }
+    .dg-log {
+        font-family: ui-monospace, Menlo, monospace; font-size: 0.8rem;
+        background: #0b1229; color: #d1d5db; border-radius: 6px;
+        padding: 0.75rem; max-height: 260px; min-height: 80px; overflow-y: auto;
+    }
+    .dg-log .pending { color: #fbbf24; }
+    .dg-log .ok { color: #4ade80; font-weight: 600; }
+    .dg-log .bad { color: #f87171; font-weight: 600; }
+    .dg-tv {
+        background: #0b1229; color: #e5e7eb; border: 6px solid #1f2a4d; border-radius: 12px;
+        padding: 1.5rem 1rem; min-height: 230px; display: flex; align-items: center; justify-content: center;
+    }
+    .dg-tv-dim { color: #64748b; }
+    .dg-tv-small { color: #94a3b8; font-size: 0.85rem; }
+    .dg-tv-url { color: #38bdf8; font-family: ui-monospace, Menlo, monospace; font-size: 0.9rem; word-break: break-all; }
+    .dg-tv-code {
+        font-family: ui-monospace, Menlo, monospace; font-size: 2.4rem; font-weight: 800;
+        letter-spacing: 0.25em; color: #fff; background: #172554; border-radius: 8px;
+        display: inline-block; padding: 0.3rem 1rem;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+  const BASE = '/training/device-grant-demo';
+  const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+  const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+  const $ = id => document.getElementById(id);
+  let timer = null, cd = null, popup = null, running = false;
+
+  function post(path, body) {
+    const h = {'Content-Type': 'application/json'};
+    if (csrfToken && csrfHeader) h[csrfHeader] = csrfToken;
+    return fetch(BASE + path, {method: 'POST', headers: h, body: JSON.stringify(body)}).then(r => r.json());
+  }
+  function setBadge(el, text, cls) { el.textContent = text; el.className = 'badge text-bg-' + cls; }
+  function log(msg, cls) {
+    const l = $('log'); if (l.querySelector('.text-muted')) l.innerHTML = '';
+    const d = document.createElement('div'); d.className = cls || '';
+    d.textContent = new Date().toLocaleTimeString() + '  ' + msg; l.appendChild(d); l.scrollTop = l.scrollHeight;
+  }
+  function decode(jwt) {
+    try {
+      const p = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.stringify(JSON.parse(decodeURIComponent(escape(atob(p)))), null, 2);
+    } catch (e) { return '(not decodable)'; }
+  }
+  function tvIdle() { $('tvIdle').style.display = 'block'; $('tvLive').style.display = 'none'; }
+  function stop() { running = false; clearTimeout(timer); clearInterval(cd); $('go').disabled = false; }
+
+  $('go').addEventListener('click', function () {
+    if (running) return;
+    running = true; $('go').disabled = true;
+    $('log').innerHTML = '<span class="text-muted">Poll log appears here.</span>';
+    $('result').style.display = 'none'; $('resp1').style.display = 'none'; $('manualLink').style.display = 'none';
+    tvIdle(); setBadge($('st1'), 'running', 'warning'); setBadge($('st2'), 'waiting', 'secondary');
+    popup = window.open('', 'device-approval');   // synchronous in the click so it is not blocked
+    const scope = $('scope').value.trim() || 'openid';
+
+    post('/start', {scope}).then(res => {
+      $('resp1').textContent = 'HTTP ' + res.status + '\n' + JSON.stringify(res.body, null, 2);
+      $('resp1').style.display = 'block';
+      const b0 = res.body || {};
+      if (res.status !== 200 || !b0.device_code) {
+        setBadge($('st1'), 'failed (' + res.status + ')', 'danger');
+        log('Device request failed: ' + (b0.error || '') + ' ' + (b0.error_description || ''), 'bad');
+        if (popup) popup.close(); stop(); return;
+      }
+      setBadge($('st1'), 'HTTP 200 - codes issued', 'success');
+      const deviceCode = b0.device_code;
+      let interval = b0.interval || 5, left = b0.expires_in || 600;
+      $('intv').textContent = interval; $('countdown').textContent = left;
+      $('tvUrl').textContent = b0.verification_uri; $('tvCode').textContent = b0.user_code;
+      $('tvIdle').style.display = 'none'; $('tvLive').style.display = 'block';
+
+      const target = $('typeIt').checked ? b0.verification_uri : (b0.verification_uri_complete || b0.verification_uri);
+      $('manualA').href = target; $('manualLink').style.display = 'block';
+      if (popup) popup.location.href = target;
+      else log('Popup blocked - use the link under the TV screen.', 'pending');
+
+      cd = setInterval(() => { left = Math.max(0, left - 1); $('countdown').textContent = left; }, 1000);
+      setBadge($('st2'), 'polling', 'warning');
+
+      const tick = () => post('/poll', {deviceCode}).then(p => {
+        const b = p.body || {};
+        if (p.status === 200 && b.access_token) {
+          log('HTTP 200 - SUCCESS, tokens issued', 'ok'); setBadge($('st2'), 'approved', 'success');
+          $('result').style.display = 'block';
+          $('resultMsg').innerHTML = '<div class="alert alert-success mb-3"><i class="bi bi-check-circle me-2"></i>Approved &mdash; the device received tokens for the human who approved, without ever seeing their password.</div>';
+          $('atClaims').textContent = decode(b.access_token);
+          $('idClaims').textContent = b.id_token ? decode(b.id_token) : '(no id_token)';
+          $('tvLive').style.display = 'none'; $('tvIdle').style.display = 'block';
+          $('tvIdle').innerHTML = '<i class="bi bi-check-circle-fill fs-1 text-success"></i><div class="mt-2 text-success">Signed in</div>';
+          stop(); return;
+        }
+        if (b.error === 'authorization_pending') { log('HTTP ' + p.status + ' authorization_pending', 'pending'); timer = setTimeout(tick, interval * 1000); return; }
+        if (b.error === 'slow_down') { interval += 5; $('intv').textContent = interval; log('slow_down - interval now ' + interval + 's', 'pending'); timer = setTimeout(tick, interval * 1000); return; }
+        const denied = b.error === 'access_denied';
+        log('HTTP ' + p.status + ' ' + (b.error || '?') + ' ' + (b.error_description || ''), 'bad');
+        setBadge($('st2'), denied ? 'denied' : (b.error === 'expired_token' ? 'expired' : 'error'), 'danger');
+        $('result').style.display = 'block';
+        $('resultMsg').innerHTML = '<div class="alert alert-danger mb-3">' + (denied ? 'The user denied the request.' : 'Flow ended: ' + (b.error || 'unknown error')) + '</div>';
+        $('atClaims').textContent = ''; $('idClaims').textContent = '';
+        tvIdle(); stop();
+      }).catch(e => { log('poll error: ' + e, 'bad'); stop(); });
+      timer = setTimeout(tick, interval * 1000);
+    }).catch(e => { log('start error: ' + e, 'bad'); setBadge($('st1'), 'error', 'danger'); stop(); });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: keycloak-jpa-demo
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/ecommerce_demo
+    username: root
+    password: localroot
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # DBA-owned DDL (schema.sql / seed-data.sql). Hibernate never manages the schema.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 25
+    show-sql: false
+
+  thymeleaf:
+    cache: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: jpa-demo-web
+            client-secret: 3TQ3SJWOcJpFxWdSKAq99qf3c7VmXufF
+            authorization-grant-type: authorization_code
+            scope: openid, profile, email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          keycloak:
+            issuer-uri: https://localhost:8443/realms/jpa-demo-realm
+      resourceserver:
+        jwt:
+          issuer-uri: https://localhost:8443/realms/jpa-demo-realm
+
+logging:
+  level:
+    org.hibernate.SQL: warn
+    com.rollingstone.demo: info
+
+signed-jwt:
+  client-id: signed-jwt-client
+  keystore-path: keys/signed-jwt-client-keystore.p12
+  keystore-password: changeit
+  key-alias: signed-jwt-client
+  # Where we POST (plain HTTP listener).
+  token-endpoint: http://localhost:8080/realms/jpa-demo-realm/protocol/openid-connect/token
+  userinfo-endpoint: http://localhost:8080/realms/jpa-demo-realm/protocol/openid-connect/userinfo
+  # What goes in the assertion's "aud" claim. Must use the realm's Frontend URL base.
+  audience: https://localhost:8443/realms/jpa-demo-realm/protocol/openid-connect/token
+
+x509-demo:
+  client-id: x509-cert-client
+  keystore-path: mtls/x509-cert-client-keystore.p12
+  keystore-password: changeit
+  key-alias: x509-cert-client
+  truststore-path: mtls/truststore.p12
+  truststore-password: changeit
+  token-endpoint: https://localhost:8443/realms/jpa-demo-realm/protocol/openid-connect/token
+  userinfo-endpoint: https://localhost:8443/realms/jpa-demo-realm/protocol/openid-connect/userinfo
+
+authz-demo:
+  client-id: capability-demo-client
+  client-secret: 88x3Wm0K9me6fEGCwRzMgypc4bsNL4EE
+  token-endpoint: http://localhost:8080/realms/jpa-demo-realm/protocol/openid-connect/token
+  resource-name: Order Resource

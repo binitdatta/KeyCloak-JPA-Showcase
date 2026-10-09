@@ -1,0 +1,1083 @@
+<!doctype html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keycloak Custom Authenticators — Entra ID Broker Sync</title><style>
+:root{--navy:#0b1f3a;--blue:#2563eb;--cyan:#0ea5e9;--ink:#16233b;--muted:#60708b;--bg:#f5f8fc;--line:#dce5f1;--green:#0f766e;--amber:#b45309}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Arial,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.58}
+header{background:linear-gradient(120deg,#07182f,#163a78 60%,#2563eb);color:white;padding:52px 24px}.wrap,main{max-width:1240px;margin:auto}
+h1{font-size:clamp(2.3rem,5vw,4.2rem);line-height:1.04;margin:.35rem 0 1rem}.lead{max-width:940px;font-size:1.17rem;color:#dbeafe}
+.eyebrow{color:#8ed8ff;font-weight:bold;letter-spacing:.12em}.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}.badge{border:1px solid #ffffff55;background:#ffffff12;border-radius:99px;padding:6px 10px}
+nav{position:sticky;top:0;z-index:5;background:white;border-bottom:1px solid var(--line)}nav div{max-width:1240px;margin:auto;display:flex;gap:20px;overflow:auto;padding:13px 20px}nav a{white-space:nowrap;text-decoration:none;color:#334155;font-weight:bold}
+main{padding:34px 20px 70px}section{margin-bottom:40px;scroll-margin-top:60px}h2{font-size:2rem;color:var(--navy);margin-bottom:14px}h3{color:#173b6d;margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+.card{background:white;border:1px solid var(--line);border-radius:14px;padding:21px;box-shadow:0 6px 22px #102a4308}
+.callout{background:#eef5ff;border-left:5px solid var(--blue);border-radius:9px;padding:16px 18px;margin:16px 0}.warn{background:#fff8eb;border-left-color:var(--amber)}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:20px 0}.step{background:white;border:1px solid var(--line);border-radius:12px;padding:14px}.step b{display:block;color:var(--blue);font-size:.8rem}
+table{width:100%;border-collapse:collapse;background:white;border:1px solid var(--line)}th,td{padding:12px 13px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{background:#edf4ff;color:#173b6d}
+code{font-family:Consolas,monospace;background:#eef2f7;color:#7c2d12;padding:2px 5px;border-radius:5px}pre{background:#081426;color:#dbeafe;border-radius:10px;padding:17px;overflow:auto;font-size:.82rem}
+.method{border-left:4px solid var(--cyan)}.sig{font-family:Consolas,monospace;color:#1d4ed8;word-break:break-word}.when{font-size:.8rem;color:var(--green);font-weight:bold;text-transform:uppercase}
+.pill{background:#ede9fe;color:#6d28d9;padding:4px 8px;border-radius:99px;font-size:.76rem;font-weight:bold}.small{color:var(--muted)}
+@media(max-width:900px){.grid,.grid3,.flow{grid-template-columns:1fr}}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" th:href="@{/css/bright-blue.css}">
+</head><body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<header><div class="wrap"><div class="eyebrow">KEYCLOAK 26 SPI • MICROSOFT ENTRA ID • SAML 2.0</div>
+<h1>Custom Authenticators:<br>First Login Provisioning & Post-Login Synchronization</h1>
+<p class="lead">Detailed, code-grounded explanation of how the supplied Keycloak extensions are discovered, instantiated and called; how brokered SAML data reaches them; and how Entra profile, role and group state is synchronized with Keycloak and MySQL.</p>
+<div class="badges"><span class="badge">Authenticator SPI</span><span class="badge">AuthenticatorFactory</span><span class="badge">AbstractIdpAuthenticator</span><span class="badge">BrokeredIdentityContext</span><span class="badge">First Broker Login</span><span class="badge">Post Login</span></div></div></header>
+<nav><div><a href="#overview">Overview</a><a href="#spi">SPI</a><a href="#first">First Login</a><a href="#post">Post Login</a><a href="#methods">Methods</a><a href="#data">Data</a><a href="#sequence">Sequences</a><a href="#deploy">Deployment</a><a href="#source">Source</a></div></nav>
+<main>
+<section id="overview"><h2>1. Architecture and responsibilities</h2>
+<div class="grid"><div class="card"><h3>ExtendedEntraCreateUserAuthenticator</h3><span class="pill">FIRST BROKER LOGIN</span>
+<p>Runs in the Entra IdP's custom First Login Flow. It creates the Keycloak <code>UserModel</code> when necessary, extracts mapped Entra attributes, upserts the local identity record, and applies initial realm-role and group mappings.</p></div>
+<div class="card"><h3>EntraPostLoginRoleGroupSyncAuthenticator</h3><span class="pill">POST LOGIN</span>
+<p>Runs on subsequent brokered logins. It compares the current Entra assertion's roles/groups with the last-known active sets in MySQL, granting additions and revoking removals in both Keycloak and the synchronization database.</p></div></div>
+<div class="flow"><div class="step"><b>1 • Browser</b>Authenticate through Keycloak.</div><div class="step"><b>2 • Entra</b>Return SAML identity and attributes.</div><div class="step"><b>3 • Broker</b>Populate broker identity context.</div><div class="step"><b>4 • Extension</b>Provision or reconcile.</div><div class="step"><b>5 • State</b>Update Keycloak + MySQL.</div></div></section>
+
+<section id="spi"><h2>2. Factory SPI versus runtime Authenticator</h2>
+<div class="callout"><b>Key concept:</b> an <code>AuthenticatorFactory</code> describes and creates a provider. The authenticator instance executes inside an authentication flow for a particular login.</div>
+<div class="grid"><div class="card"><h3>AuthenticatorFactory</h3><p>The two factory classes implement <code>AuthenticatorFactory</code>. They expose provider IDs, Admin Console display names, allowed execution requirements, help text and configuration metadata. Their <code>create(KeycloakSession)</code> methods instantiate the runtime authenticators.</p></div>
+<div class="card"><h3>AbstractIdpAuthenticator</h3><p>Both runtime classes extend Keycloak's broker-oriented <code>AbstractIdpAuthenticator</code>. The first-login implementation uses its normal dispatch behavior. The post-login implementation overrides <code>authenticate()</code> because its serialized broker identity can live under the Post Broker Login session-note key.</p></div></div></section>
+
+<section id="first"><h2>3. First Login Authenticator</h2>
+<div class="flow"><div class="step"><b>ENTRY</b>Inherited <code>authenticate()</code></div><div class="step"><b>DISPATCH</b><code>authenticateImpl()</code></div><div class="step"><b>CREATE</b>Create user if null</div><div class="step"><b>PERSIST</b>Profile + initial authorization</div><div class="step"><b>FINISH</b><code>context.success()</code></div></div>
+<div class="grid">
+<div class="card method"><div class="when">Primary implementation hook</div><h3 class="sig">authenticateImpl(...)</h3><p>Gets realm/user, creates a Keycloak user if needed, persists the profile, applies initial roles/groups and succeeds. A SQL exception records a Keycloak event error and fails the execution with <code>INTERNAL_ERROR</code>.</p></div>
+<div class="card method"><div class="when">User creation</div><h3 class="sig">createKeycloakUser(...)</h3><p>Chooses model username, broker username or email; invokes <code>session.users().addUser()</code>; enables the user; sets email/email verification; then calls <code>context.setUser()</code>.</p></div>
+<div class="card method"><div class="when">Profile import</div><h3 class="sig">persistProfile(...)</h3><p>Reads Entra object ID, email and mapped profile attributes from <code>BrokeredIdentityContext</code>, updates first/last name on the Keycloak user, then calls <code>dao.upsertUser()</code>.</p></div>
+<div class="card method"><div class="when">Authorization bootstrap</div><h3 class="sig">applyInitialRolesAndGroups(...)</h3><p>Reads <code>entraRoles</code>. Values prefixed with <code>GROUP_</code> become groups; other values are treated as realm roles.</p></div></div>
+<div class="callout warn"><b>Why not <code>actionImpl()</code>?</b> The source explicitly documents that this authenticator never issues <code>context.challenge(...)</code>. Therefore its normal flow never transitions to browser-action processing. Its provisioning logic belongs in <code>authenticateImpl()</code>.</div></section>
+
+<section id="post"><h2>4. Post-Login Role/Group Synchronizer</h2>
+<div class="flow"><div class="step"><b>ENTRY</b>Overridden <code>authenticate()</code></div><div class="step"><b>RECOVER</b>Read broker session note</div><div class="step"><b>DESERIALIZE</b>Build broker context</div><div class="step"><b>DIFF</b>Asserted vs active sets</div><div class="step"><b>FINISH</b>Touch login + success</div></div>
+<div class="grid">
+<div class="card method"><div class="when">Custom entry point</div><h3 class="sig">authenticate(AuthenticationFlowContext)</h3><p>Tries the normal broker-context note first and the Post Login note second. Missing both causes <code>IDENTITY_PROVIDER_ERROR</code>. A recovered serialized context is deserialized and passed to <code>authenticateImpl()</code>.</p></div>
+<div class="card method"><div class="when">Runtime synchronization</div><h3 class="sig">authenticateImpl(...)</h3><p>Uses the established user and Entra object ID to locate <code>idp_user</code>, calls <code>reconcile()</code>, updates <code>last_login_at</code> and succeeds.</p></div>
+<div class="card method"><div class="when">Set reconciliation</div><h3 class="sig">reconcile(...)</h3><p>Creates asserted role/group sets, reads active DB sets, then performs four operations: grant newly asserted roles, revoke absent roles, join newly asserted groups, and leave absent groups.</p></div>
+<div class="card method"><div class="when">SPI contract</div><h3 class="sig">requiresUser() → true</h3><p>The post-login execution expects an associated Keycloak user. The first-login implementation instead returns <code>false</code> because it can create that user itself.</p></div></div></section>
+
+<section id="methods"><h2>5. Keycloak SPI/interface methods and call timing</h2>
+<table><thead><tr><th>Method</th><th>Owner</th><th>When used</th><th>This implementation</th></tr></thead><tbody>
+<tr><td><code>getId()</code></td><td>Factory</td><td>Provider discovery/reference</td><td>Returns stable provider ID.</td></tr>
+<tr><td><code>create(KeycloakSession)</code></td><td>Factory</td><td>Keycloak needs an execution instance</td><td>Creates the custom authenticator.</td></tr>
+<tr><td><code>init(Config.Scope)</code></td><td>Factory</td><td>Provider initialization</td><td>No-op; suitable place for SPI configuration.</td></tr>
+<tr><td><code>postInit(KeycloakSessionFactory)</code></td><td>Factory</td><td>After provider factory initialization</td><td>No-op.</td></tr>
+<tr><td><code>close()</code></td><td>Factory</td><td>Provider shutdown</td><td>No-op.</td></tr>
+<tr><td><code>getDisplayType()</code></td><td>Factory</td><td>Admin Console presentation</td><td>Names the execution shown when adding it to a flow.</td></tr>
+<tr><td><code>getReferenceCategory()</code></td><td>Factory</td><td>Provider category metadata</td><td><code>user-creation</code> / <code>post-login-provisioning</code>.</td></tr>
+<tr><td><code>isConfigurable()</code></td><td>Factory</td><td>Whether execution has per-instance config</td><td><code>false</code>.</td></tr>
+<tr><td><code>getRequirementChoices()</code></td><td>Factory</td><td>Admin flow requirement choices</td><td>First login: REQUIRED, ALTERNATIVE, DISABLED. Post login: REQUIRED, DISABLED.</td></tr>
+<tr><td><code>isUserSetupAllowed()</code></td><td>Factory</td><td>Whether user-driven setup is supported</td><td><code>false</code>.</td></tr>
+<tr><td><code>getHelpText()</code></td><td>Factory</td><td>Admin-facing explanation</td><td>Describes each execution's purpose.</td></tr>
+<tr><td><code>getConfigProperties()</code></td><td>Factory</td><td>Declares configurable properties</td><td>Empty list.</td></tr>
+<tr><td><code>authenticate(...)</code></td><td>Authenticator/base</td><td>Main authentication-flow entry</td><td>Inherited for first login; overridden for post login.</td></tr>
+<tr><td><code>authenticateImpl(...)</code></td><td>AbstractIdpAuthenticator subclass</td><td>Broker-specific authentication logic</td><td>Core business logic in both providers.</td></tr>
+<tr><td><code>action(...)</code></td><td>Authenticator</td><td>Handles a submitted response after a challenge</td><td>Not normal first-login path here; post-login delegates to authenticate.</td></tr>
+<tr><td><code>actionImpl(...)</code></td><td>Subclass</td><td>Broker-specific action handling</td><td>Required override but not normal path for this design.</td></tr>
+<tr><td><code>requiresUser()</code></td><td>Authenticator</td><td>Flow engine checks prerequisite user</td><td>First login false; post login true.</td></tr>
+<tr><td><code>configuredFor(...)</code></td><td>Authenticator</td><td>Checks whether provider is configured for user</td><td>Always true.</td></tr>
+<tr><td><code>setRequiredActions(...)</code></td><td>Authenticator</td><td>May register required user actions</td><td>No-op.</td></tr>
+</tbody></table></section>
+
+<section id="data"><h2>6. SAML attributes, Keycloak state and MySQL state</h2>
+<div class="grid3"><div class="card"><h3>Attribute source</h3><p>The supplied code reads mapper-produced values from <code>BrokeredIdentityContext.getContextData()</code> with the prefix <code>user.attributes.</code>, for example <code>user.attributes.entraRoles</code>.</p></div>
+<div class="card"><h3>Role/group convention</h3><p><code>entraRoles</code> carries both concepts. <code>GROUP_*</code> values become group memberships; unprefixed values become realm-role mappings.</p></div>
+<div class="card"><h3>Persistence</h3><p>The DAO maintains <code>idp_user</code>, <code>idp_user_role</code>, <code>idp_user_group</code> and <code>idp_sync_audit</code>. Revocation/leave operations timestamp existing active mappings instead of simply deleting history.</p></div></div>
+<table style="margin-top:18px"><thead><tr><th>Logical operation</th><th>Keycloak</th><th>MySQL</th></tr></thead><tbody>
+<tr><td>Grant role</td><td><code>user.grantRole(role)</code></td><td>Insert role + audit</td></tr>
+<tr><td>Revoke role</td><td><code>user.deleteRoleMapping(role)</code></td><td>Set <code>revoked_at</code> + audit</td></tr>
+<tr><td>Join group</td><td><code>user.joinGroup(group)</code></td><td>Insert group + audit</td></tr>
+<tr><td>Leave group</td><td><code>user.leaveGroup(group)</code></td><td>Set <code>revoked_at</code> + audit</td></tr></tbody></table></section>
+
+<section id="sequence"><h2>7. End-to-end call sequences</h2>
+<div class="grid"><div class="card"><h3>A. First brokered login</h3><ol><li>Browser authenticates at Entra through Keycloak brokering.</li><li>Keycloak receives the SAML identity.</li><li>IdP Attribute Importer mappers populate broker context.</li><li>Custom First Login Flow reaches the create-user extension.</li><li><code>authenticateImpl()</code> runs.</li><li>Create <code>UserModel</code> if necessary.</li><li>Persist profile to <code>idp_user</code>.</li><li>Apply initial roles/groups in Keycloak and DB.</li><li>Write audit records.</li><li>Call <code>context.success()</code>.</li></ol></div>
+<div class="card"><h3>B. Subsequent brokered login</h3><ol><li>Entra authenticates and returns current assertion.</li><li>Post Login Flow invokes synchronization extension.</li><li>Custom <code>authenticate()</code> retrieves serialized broker identity.</li><li>Resolve Keycloak user and local <code>idp_user</code>.</li><li>Read current asserted roles/groups.</li><li>Load active roles/groups from MySQL.</li><li>Compute grants/revocations and joins/leaves.</li><li>Apply changes to both systems.</li><li>Update last-login timestamp.</li><li>Call <code>context.success()</code>.</li></ol></div></div></section>
+
+<section id="deploy"><h2>8. Build, provider deployment and flow wiring</h2>
+<div class="grid"><div class="card"><h3>Build/deploy</h3><p>The project uses Java 17 and Keycloak SPI artifacts, with MySQL Connector/J 8.4.0. The deployment guide copies the extension JAR and MySQL driver into <code>$KEYCLOAK_HOME/providers/</code> and runs <code>bin/kc.sh build</code>.</p></div>
+<div class="card"><h3>Wire the flows</h3><p><b>First Login:</b> duplicate the built-in first broker login flow and replace “Create User If Unique” with <b>rollingstone Entra Create User (Ext)</b>.</p><p><b>Post Login:</b> create a top-level flow containing <b>rollingstone Entra Post-Login Role/Group Sync</b> as REQUIRED, then select both flows on the Entra SAML IdP.</p></div></div>
+<div class="callout warn"><b>Production considerations exposed by the supplied source:</b> DB credentials are hardcoded for the training lab and the DAO opens a short-lived <code>DriverManager</code> connection per operation. The comments recommend SPI configuration and a pooled <code>DataSource</code> for a real deployment. The POM compiles against Keycloak 26.0.7 while the deployment notes reference a 26.2.5 installation; align versions before production use.</div></section>
+
+<section id="source"><h2>9. Supplied source appendix</h2><p class="small">Expandable source is included for walkthrough/training. Credential-like lines in DEPLOY.md are intentionally omitted from the generated page.</p>
+<details class="card" style="margin:12px 0"><summary><b>EntraUserSyncDao.java</b></summary><pre>package com.rollingstone.kc.entra;
+
+import java.sql.*;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * Plain-JDBC data access for the idp_user / idp_user_role / idp_user_group /
+ * idp_sync_audit tables. Opens one short-lived connection per call —
+ * acceptable for this lab&#x27;s login volume; swap for a pooled DataSource
+ * (HikariCP) in a real deployment.
+ */
+public class EntraUserSyncDao {
+
+    private Connection connect() throws SQLException {
+        return DriverManager.getConnection(
+                EntraFblConstants.JDBC_URL,
+                EntraFblConstants.JDBC_USER,
+                EntraFblConstants.JDBC_PASSWORD);
+    }
+
+    /** Insert-or-update idp_user by entra_object_id. Returns the local idp_user.id. */
+    public long upsertUser(String keycloakUserId, String entraObjectId, String email,
+                           String firstName, String lastName, LocalDate dob, String phone,
+                           String street, String city, String state, String postalCode, String country)
+            throws SQLException {
+
+        try (Connection c = connect()) {
+            Long existingId = findIdByEntraObjectId(c, entraObjectId);
+
+            if (existingId == null) {
+                String sql = &quot;INSERT INTO idp_user (keycloak_user_id, entra_object_id, email, first_name, &quot; +
+                        &quot;last_name, date_of_birth, phone_number, street_address, city, state, postal_code, country) &quot; +
+                        &quot;VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;
+                try (PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setString(1, keycloakUserId);
+                    ps.setString(2, entraObjectId);
+                    ps.setString(3, email);
+                    ps.setString(4, firstName);
+                    ps.setString(5, lastName);
+                    setNullableDate(ps, 6, dob);
+                    ps.setString(7, phone);
+                    ps.setString(8, street);
+                    ps.setString(9, city);
+                    ps.setString(10, state);
+                    ps.setString(11, postalCode);
+                    ps.setString(12, country);
+                    ps.executeUpdate();
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        keys.next();
+                        long newId = keys.getLong(1);
+                        recordAudit(c, newId, &quot;USER_CREATED&quot;, email);
+                        return newId;
+                    }
+                }
+            } else {
+                String sql = &quot;UPDATE idp_user SET keycloak_user_id=?, email=?, first_name=?, last_name=?, &quot; +
+                        &quot;date_of_birth=?, phone_number=?, street_address=?, city=?, state=?, postal_code=?, &quot; +
+                        &quot;country=?, last_login_at=CURRENT_TIMESTAMP WHERE id=?&quot;;
+                try (PreparedStatement ps = c.prepareStatement(sql)) {
+                    ps.setString(1, keycloakUserId);
+                    ps.setString(2, email);
+                    ps.setString(3, firstName);
+                    ps.setString(4, lastName);
+                    setNullableDate(ps, 5, dob);
+                    ps.setString(6, phone);
+                    ps.setString(7, street);
+                    ps.setString(8, city);
+                    ps.setString(9, state);
+                    ps.setString(10, postalCode);
+                    ps.setString(11, country);
+                    ps.setLong(12, existingId);
+                    ps.executeUpdate();
+                }
+                recordAudit(c, existingId, &quot;USER_UPDATED&quot;, email);
+                return existingId;
+            }
+        }
+    }
+
+    /** Records a fresh login timestamp without touching profile fields. */
+    public void touchLastLogin(long idpUserId) throws SQLException {
+        try (Connection c = connect();
+             PreparedStatement ps = c.prepareStatement(
+                     &quot;UPDATE idp_user SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?&quot;)) {
+            ps.setLong(1, idpUserId);
+            ps.executeUpdate();
+        }
+    }
+
+    public Long findIdByEntraObjectId(String entraObjectId) throws SQLException {
+        try (Connection c = connect()) {
+            return findIdByEntraObjectId(c, entraObjectId);
+        }
+    }
+
+    private Long findIdByEntraObjectId(Connection c, String entraObjectId) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                &quot;SELECT id FROM idp_user WHERE entra_object_id = ?&quot;)) {
+            ps.setString(1, entraObjectId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getLong(1) : null;
+            }
+        }
+    }
+
+    public Set&lt;String&gt; currentActiveRoles(long idpUserId) throws SQLException {
+        return currentActive(idpUserId, &quot;idp_user_role&quot;, &quot;role_name&quot;);
+    }
+
+    public Set&lt;String&gt; currentActiveGroups(long idpUserId) throws SQLException {
+        return currentActive(idpUserId, &quot;idp_user_group&quot;, &quot;group_name&quot;);
+    }
+
+    private Set&lt;String&gt; currentActive(long idpUserId, String table, String column) throws SQLException {
+        Set&lt;String&gt; values = new HashSet&lt;&gt;();
+        String sql = &quot;SELECT &quot; + column + &quot; FROM &quot; + table + &quot; WHERE idp_user_id = ? AND revoked_at IS NULL&quot;;
+        try (Connection c = connect(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, idpUserId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    values.add(rs.getString(1));
+                }
+            }
+        }
+        return values;
+    }
+
+    public void grantRole(long idpUserId, String roleName) throws SQLException {
+        try (Connection c = connect();
+             PreparedStatement ps = c.prepareStatement(
+                     &quot;INSERT INTO idp_user_role (idp_user_id, role_name) VALUES (?, ?)&quot;)) {
+            ps.setLong(1, idpUserId);
+            ps.setString(2, roleName);
+            ps.executeUpdate();
+            recordAudit(c, idpUserId, &quot;ROLE_GRANTED&quot;, roleName);
+        }
+    }
+
+    public void revokeRole(long idpUserId, String roleName) throws SQLException {
+        try (Connection c = connect();
+             PreparedStatement ps = c.prepareStatement(
+                     &quot;UPDATE idp_user_role SET revoked_at = CURRENT_TIMESTAMP &quot; +
+                             &quot;WHERE idp_user_id = ? AND role_name = ? AND revoked_at IS NULL&quot;)) {
+            ps.setLong(1, idpUserId);
+            ps.setString(2, roleName);
+            ps.executeUpdate();
+            recordAudit(c, idpUserId, &quot;ROLE_REVOKED&quot;, roleName);
+        }
+    }
+
+    public void joinGroup(long idpUserId, String groupName) throws SQLException {
+        try (Connection c = connect();
+             PreparedStatement ps = c.prepareStatement(
+                     &quot;INSERT INTO idp_user_group (idp_user_id, group_name) VALUES (?, ?)&quot;)) {
+            ps.setLong(1, idpUserId);
+            ps.setString(2, groupName);
+            ps.executeUpdate();
+            recordAudit(c, idpUserId, &quot;GROUP_JOINED&quot;, groupName);
+        }
+    }
+
+    public void leaveGroup(long idpUserId, String groupName) throws SQLException {
+        try (Connection c = connect();
+             PreparedStatement ps = c.prepareStatement(
+                     &quot;UPDATE idp_user_group SET revoked_at = CURRENT_TIMESTAMP &quot; +
+                             &quot;WHERE idp_user_id = ? AND group_name = ? AND revoked_at IS NULL&quot;)) {
+            ps.setLong(1, idpUserId);
+            ps.setString(2, groupName);
+            ps.executeUpdate();
+            recordAudit(c, idpUserId, &quot;GROUP_LEFT&quot;, groupName);
+        }
+    }
+
+    private void recordAudit(Connection c, long idpUserId, String eventType, String detail) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                &quot;INSERT INTO idp_sync_audit (idp_user_id, event_type, detail) VALUES (?, ?, ?)&quot;)) {
+            ps.setLong(1, idpUserId);
+            ps.setString(2, eventType);
+            ps.setString(3, detail);
+            ps.executeUpdate();
+        }
+    }
+
+    private void setNullableDate(PreparedStatement ps, int index, LocalDate date) throws SQLException {
+        if (date == null) {
+            ps.setNull(index, Types.DATE);
+        } else {
+            ps.setDate(index, Date.valueOf(date));
+        }
+    }
+}</pre></details><details class="card" style="margin:12px 0"><summary><b>ExtendedEntraCreateUserAuthenticatorFactory.java</b></summary><pre>package com.rollingstone.kc.entra;
+
+import org.keycloak.Config;
+import org.keycloak.authentication.Authenticator;
+import org.keycloak.authentication.AuthenticatorFactory;
+import org.keycloak.models.AuthenticationExecutionModel;
+import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakSessionFactory;
+import org.keycloak.provider.ProviderConfigProperty;
+
+import java.util.Collections;
+import java.util.List;
+
+public class ExtendedEntraCreateUserAuthenticatorFactory implements AuthenticatorFactory {
+
+    @Override
+    public String getId() {
+        return ExtendedEntraCreateUserAuthenticator.PROVIDER_ID;
+    }
+
+    @Override
+    public Authenticator create(KeycloakSession session) {
+        return new ExtendedEntraCreateUserAuthenticator();
+    }
+
+    @Override
+    public void init(Config.Scope config) {
+    }
+
+    @Override
+    public void postInit(KeycloakSessionFactory factory) {
+    }
+
+    @Override
+    public void close() {
+    }
+
+    @Override
+    public String getDisplayType() {
+        return &quot;rollingstone Entra Create User (Ext)&quot;;
+    }
+
+    @Override
+    public String getReferenceCategory() {
+        return &quot;user-creation&quot;;
+    }
+
+    @Override
+    public boolean isConfigurable() {
+        return false;
+    }
+
+    @Override
+    public AuthenticationExecutionModel.Requirement[] getRequirementChoices() {
+        return new AuthenticationExecutionModel.Requirement[]{
+                AuthenticationExecutionModel.Requirement.REQUIRED,
+                AuthenticationExecutionModel.Requirement.ALTERNATIVE,
+                AuthenticationExecutionModel.Requirement.DISABLED
+        };
+    }
+
+    @Override
+    public boolean isUserSetupAllowed() {
+        return false;
+    }
+
+    @Override
+    public String getHelpText() {
+        return &quot;Extracts profile/role/group claims from the Entra SAML assertion, creates the &quot; +
+                &quot;Keycloak user if needed, upserts the local idp_user MySQL row, and grants the &quot; +
+                &quot;initial roles/groups. Runs once, on first login.&quot;;
+    }
+
+    @Override
+    public List&lt;ProviderConfigProperty&gt; getConfigProperties() {
+        return Collections.emptyList();
+    }
+}</pre></details><details class="card" style="margin:12px 0"><summary><b>EntraPostLoginRoleGroupSyncAuthenticator.java</b></summary><pre>package com.rollingstone.kc.entra;
+
+import org.keycloak.authentication.AuthenticationFlowContext;
+import org.keycloak.authentication.AuthenticationFlowError;
+import org.keycloak.authentication.authenticators.broker.AbstractIdpAuthenticator;
+import org.keycloak.authentication.authenticators.broker.util.PostBrokerLoginConstants;
+import org.keycloak.authentication.authenticators.broker.util.SerializedBrokeredIdentityContext;
+import org.keycloak.broker.provider.BrokeredIdentityContext;
+import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.RealmModel;
+import org.keycloak.models.UserModel;
+import org.keycloak.sessions.AuthenticationSessionModel;
+
+import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * Bound to the Entra IdP&#x27;s Post Login Flow (rollingstone-entra-post-login) —
+ * unlike the First Login Flow, this runs on EVERY subsequent brokered login.
+ * Diffs the roles/groups carried in this login&#x27;s SAML assertion against the
+ * last-known ACTIVE set in MySQL: anything new is granted (in Keycloak and
+ * MySQL), anything missing is revoked (in Keycloak and MySQL). This is what
+ * makes a role/group removal in Entra actually take effect — on the user&#x27;s
+ * next login, not just once at account creation.
+ *
+ * KNOWN KEYCLOAK QUIRK: AbstractIdpAuthenticator#authenticate() (the base
+ * class method, called by the framework BEFORE authenticateImpl()) only
+ * looks for the serialized broker context under BROKERED_CONTEXT_NOTE --
+ * the note key used by the First Broker Login Flow. When this authenticator
+ * is bound to a Post Login Flow instead, Keycloak stores that same context
+ * under a DIFFERENT note key, PostBrokerLoginConstants.PBL_BROKERED_IDENTITY_CONTEXT,
+ * so the base class&#x27;s lookup always comes back null and throws
+ * &quot;Not found serialized context in clientSession&quot; before our code ever runs.
+ * (See https://groups.google.com/g/keycloak-user/c/eiX5dCjN3qc.)
+ * authenticate() is overridden below to check both note keys.
+ *
+ * ATTRIBUTE SOURCE: same as ExtendedEntraCreateUserAuthenticator -- the IdP&#x27;s
+ * Attribute Importer mappers write claim values into
+ * BrokeredIdentityContext.getContextData() under a &quot;user.attributes.&quot; prefix
+ * (confirmed via runtime dump), not under the bare attribute name.
+ */
+public class EntraPostLoginRoleGroupSyncAuthenticator extends AbstractIdpAuthenticator {
+
+    public static final String PROVIDER_ID = &quot;rollingstone-entra-post-login-sync&quot;;
+
+    private static final Logger LOG = Logger.getLogger(EntraPostLoginRoleGroupSyncAuthenticator.class.getName());
+
+    private static final String USER_ATTR_PREFIX = &quot;user.attributes.&quot;;
+
+    private final EntraUserSyncDao dao = new EntraUserSyncDao();
+
+    @Override
+    public void authenticate(AuthenticationFlowContext context) {
+        AuthenticationSessionModel authSession = context.getAuthenticationSession();
+
+        SerializedBrokeredIdentityContext serializedCtx =
+                SerializedBrokeredIdentityContext.readFromAuthenticationSession(authSession, BROKERED_CONTEXT_NOTE);
+
+        if (serializedCtx == null) {
+            // Post Login Flow stores it under a different note than First Broker Login Flow does.
+            serializedCtx = SerializedBrokeredIdentityContext.readFromAuthenticationSession(
+                    authSession, PostBrokerLoginConstants.PBL_BROKERED_IDENTITY_CONTEXT);
+            LOG.log(Level.INFO, &quot;rollingstone-entra-post-login-sync: fell back to PBL_BROKERED_IDENTITY_CONTEXT note, found={0}&quot;,
+                    serializedCtx != null);
+        }
+
+        if (serializedCtx == null) {
+            LOG.log(Level.SEVERE, &quot;rollingstone-entra-post-login-sync: no serialized broker context under either note key&quot;);
+            context.failure(AuthenticationFlowError.IDENTITY_PROVIDER_ERROR);
+            return;
+        }
+
+        BrokeredIdentityContext brokerContext = serializedCtx.deserialize(context.getSession(), authSession);
+        authenticateImpl(context, serializedCtx, brokerContext);
+    }
+
+    @Override
+    protected void authenticateImpl(AuthenticationFlowContext context,
+                                    SerializedBrokeredIdentityContext serializedCtx,
+                                    BrokeredIdentityContext brokerContext) {
+
+        LOG.log(Level.INFO, &quot;rollingstone-entra-post-login-sync: authenticateImpl ENTERED, idp identity={0}&quot;,
+                brokerContext == null ? &quot;null-brokerContext&quot; : brokerContext.getId());
+
+        UserModel user = context.getUser();
+        RealmModel realm = context.getRealm();
+
+        LOG.log(Level.INFO, &quot;rollingstone-entra-post-login-sync: context.getUser()={0}&quot;,
+                user == null ? &quot;null&quot; : user.getUsername());
+
+        if (user == null) {
+            LOG.log(Level.WARNING, &quot;rollingstone-entra-post-login-sync: user is null, skipping sync&quot;);
+            context.success();
+            return;
+        }
+
+        try {
+            Long idpUserId = dao.findIdByEntraObjectId(brokerContext.getId());
+            LOG.log(Level.INFO, &quot;rollingstone-entra-post-login-sync: resolved idpUserId={0} for entra id {1}&quot;,
+                    new Object[]{idpUserId, brokerContext.getId()});
+
+            if (idpUserId == null) {
+                LOG.log(Level.WARNING, &quot;rollingstone-entra-post-login-sync: no idp_user row for entra id {0}&quot;, brokerContext.getId());
+                context.success();
+                return;
+            }
+
+            LOG.log(Level.INFO, &quot;DEBUG post-login contextData keys: {0}&quot;, brokerContext.getContextData().keySet());
+            LOG.log(Level.INFO, &quot;DEBUG post-login entraRoles raw (prefixed): {0}&quot;,
+                    brokerContext.getContextData().get(USER_ATTR_PREFIX + EntraFblConstants.ATTR_ROLES));
+
+            reconcile(realm, user, brokerContext, idpUserId);
+            dao.touchLastLogin(idpUserId);
+            LOG.log(Level.INFO, &quot;rollingstone-entra-post-login-sync: reconcile + context.success() completed for idpUserId={0}&quot;, idpUserId);
+            context.success();
+
+        } catch (SQLException e) {
+            LOG.log(Level.SEVERE, &quot;rollingstone-entra-post-login-sync: DB sync failed&quot;, e);
+            context.getEvent().error(&quot;rollingstone_entra_post_login_sync_failed&quot;);
+            context.failure(AuthenticationFlowError.INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public void action(AuthenticationFlowContext context) {
+        LOG.log(Level.INFO, &quot;rollingstone-entra-post-login-sync: action() ENTERED&quot;);
+        authenticate(context);
+    }
+
+    @Override
+    protected void actionImpl(AuthenticationFlowContext context,
+                              SerializedBrokeredIdentityContext serializedCtx,
+                              BrokeredIdentityContext brokerContext) {
+        LOG.log(Level.INFO, &quot;rollingstone-entra-post-login-sync: actionImpl ENTERED (unexpected path)&quot;);
+        authenticateImpl(context, serializedCtx, brokerContext);
+    }
+
+    private void reconcile(RealmModel realm, UserModel user, BrokeredIdentityContext brokerContext, long idpUserId)
+            throws SQLException {
+
+        Set&lt;String&gt; assertedRoles = new HashSet&lt;&gt;();
+        Set&lt;String&gt; assertedGroups = new HashSet&lt;&gt;();
+        for (String value : attrList(brokerContext, EntraFblConstants.ATTR_ROLES)) {
+            if (value.startsWith(EntraFblConstants.GROUP_ROLE_PREFIX)) {
+                assertedGroups.add(value.substring(EntraFblConstants.GROUP_ROLE_PREFIX.length()));
+            } else {
+                assertedRoles.add(value);
+            }
+        }
+
+        Set&lt;String&gt; activeRoles = dao.currentActiveRoles(idpUserId);
+        Set&lt;String&gt; activeGroups = dao.currentActiveGroups(idpUserId);
+
+        LOG.log(Level.INFO, &quot;rollingstone-entra-post-login-sync: assertedRoles={0} assertedGroups={1} activeRoles={2} activeGroups={3}&quot;,
+                new Object[]{assertedRoles, assertedGroups, activeRoles, activeGroups});
+
+        for (String roleName : assertedRoles) {
+            if (!activeRoles.contains(roleName)) {
+                RoleGroupSync.grantRoleInKeycloakAndDb(realm, user, dao, idpUserId, roleName, LOG);
+            }
+        }
+        for (String roleName : activeRoles) {
+            if (!assertedRoles.contains(roleName)) {
+                RoleGroupSync.revokeRoleInKeycloakAndDb(realm, user, dao, idpUserId, roleName, LOG);
+            }
+        }
+
+        for (String groupName : assertedGroups) {
+            if (!activeGroups.contains(groupName)) {
+                RoleGroupSync.joinGroupInKeycloakAndDb(realm, user, dao, idpUserId, groupName, LOG);
+            }
+        }
+        for (String groupName : activeGroups) {
+            if (!assertedGroups.contains(groupName)) {
+                RoleGroupSync.leaveGroupInKeycloakAndDb(realm, user, dao, idpUserId, groupName, LOG);
+            }
+        }
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private List&lt;String&gt; attrList(BrokeredIdentityContext ctx, String name) {
+        Object value = ctx.getContextData().get(USER_ATTR_PREFIX + name);
+        if (value instanceof List&lt;?&gt; list) {
+            return (List&lt;String&gt;) list;
+        }
+        return value == null ? List.of() : List.of(String.valueOf(value));
+    }
+
+    @Override
+    public boolean requiresUser() {
+        return true;
+    }
+
+    @Override
+    public boolean configuredFor(KeycloakSession session, RealmModel realm, UserModel user) {
+        return true;
+    }
+
+    @Override
+    public void setRequiredActions(KeycloakSession session, RealmModel realm, UserModel user) {
+    }
+}</pre></details><details class="card" style="margin:12px 0"><summary><b>EntraPostLoginRoleGroupSyncAuthenticatorFactory.java</b></summary><pre>package com.rollingstone.kc.entra;
+
+import org.keycloak.Config;
+import org.keycloak.authentication.Authenticator;
+import org.keycloak.authentication.AuthenticatorFactory;
+import org.keycloak.models.AuthenticationExecutionModel;
+import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakSessionFactory;
+import org.keycloak.provider.ProviderConfigProperty;
+
+import java.util.Collections;
+import java.util.List;
+
+public class EntraPostLoginRoleGroupSyncAuthenticatorFactory implements AuthenticatorFactory {
+
+    @Override
+    public String getId() {
+        return EntraPostLoginRoleGroupSyncAuthenticator.PROVIDER_ID;
+    }
+
+    @Override
+    public Authenticator create(KeycloakSession session) {
+        return new EntraPostLoginRoleGroupSyncAuthenticator();
+    }
+
+    @Override
+    public void init(Config.Scope config) {
+    }
+
+    @Override
+    public void postInit(KeycloakSessionFactory factory) {
+    }
+
+    @Override
+    public void close() {
+    }
+
+    @Override
+    public String getDisplayType() {
+        return &quot;rollingstone Entra Post-Login Role/Group Sync&quot;;
+    }
+
+    @Override
+    public String getReferenceCategory() {
+        return &quot;post-login-provisioning&quot;;
+    }
+
+    @Override
+    public boolean isConfigurable() {
+        return false;
+    }
+
+    @Override
+    public AuthenticationExecutionModel.Requirement[] getRequirementChoices() {
+        return new AuthenticationExecutionModel.Requirement[]{
+                AuthenticationExecutionModel.Requirement.REQUIRED,
+                AuthenticationExecutionModel.Requirement.DISABLED
+        };
+    }
+
+    @Override
+    public boolean isUserSetupAllowed() {
+        return false;
+    }
+
+    @Override
+    public String getHelpText() {
+        return &quot;Runs on every brokered login (bound to the IdP&#x27;s Post Login Flow). Diffs the &quot; +
+                &quot;Entra assertion&#x27;s roles/groups against MySQL&#x27;s last-known ACTIVE set and applies &quot; +
+                &quot;grants and revocations to both Keycloak and MySQL.&quot;;
+    }
+
+    @Override
+    public List&lt;ProviderConfigProperty&gt; getConfigProperties() {
+        return Collections.emptyList();
+    }
+}</pre></details><details class="card" style="margin:12px 0"><summary><b>EntraFblConstants.java</b></summary><pre>package com.rollingstone.kc.entra;
+
+/**
+ * Shared constants for the Entra ID broker-sync authenticators. DB
+ * credentials are hardcoded here to keep this training example short — in a
+ * real deployment, source these from Config.Scope (SPI config in
+ * keycloak.conf) instead.
+ */
+public final class EntraFblConstants {
+
+    private EntraFblConstants() {
+    }
+
+    public static final String JDBC_URL = &quot;jdbc:mysql://localhost:3306/ecommerce_demo&quot;;
+    public static final String JDBC_USER = &quot;root&quot;;
+    public static final String JDBC_PASSWORD = &quot;localroot&quot;;
+
+    /** SAML attribute names, as configured on the Keycloak IdP&#x27;s Attribute Importer mappers. */
+    public static final String ATTR_FIRST_NAME = &quot;firstName&quot;;
+    public static final String ATTR_LAST_NAME = &quot;lastName&quot;;
+    public static final String ATTR_PHONE = &quot;phoneNumber&quot;;
+    public static final String ATTR_STREET = &quot;streetAddress&quot;;
+    public static final String ATTR_CITY = &quot;city&quot;;
+    public static final String ATTR_STATE = &quot;state&quot;;
+    public static final String ATTR_POSTAL_CODE = &quot;postalCode&quot;;
+    public static final String ATTR_COUNTRY = &quot;country&quot;;
+    public static final String ATTR_DOB = &quot;dateOfBirth&quot;;
+    public static final String ATTR_ROLES = &quot;entraRoles&quot;;
+
+    /** App Role values carrying this prefix are treated as group membership, not a role. */
+    public static final String GROUP_ROLE_PREFIX = &quot;GROUP_&quot;;
+}</pre></details><details class="card" style="margin:12px 0"><summary><b>ExtendedEntraCreateUserAuthenticator.java</b></summary><pre>package com.rollingstone.kc.entra;
+
+import org.keycloak.authentication.AuthenticationFlowContext;
+import org.keycloak.authentication.AuthenticationFlowError;
+import org.keycloak.authentication.authenticators.broker.AbstractIdpAuthenticator;
+import org.keycloak.authentication.authenticators.broker.util.SerializedBrokeredIdentityContext;
+import org.keycloak.broker.provider.BrokeredIdentityContext;
+import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.RealmModel;
+import org.keycloak.models.UserModel;
+
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * Bound to the Entra IdP&#x27;s First Login Flow (rollingstone-entra-first-broker-login).
+ * Runs exactly once, the first time a given Entra identity links to a
+ * Keycloak account.
+ *
+ * IMPORTANT: AbstractIdpAuthenticator#authenticate() calls authenticateImpl()
+ * directly. action()/actionImpl() are ONLY invoked later if authenticateImpl()
+ * issued a browser challenge (context.challenge(...)) and the user submitted
+ * that form. This authenticator never challenges, so all of its real work
+ * (user creation, MySQL sync, initial role/group grants) must happen inside
+ * authenticateImpl() itself -- putting it in actionImpl() means it never runs.
+ * action()/actionImpl() are still implemented below purely because
+ * AbstractIdpAuthenticator declares actionImpl() abstract -- they are dead
+ * code in this authenticator&#x27;s normal flow.
+ *
+ * Since this authenticator now also replaces the built-in &quot;Create User If
+ * Unique&quot; step in the User creation or linking sub-flow, it creates the
+ * Keycloak UserModel itself when context.getUser() is still null at this
+ * point in the flow, instead of assuming some other execution already did it.
+ *
+ * ATTRIBUTE SOURCE: the Keycloak IdP&#x27;s &quot;Attribute Importer&quot; mappers write
+ * claim values into BrokeredIdentityContext.getContextData(), keyed with a
+ * &quot;user.attributes.&quot; prefix (e.g. &quot;user.attributes.entraRoles&quot;,
+ * &quot;user.attributes.firstName&quot;) -- confirmed from a runtime dump of
+ * getContextData().keySet(). attr()/attrList() below read from
+ * brokerContext with that prefix prepended, not from the UserModel.
+ */
+public class ExtendedEntraCreateUserAuthenticator extends AbstractIdpAuthenticator {
+
+    public static final String PROVIDER_ID = &quot;rollingstone-entra-create-user&quot;;
+
+    private static final Logger LOG = Logger.getLogger(ExtendedEntraCreateUserAuthenticator.class.getName());
+
+    private static final String USER_ATTR_PREFIX = &quot;user.attributes.&quot;;
+
+    private final EntraUserSyncDao dao = new EntraUserSyncDao();
+
+    @Override
+    protected void authenticateImpl(AuthenticationFlowContext context,
+                                    SerializedBrokeredIdentityContext serializedCtx,
+                                    BrokeredIdentityContext brokerContext) {
+
+        RealmModel realm = context.getRealm();
+        UserModel user = context.getUser();
+
+        if (user == null) {
+            user = createKeycloakUser(context, brokerContext);
+        }
+
+        try {
+            long idpUserId = persistProfile(brokerContext, user);
+            applyInitialRolesAndGroups(realm, user, brokerContext, idpUserId);
+            context.success();
+        } catch (SQLException e) {
+            LOG.log(Level.SEVERE, &quot;rollingstone-entra-create-user: DB sync failed&quot;, e);
+            context.getEvent().error(&quot;rollingstone_entra_db_sync_failed&quot;);
+            context.failure(AuthenticationFlowError.INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public void action(AuthenticationFlowContext context) {
+        authenticate(context);
+    }
+
+    @Override
+    protected void actionImpl(AuthenticationFlowContext context,
+                              SerializedBrokeredIdentityContext serializedCtx,
+                              BrokeredIdentityContext brokerContext) {
+        // authenticateImpl() never challenges, so this is never reached in
+        // practice -- required override only to satisfy AbstractIdpAuthenticator.
+        context.success();
+    }
+
+    /**
+     * Creates the Keycloak-side UserModel for a brand-new Entra identity.
+     * Mirrors the minimum the built-in &quot;Create User If Unique&quot; step did --
+     * no duplicate-email detection here, since this is a training lab where
+     * every Entra login is expected to be a genuinely new account.
+     */
+    private UserModel createKeycloakUser(AuthenticationFlowContext context, BrokeredIdentityContext brokerContext) {
+        RealmModel realm = context.getRealm();
+        KeycloakSession session = context.getSession();
+
+        String username = brokerContext.getModelUsername();
+        if (username == null || username.isBlank()) {
+            username = brokerContext.getUsername();
+        }
+        if (username == null || username.isBlank()) {
+            username = brokerContext.getEmail();
+        }
+
+        UserModel newUser = session.users().addUser(realm, username);
+        newUser.setEnabled(true);
+        newUser.setEmail(brokerContext.getEmail());
+        newUser.setEmailVerified(true);
+
+        context.setUser(newUser);
+
+        LOG.log(Level.INFO, &quot;rollingstone-entra-create-user: created Keycloak user &#x27;&#x27;{0}&#x27;&#x27; for Entra object {1}&quot;,
+                new Object[]{username, brokerContext.getId()});
+
+        return newUser;
+    }
+
+    private long persistProfile(BrokeredIdentityContext brokerContext, UserModel user) throws SQLException {
+        String entraObjectId = brokerContext.getId();
+        String email = brokerContext.getEmail();
+        String firstName = attr(brokerContext, EntraFblConstants.ATTR_FIRST_NAME);
+        String lastName = attr(brokerContext, EntraFblConstants.ATTR_LAST_NAME);
+        String phone = attr(brokerContext, EntraFblConstants.ATTR_PHONE);
+        String street = attr(brokerContext, EntraFblConstants.ATTR_STREET);
+        String city = attr(brokerContext, EntraFblConstants.ATTR_CITY);
+        String state = attr(brokerContext, EntraFblConstants.ATTR_STATE);
+        String postalCode = attr(brokerContext, EntraFblConstants.ATTR_POSTAL_CODE);
+        String country = attr(brokerContext, EntraFblConstants.ATTR_COUNTRY);
+        LocalDate dob = parseDob(attr(brokerContext, EntraFblConstants.ATTR_DOB));
+
+        LOG.log(Level.INFO, &quot;DEBUG contextData keys: {0}&quot;, brokerContext.getContextData().keySet());
+        LOG.log(Level.INFO, &quot;DEBUG contextData entraRoles raw (prefixed): {0}&quot;,
+                brokerContext.getContextData().get(USER_ATTR_PREFIX + EntraFblConstants.ATTR_ROLES));
+        LOG.log(Level.INFO, &quot;DEBUG contextData firstName raw (prefixed): {0}&quot;,
+                brokerContext.getContextData().get(USER_ATTR_PREFIX + EntraFblConstants.ATTR_FIRST_NAME));
+
+        if (firstName != null) {
+            user.setFirstName(firstName);
+        }
+        if (lastName != null) {
+            user.setLastName(lastName);
+        }
+
+        return dao.upsertUser(user.getId(), entraObjectId, email, firstName, lastName, dob,
+                phone, street, city, state, postalCode, country);
+    }
+
+    private void applyInitialRolesAndGroups(RealmModel realm, UserModel user,
+                                            BrokeredIdentityContext brokerContext, long idpUserId) throws SQLException {
+        List&lt;String&gt; claimValues = attrList(brokerContext, EntraFblConstants.ATTR_ROLES);
+
+        for (String value : claimValues) {
+            if (value.startsWith(EntraFblConstants.GROUP_ROLE_PREFIX)) {
+                String groupName = value.substring(EntraFblConstants.GROUP_ROLE_PREFIX.length());
+                RoleGroupSync.joinGroupInKeycloakAndDb(realm, user, dao, idpUserId, groupName, LOG);
+            } else {
+                RoleGroupSync.grantRoleInKeycloakAndDb(realm, user, dao, idpUserId, value, LOG);
+            }
+        }
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private String attr(BrokeredIdentityContext ctx, String name) {
+        Object value = ctx.getContextData().get(USER_ATTR_PREFIX + name);
+        if (value instanceof List&lt;?&gt; list &amp;&amp; !list.isEmpty()) {
+            return String.valueOf(list.get(0));
+        }
+        return value == null ? null : String.valueOf(value);
+    }
+
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private List&lt;String&gt; attrList(BrokeredIdentityContext ctx, String name) {
+        Object value = ctx.getContextData().get(USER_ATTR_PREFIX + name);
+        if (value instanceof List&lt;?&gt; list) {
+            return (List&lt;String&gt;) list;
+        }
+        return value == null ? List.of() : List.of(String.valueOf(value));
+    }
+
+    private LocalDate parseDob(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(raw);
+        } catch (DateTimeParseException e) {
+            LOG.log(Level.WARNING, &quot;rollingstone-entra-create-user: unparseable dateOfBirth &#x27;&#x27;{0}&#x27;&#x27;&quot;, raw);
+            return null;
+        }
+    }
+
+    @Override
+    public boolean requiresUser() {
+        return false;
+    }
+
+    @Override
+    public boolean configuredFor(KeycloakSession session, RealmModel realm, UserModel user) {
+        return true;
+    }
+
+    @Override
+    public void setRequiredActions(KeycloakSession session, RealmModel realm, UserModel user) {
+    }
+}</pre></details><details class="card" style="margin:12px 0"><summary><b>RoleGroupSync.java</b></summary><pre>package com.rollingstone.kc.entra;
+
+import org.keycloak.models.GroupModel;
+import org.keycloak.models.RealmModel;
+import org.keycloak.models.RoleModel;
+import org.keycloak.models.UserModel;
+
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
+
+final class RoleGroupSync {
+
+    private RoleGroupSync() {
+    }
+
+    static void grantRoleInKeycloakAndDb(RealmModel realm, UserModel user, EntraUserSyncDao dao,
+                                         long idpUserId, String roleName, Logger log) throws SQLException {
+        RoleModel role = realm.getRole(roleName);
+        if (role == null) {
+            log.log(Level.WARNING, &quot;rollingstone-entra: realm role &#x27;&#x27;{0}&#x27;&#x27; not found, skipping grant&quot;, roleName);
+            return;
+        }
+        user.grantRole(role);
+        dao.grantRole(idpUserId, roleName);
+    }
+
+    static void revokeRoleInKeycloakAndDb(RealmModel realm, UserModel user, EntraUserSyncDao dao,
+                                          long idpUserId, String roleName, Logger log) throws SQLException {
+        RoleModel role = realm.getRole(roleName);
+        if (role != null) {
+            user.deleteRoleMapping(role);
+        }
+        dao.revokeRole(idpUserId, roleName);
+    }
+
+    static void joinGroupInKeycloakAndDb(RealmModel realm, UserModel user, EntraUserSyncDao dao,
+                                         long idpUserId, String groupName, Logger log) throws SQLException {
+        GroupModel group = findGroupByName(realm, groupName);
+        if (group == null) {
+            log.log(Level.WARNING, &quot;rollingstone-entra: group &#x27;&#x27;{0}&#x27;&#x27; not found, skipping join&quot;, groupName);
+            return;
+        }
+        user.joinGroup(group);
+        dao.joinGroup(idpUserId, groupName);
+    }
+
+    static void leaveGroupInKeycloakAndDb(RealmModel realm, UserModel user, EntraUserSyncDao dao,
+                                          long idpUserId, String groupName, Logger log) throws SQLException {
+        GroupModel group = findGroupByName(realm, groupName);
+        if (group != null) {
+            user.leaveGroup(group);
+        }
+        dao.leaveGroup(idpUserId, groupName);
+    }
+
+    private static GroupModel findGroupByName(RealmModel realm, String name) {
+        return realm.getGroupsStream()
+                .flatMap(RoleGroupSync::flatten)
+                .filter(g -&gt; g.getName().equals(name))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static Stream&lt;GroupModel&gt; flatten(GroupModel group) {
+        return Stream.concat(Stream.of(group), group.getSubGroupsStream().flatMap(RoleGroupSync::flatten));
+    }
+}</pre></details><details class="card" style="margin:12px 0"><summary><b>DEPLOY.md</b></summary><pre># Deploying entra-broker-sync-ext
+
+## 1. Database
+Run db/entra-sync-schema.sql against your keycloak_jpa_demo MySQL 8 schema
+before any Entra login test.
+
+## 2. Build
+    cd entra-broker-sync-ext
+    mvn clean package
+    export KEYCLOAK_HOME=/Users/binitdatta/KeyCloak_Home/keycloak-26.2.5
+
+## 3. Deploy to Keycloak
+    cp target/rollingstone-entra-broker-sync-ext.jar $KEYCLOAK_HOME/providers/
+    cp ~/.m2/repository/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar $KEYCLOAK_HOME/providers/
+    cd $KEYCLOAK_HOME
+    bin/kc.sh build
+
+#  4. Start KeyCloak
+
+    bin/kc.sh start-dev \
+    --spi-ciba-auth-channel-ciba-http-auth-channel-http-authentication-channel-uri=http://localhost:8092/ciba/notify \
+    --https-certificate-file=/Users/binitdatta/Development/KeyCloak-JPA-Showcase/keycloak-jpa-demo/mtls/kc-server-cert.pem \
+    --https-certificate-key-file=/Users/binitdatta/Development/KeyCloak-JPA-Showcase/keycloak-jpa-demo/mtls/kc-server-key.pem \
+    --https-client-auth=request \
+    --https-trust-store-file=/Users/binitdatta/Development/KeyCloak-JPA-Showcase/keycloak-jpa-demo/mtls/truststore.p12 \
+    --https-trust-store-password=changeit
+
+## 4. Start Keycloak, then confirm registration
+Authentication -&gt; Flows -&gt; any flow -&gt; Add execution. The dropdown should
+list &quot;rollingstone Entra Create User (Ext)&quot; and &quot;rollingstone Entra Post-Login Role/Group
+Sync&quot;. If either is missing, the META-INF/services file didn&#x27;t make it into
+the JAR -- verify with:
+    jar tf target/rollingstone-entra-broker-sync-ext.jar | grep META-INF/services
+
+## 5. Wire the flows
+- First Login Flow: duplicate the built-in &quot;first broker login&quot; flow, name it
+  rollingstone-entra-first-broker-login, swap its &quot;Create User If Unique&quot; step for
+  &quot;rollingstone Entra Create User (Ext)&quot;.
+- Post Login Flow: create a new top-level flow rollingstone-entra-post-login with a
+  single REQUIRED execution: &quot;rollingstone Entra Post-Login Role/Group Sync&quot;.
+- On the entra-saml Identity Provider&#x27;s Advanced tab, set First Login Flow
+  and Post Login Flow to the two flows above.
+
+## 6. DB credentials
+EntraFblConstants.java hardcodes JDBC_URL / JDBC_USER / JDBC_PASSWORD for
+this training lab. Edit that file and rebuild if your MySQL credentials
+differ from root/changeit on localhost:3306.
+</pre></details><details class="card" style="margin:12px 0"><summary><b>pom.xml</b></summary><pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.rollingstone.kc&lt;/groupId&gt;
+    &lt;artifactId&gt;entra-broker-sync-ext&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0&lt;/version&gt;
+    &lt;packaging&gt;jar&lt;/packaging&gt;
+    &lt;name&gt;entra-broker-sync-ext&lt;/name&gt;
+    &lt;description&gt;
+        Keycloak 26 SPI providers for the Entra ID SAML broker: (1)
+        ExtendedEntraCreateUserAuthenticator, bound to the IdP&#x27;s First Login
+        Flow, which extracts profile/role/group claims from the SAML
+        assertion and upserts them into the keycloak-jpa-demo MySQL schema;
+        and (2) EntraPostLoginRoleGroupSyncAuthenticator, bound to the IdP&#x27;s
+        Post Login Flow, which runs on every subsequent login and reconciles
+        role/group grants and revocations between the assertion and MySQL.
+    &lt;/description&gt;
+
+    &lt;properties&gt;
+        &lt;maven.compiler.source&gt;17&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;17&lt;/maven.compiler.target&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+        &lt;keycloak.version&gt;26.0.7&lt;/keycloak.version&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.keycloak&lt;/groupId&gt;
+            &lt;artifactId&gt;keycloak-server-spi&lt;/artifactId&gt;
+            &lt;version&gt;${keycloak.version}&lt;/version&gt;
+            &lt;scope&gt;provided&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.keycloak&lt;/groupId&gt;
+            &lt;artifactId&gt;keycloak-server-spi-private&lt;/artifactId&gt;
+            &lt;version&gt;${keycloak.version}&lt;/version&gt;
+            &lt;scope&gt;provided&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.keycloak&lt;/groupId&gt;
+            &lt;artifactId&gt;keycloak-services&lt;/artifactId&gt;
+            &lt;version&gt;${keycloak.version}&lt;/version&gt;
+            &lt;scope&gt;provided&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.keycloak&lt;/groupId&gt;
+            &lt;artifactId&gt;keycloak-core&lt;/artifactId&gt;
+            &lt;version&gt;${keycloak.version}&lt;/version&gt;
+            &lt;scope&gt;provided&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;!-- NOT on Keycloak&#x27;s classpath by default — compile scope here, and
+             the driver JAR must be dropped into KEYCLOAK_HOME/providers/
+             alongside this module&#x27;s JAR too, see DEPLOY.md. --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-j&lt;/artifactId&gt;
+            &lt;version&gt;8.4.0&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;finalName&gt;rollingstone-entra-broker-sync-ext&lt;/finalName&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+                &lt;version&gt;3.13.0&lt;/version&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+&lt;/project&gt;
+</pre></details></section></main></body></html>

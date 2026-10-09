@@ -1,0 +1,204 @@
+{
+  "realm": "jpa-demo-realm",
+  "enabled": true,
+  "displayName": "JPA & Keycloak Lab",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+
+  "roles": {
+    "realm": [
+      { "name": "customer", "description": "Baseline realm role granted to every migrated / broker-login customer" },
+      { "name": "admin", "description": "Realm administrator for this lab" }
+    ]
+  },
+
+  "groups": [
+    {
+      "name": "customers",
+      "subGroups": [
+        { "name": "migrated", "path": "/customers/migrated" }
+      ]
+    }
+  ],
+
+  "clients": [
+    {
+      "clientId": "jpa-demo-web",
+      "name": "JPA Demo Web (Thymeleaf UI)",
+      "description": "Browser-facing Spring Boot app using standard Authorization Code + PKCE",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "jpa-demo-web-secret",
+      "redirectUris": [ "http://localhost:8091/login/oauth2/code/keycloak" ],
+      "webOrigins": [ "http://localhost:8091" ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "signed-jwt-client",
+      "name": "Signed JWT Demo Client (Episode A)",
+      "description": "Confidential client authenticating with a self-signed JWT bearer assertion (private_key_jwt)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-jwt",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "attributes": {
+        "use.jwks.url": "true",
+        "jwks.url": "https://example.internal/signed-jwt-client/jwks.json",
+        "token.endpoint.auth.signing.alg": "RS256"
+      }
+    },
+    {
+      "clientId": "x509-cert-client",
+      "name": "X509 Certificate Demo Client (Episode B)",
+      "description": "Confidential client authenticating via mutual TLS / client certificate",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-x509",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "attributes": {
+        "x509.subjectdn": "CN=x509-cert-client,OU=Labs,O=Labs,C=US",
+        "x509.allow.regex.pattern.comparison": "true"
+      }
+    },
+    {
+      "clientId": "signed-jwt-secret-client",
+      "name": "Signed JWT with Client Secret Demo Client (Episode C)",
+      "description": "Confidential client authenticating with an HMAC-signed JWT assertion, keyed by the client secret",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret-jwt",
+      "secret": "signed-jwt-secret-client-hmac-key",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "attributes": {
+        "token.endpoint.auth.signing.alg": "HS256"
+      }
+    },
+    {
+      "clientId": "capability-demo-client",
+      "name": "Capability Config Demo Client (Episode D)",
+      "description": "Demonstrates Authorization Services, Device Authorization Grant, and CIBA toggles",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "capability-demo-client-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "attributes": {
+        "oauth2.device.authorization.grant.enabled": "true",
+        "oidc.ciba.grant.enabled": "true",
+        "standard.token.exchange.enabled": "true"
+      },
+      "authorizationSettings": {
+        "allowRemoteResourceManagement": true,
+        "policyEnforcementMode": "ENFORCING",
+        "resources": [
+          { "name": "Default Resource", "uri": "/*", "type": "urn:capability-demo-client:resources:default" }
+        ]
+      }
+    },
+    {
+      "clientId": "labs-secret-header-client",
+      "name": "Custom Client Authenticator Demo Client (Episode E1)",
+      "description": "Authenticates using the custom labs-secret-header ClientAuthenticatorFactory (see custom-providers/client-authenticator)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "labs-secret-header",
+      "secret": "labs-secret-header-demo-key",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false
+    }
+  ],
+
+  "identityProviders": [
+    {
+      "alias": "labs-legacy-broker",
+      "displayName": "Labs Legacy Customer Broker (Episode E2/E3)",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "firstBrokerLoginFlowAlias": "labs-first-broker-login",
+      "config": {
+        "clientId": "labs-legacy-broker-client",
+        "clientSecret": "labs-legacy-broker-client-secret",
+        "authorizationUrl": "https://legacy.example.internal/oauth2/authorize",
+        "tokenUrl": "https://legacy.example.internal/oauth2/token",
+        "userInfoUrl": "https://legacy.example.internal/oauth2/userinfo",
+        "defaultScope": "openid email profile",
+        "syncMode": "IMPORT"
+      }
+    }
+  ],
+
+  "authenticationFlows": [
+    {
+      "alias": "labs-first-broker-login",
+      "description": "Copy of the built-in First broker login flow, with Create User If Unique swapped for the custom labs-create-user-if-unique-ext authenticator, plus a required post-login role/group provisioning step (Episodes E2/E3)",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "idp-review-profile",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "autheticatorFlow": false
+        },
+        {
+          "authenticator": "labs-create-user-if-unique-ext",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "autheticatorFlow": false
+        },
+        {
+          "authenticator": "idp-auto-link",
+          "requirement": "ALTERNATIVE",
+          "priority": 30,
+          "userSetupAllowed": false,
+          "autheticatorFlow": false
+        },
+        {
+          "authenticator": "labs-post-login-role-group",
+          "requirement": "REQUIRED",
+          "priority": 40,
+          "userSetupAllowed": false,
+          "autheticatorFlow": false
+        }
+      ]
+    }
+  ]
+}

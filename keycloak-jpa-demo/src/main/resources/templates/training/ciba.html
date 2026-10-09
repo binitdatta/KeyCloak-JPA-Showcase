@@ -1,0 +1,3590 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>OIDC CIBA Grant | Training</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/bright-blue.css}">
+
+    <style>
+
+        :root {
+            --ciba-navy: #06142f;
+            --ciba-navy-2: #0b2455;
+            --ciba-blue: #315df1;
+            --ciba-cyan: #19c9f5;
+            --ciba-white: #ffffff;
+            --ciba-panel: rgba(255,255,255,.97);
+            --ciba-text: #17243d;
+            --ciba-heading: #102b69;
+            --ciba-muted: #5d6c80;
+            --ciba-border: #dbe6f2;
+            --ciba-code: #061536;
+            --ciba-green: #15945d;
+            --ciba-red: #d63c4c;
+            --ciba-yellow: #eba900;
+            --ciba-purple: #7256d8;
+        }
+
+
+        /* =========================================================
+           CONTINUOUS BACKGROUND
+           ========================================================= */
+
+        html {
+            min-height: 100%;
+            background: #06142f;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: white;
+
+            background:
+                radial-gradient(
+                    circle at 92% 12%,
+                    rgba(39,103,246,.92) 0,
+                    rgba(39,103,246,.44) 24%,
+                    transparent 44%
+                ),
+                radial-gradient(
+                    circle at 82% 54%,
+                    rgba(24,112,244,.44) 0,
+                    transparent 37%
+                ),
+                linear-gradient(
+                    112deg,
+                    #06142f 0%,
+                    #0b2150 34%,
+                    #173a91 66%,
+                    #315df1 100%
+                );
+
+            background-attachment: fixed;
+        }
+
+        .navbar {
+            position: relative;
+            z-index: 100;
+        }
+
+        .ciba-page {
+            position: relative;
+            overflow: hidden;
+            background: transparent !important;
+        }
+
+        .ciba-layer {
+            position: relative;
+            z-index: 2;
+        }
+
+        .ciba-section {
+            padding: 5rem 0;
+            background: transparent !important;
+        }
+
+        .ciba-section + .ciba-section {
+            border-top: 1px solid rgba(255,255,255,.09);
+        }
+
+
+        /* =========================================================
+           TYPOGRAPHY
+           ========================================================= */
+
+        .ciba-kicker {
+            color: #45d6ff;
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .19em;
+            text-transform: uppercase;
+        }
+
+        .ciba-section-title {
+            color: white;
+            font-size: clamp(2rem,3vw,3.1rem);
+            font-weight: 800;
+            letter-spacing: -.035em;
+            margin-bottom: 1rem;
+        }
+
+        .ciba-section-lead {
+            max-width: 1000px;
+            color: rgba(255,255,255,.80);
+            font-size: 1.08rem;
+            line-height: 1.8;
+        }
+
+        .ciba-electric {
+            color: #22c8f3;
+        }
+
+
+        /* =========================================================
+           HERO
+           ========================================================= */
+
+        .ciba-hero {
+            padding: 2.5rem 0 5.5rem;
+            background: transparent !important;
+        }
+
+        .ciba-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            margin-bottom: 4rem;
+            color: #8ae4ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .ciba-back-link:hover {
+            color: white;
+        }
+
+        .ciba-hero-title {
+            color: white;
+            font-size: clamp(3rem,5vw,5.1rem);
+            font-weight: 800;
+            line-height: .99;
+            letter-spacing: -.045em;
+        }
+
+        .ciba-hero-lead {
+            max-width: 760px;
+            color: rgba(255,255,255,.82);
+            font-size: 1.14rem;
+            line-height: 1.75;
+        }
+
+        .ciba-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .45rem .88rem;
+            color: white;
+            font-size: .78rem;
+            font-weight: 700;
+            border: 1px solid #21c9f5;
+            border-radius: 999px;
+            background: rgba(4,21,55,.42);
+        }
+
+
+        /* =========================================================
+           HERO ARCHITECTURE
+           ========================================================= */
+
+        .ciba-architecture {
+            padding: 1.6rem;
+            background: rgba(7,30,77,.72);
+            border: 1px solid #1bc9f5;
+            border-radius: 21px;
+            box-shadow: 0 25px 65px rgba(0,0,0,.18);
+            backdrop-filter: blur(8px);
+        }
+
+        .ciba-architecture-title {
+            color: white;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .ciba-architecture-subtitle {
+            color: rgba(255,255,255,.70);
+        }
+
+        .ciba-arch-node {
+            padding: 1.15rem;
+            text-align: center;
+            color: white;
+            background: rgba(255,255,255,.055);
+            border: 1px solid rgba(255,255,255,.70);
+            border-radius: 16px;
+        }
+
+        .ciba-arch-node.highlight {
+            border-color: #20c9f4;
+        }
+
+        .ciba-arrow {
+            color: #1ed0fa;
+            font-size: 1.7rem;
+        }
+
+
+        /* =========================================================
+           LIGHT CARDS
+           ========================================================= */
+
+        .ciba-card {
+            height: 100%;
+            color: var(--ciba-text);
+            background: var(--ciba-panel);
+            border: 1px solid var(--ciba-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 45px rgba(1,15,45,.16);
+            overflow: hidden;
+        }
+
+        .ciba-card-accent {
+            border-color: #32c7f2;
+        }
+
+        .ciba-card-body {
+            padding: 1.8rem;
+        }
+
+        .ciba-card-title {
+            color: #111b2e;
+            font-weight: 800;
+        }
+
+        .ciba-card p,
+        .ciba-card li {
+            color: #4f5d70;
+        }
+
+        .ciba-label {
+            font-size: .71rem;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+        .ciba-icon {
+            width: 54px;
+            height: 54px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-size: 1.55rem;
+        }
+
+        .ciba-icon-blue {
+            color: #1479df;
+            background: #e9f7ff;
+        }
+
+        .ciba-icon-green {
+            color: #148e59;
+            background: #eaf9f1;
+        }
+
+        .ciba-icon-red {
+            color: #d93e4e;
+            background: #fff0f2;
+        }
+
+        .ciba-icon-yellow {
+            color: #e5a600;
+            background: #fff6d9;
+        }
+
+        .ciba-icon-purple {
+            color: #7256d8;
+            background: #f0ecff;
+        }
+
+
+        /* =========================================================
+           CODE
+           ========================================================= */
+
+        .ciba-code {
+            margin: 0;
+            padding: 1.2rem 1.35rem;
+            color: #f8fbff;
+            background: var(--ciba-code);
+            border: 1px solid rgba(66,203,255,.24);
+            border-radius: 12px;
+            font-size: .84rem;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+
+        /* =========================================================
+           STRIPED GRID
+           ========================================================= */
+
+        .ciba-striped-grid {
+            overflow: hidden;
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--ciba-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 42px rgba(0,0,0,.14);
+        }
+
+        .ciba-striped-grid table {
+            margin: 0;
+            --bs-table-bg: transparent;
+            --bs-table-color: #27344a;
+            --bs-table-border-color: #e1e8f1;
+        }
+
+        .ciba-striped-grid thead th {
+            padding: 1.2rem;
+            color: white;
+            background: #0b285f;
+            border: 0;
+        }
+
+        .ciba-striped-grid tbody td,
+        .ciba-striped-grid tbody th {
+            padding: 1.05rem 1.2rem;
+            vertical-align: middle;
+        }
+
+        .ciba-striped-grid tbody tr:nth-child(even) {
+            background: #f1f6fc;
+        }
+
+
+        /* =========================================================
+           FLOW
+           ========================================================= */
+
+        .ciba-flow-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .ciba-flow-node {
+            min-height: 165px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1.3rem;
+            text-align: center;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--ciba-border);
+            border-radius: 17px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .ciba-flow-arrow {
+            color: #34d5fb;
+            font-size: 2rem;
+        }
+
+
+        /* =========================================================
+           PROTOCOL TIMELINE
+           ========================================================= */
+
+        .ciba-protocol-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .ciba-protocol-row {
+            position: relative;
+            display: grid;
+            grid-template-columns: 58px 1fr;
+            gap: 1.2rem;
+            padding: .8rem 0;
+        }
+
+        .ciba-protocol-row:not(:last-child)::before {
+            content: "";
+            position: absolute;
+            left: 27px;
+            top: 60px;
+            bottom: -8px;
+            width: 2px;
+            background: linear-gradient(
+                #30d0f7,
+                rgba(255,255,255,.22)
+            );
+        }
+
+        .ciba-number {
+            position: relative;
+            z-index: 2;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            background: linear-gradient(
+                135deg,
+                #1765e8,
+                #18c8f4
+            );
+            border: 4px solid rgba(255,255,255,.95);
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(0,0,0,.18);
+        }
+
+        .ciba-protocol-card {
+            padding: 1.45rem;
+            color: var(--ciba-text);
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--ciba-border);
+            border-radius: 17px;
+            box-shadow: 0 12px 32px rgba(0,0,0,.10);
+        }
+
+        .ciba-protocol-card h4 {
+            color: #10275d;
+            font-weight: 800;
+        }
+
+        .ciba-protocol-card p,
+        .ciba-protocol-card li {
+            color: #536276;
+        }
+
+        .ciba-protocol-card.cd {
+            border-left: 5px solid #20c6f2;
+        }
+
+        .ciba-protocol-card.op {
+            border-left: 5px solid #1765e8;
+        }
+
+        .ciba-protocol-card.ad {
+            border-left: 5px solid #7256d8;
+        }
+
+        .ciba-protocol-card.human {
+            border-left: 5px solid #eba900;
+        }
+
+        .ciba-protocol-card.success {
+            border-left: 5px solid #19a468;
+        }
+
+
+        /* =========================================================
+           ACCORDION
+           ========================================================= */
+
+        .ciba-accordion {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 18px 45px rgba(0,0,0,.14);
+        }
+
+        .ciba-accordion .accordion-item {
+            border-color: #dbe5f0;
+        }
+
+        .ciba-accordion .accordion-button {
+            padding: 1.25rem 1.4rem;
+            color: #15233e;
+            background: rgba(255,255,255,.98);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .ciba-accordion .accordion-button:not(.collapsed) {
+            color: #0d347a;
+            background: #e9f4ff;
+            box-shadow: none;
+        }
+
+        .ciba-accordion .accordion-button:focus {
+            box-shadow: none;
+        }
+
+        .ciba-accordion .accordion-body {
+            padding: 1.6rem;
+            color: #4e5c70;
+            background: white;
+            line-height: 1.7;
+        }
+
+        .ciba-accordion-number {
+            min-width: 37px;
+            height: 37px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: .9rem;
+            color: white;
+            background: linear-gradient(
+                135deg,
+                #1765e8,
+                #18c8f4
+            );
+            border-radius: 50%;
+            font-size: .78rem;
+            font-weight: 800;
+        }
+
+
+        /* =========================================================
+           SPECIAL PANELS
+           ========================================================= */
+
+        .ciba-callout {
+            padding: 1.6rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .ciba-big-number {
+            font-size: 3.4rem;
+            line-height: 1;
+            font-weight: 800;
+            color: #1765e8;
+        }
+
+        .ciba-takeaway {
+            padding: 2.7rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid #36cef5;
+            border-radius: 22px;
+            box-shadow: 0 22px 55px rgba(0,0,0,.16);
+        }
+
+
+        @media (max-width: 991.98px) {
+
+            .ciba-flow-arrow {
+                transform: rotate(90deg);
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+
+<div class="ciba-page">
+    <div class="ciba-layer">
+
+
+        <!-- =========================================================
+             HERO
+             ========================================================= -->
+
+        <header class="ciba-hero">
+
+            <div class="container">
+
+                <a href="/training/capability-config"
+                   class="ciba-back-link">
+
+                    <i class="bi bi-arrow-left"></i>
+                    Back: Capability Config
+
+                </a>
+
+
+                <div class="row align-items-center g-5">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ciba-kicker mb-4">
+                            Episode E • Tested • OpenID Connect • Keycloak 26
+                        </div>
+
+
+                        <h1 class="ciba-hero-title mb-4">
+
+                            OIDC CIBA
+
+                            <span class="d-block ciba-electric">
+                        Backchannel Authentication.
+                    </span>
+
+                        </h1>
+
+
+                        <p class="ciba-hero-lead">
+
+                            CIBA stands for
+                            <strong>
+                                Client Initiated Backchannel Authentication
+                            </strong>.
+
+                            The client already knows which human it wants
+                            authenticated and asks the OpenID Provider to initiate
+                            authentication through that person's separate
+                            Authentication Device.
+
+                        </p>
+
+
+                        <p class="ciba-hero-lead">
+
+                            No authorization code is typed into the client.
+
+                            Instead, the authentication request travels through a
+                            <strong>backchannel</strong>, the human approves or denies
+                            it elsewhere, and the client waits asynchronously for the
+                            result.
+
+                        </p>
+
+
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+
+                    <span class="ciba-pill">
+                        <i class="bi bi-shield-lock"></i>
+                        Keycloak 26
+                    </span>
+
+                            <span class="ciba-pill">
+                        <i class="bi bi-arrow-left-right"></i>
+                        Backchannel
+                    </span>
+
+                            <span class="ciba-pill">
+                        <i class="bi bi-person-check"></i>
+                        Human Approval
+                    </span>
+
+                            <span class="ciba-pill">
+                        <i class="bi bi-phone"></i>
+                        Authentication Device
+                    </span>
+
+                            <span class="ciba-pill">
+                        <i class="bi bi-hourglass-split"></i>
+                        Asynchronous
+                    </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ciba-architecture">
+
+                            <div class="ciba-architecture-title">
+                                CIBA Trust Conversation
+                            </div>
+
+                            <div class="ciba-architecture-subtitle small mb-4">
+                                Client → Keycloak → Authentication Device → Human
+                            </div>
+
+
+                            <div class="ciba-arch-node highlight">
+
+                                <i class="bi bi-laptop text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Consumption Device
+                                </h5>
+
+                                <small class="text-white-50">
+                                    "Authenticate alice"
+                                </small>
+
+                            </div>
+
+
+                            <div class="text-center">
+                                <div class="ciba-arrow">↓</div>
+                                <small class="text-white-50">
+                                    CIBA Authentication Request
+                                </small>
+                            </div>
+
+
+                            <div class="ciba-arch-node">
+
+                                <i class="bi bi-shield-lock-fill text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Keycloak 26
+                                </h5>
+
+                                <small class="text-white-50">
+                                    OpenID Provider
+                                </small>
+
+                            </div>
+
+
+                            <div class="text-center">
+                                <div class="ciba-arrow">↓</div>
+                                <small class="text-white-50">
+                                    Backchannel Notification
+                                </small>
+                            </div>
+
+
+                            <div class="ciba-arch-node">
+
+                                <i class="bi bi-phone-fill text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Authentication Device
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Human Approves / Denies
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =========================================================
+             WHAT CIBA IS
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Core Concept
+                </div>
+
+                <h2 class="ciba-section-title">
+                    What Problem Does CIBA Solve?
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    CIBA separates the application requesting authentication from the
+                    device on which the human actually authenticates.
+
+                    That makes it useful when the client already knows the target
+                    user but should not collect that user's credentials itself.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ciba-card">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-blue mb-3">
+                                    <i class="bi bi-person-bounding-box"></i>
+                                </div>
+
+                                <div class="ciba-label text-primary">
+                                    Step 1
+                                </div>
+
+                                <h4 class="ciba-card-title mt-2">
+                                    Client Knows the User
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The client begins with an identifier such as
+                                    <code>login_hint=alice</code>.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ciba-card ciba-card-accent">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-purple mb-3">
+                                    <i class="bi bi-send"></i>
+                                </div>
+
+                                <div class="ciba-label"
+                                     style="color:#7256d8;">
+                                    Step 2
+                                </div>
+
+                                <h4 class="ciba-card-title mt-2">
+                                    OP Initiates Authentication
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Keycloak sends a backchannel notification toward
+                                    the user's Authentication Device.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ciba-card">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-green mb-3">
+                                    <i class="bi bi-person-check-fill"></i>
+                                </div>
+
+                                <div class="ciba-label text-success">
+                                    Step 3
+                                </div>
+
+                                <h4 class="ciba-card-title mt-2">
+                                    Human Decides
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The human authenticates and approves or denies
+                                    the request on a separate device.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             CIBA VS DEVICE
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Critical Distinction
+                </div>
+
+                <h2 class="ciba-section-title">
+                    CIBA vs. Device Authorization
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    Both flows allow a person to authenticate somewhere other than
+                    the originating client. The important difference is
+                    <strong>who initiates the human interaction</strong>.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ciba-card">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-blue mb-3">
+                                    <i class="bi bi-tv"></i>
+                                </div>
+
+                                <div class="ciba-label text-primary">
+                                    Device Authorization
+                                </div>
+
+                                <h3 class="ciba-card-title h4 mt-2">
+                                    User Goes to the Authentication Experience
+                                </h3>
+
+                                <p>
+
+                                    The device displays a user code and verification
+                                    URL.
+
+                                </p>
+
+                                <div class="p-3 bg-light border rounded-3">
+
+                                    <strong>Device</strong>
+                                    →
+                                    shows code
+                                    →
+                                    <strong>User</strong>
+                                    →
+                                    opens browser
+                                    →
+                                    <strong>Keycloak</strong>
+
+                                </div>
+
+                                <p class="mt-3 mb-0">
+
+                                    The originating device waits while the human goes
+                                    elsewhere and completes authentication.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ciba-card ciba-card-accent">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-purple mb-3">
+                                    <i class="bi bi-phone-vibrate"></i>
+                                </div>
+
+                                <div class="ciba-label"
+                                     style="color:#7256d8;">
+                                    CIBA
+                                </div>
+
+                                <h3 class="ciba-card-title h4 mt-2">
+                                    Authentication Experience Goes to the User
+                                </h3>
+
+                                <p>
+
+                                    The client identifies the person and asks the OP
+                                    to initiate authentication toward that person's
+                                    Authentication Device.
+
+                                </p>
+
+                                <div class="p-3 bg-light border rounded-3">
+
+                                    <strong>Client</strong>
+                                    →
+                                    identifies user
+                                    →
+                                    <strong>Keycloak</strong>
+                                    →
+                                    notifies
+                                    →
+                                    <strong>User's Device</strong>
+
+                                </div>
+
+                                <p class="mt-3 mb-0">
+
+                                    There is no short user code for the person to copy
+                                    from the originating client.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             THREE ACTORS
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Architecture
+                </div>
+
+                <h2 class="ciba-section-title">
+                    The Three Components in Our POC
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    CIBA adds a component that the Device Grant demonstration did not
+                    need: an Authentication Device capable of receiving the
+                    backchannel notification and returning the human decision.
+
+                </p>
+
+
+                <div class="ciba-striped-grid">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+
+                            <tr>
+                                <th>Component</th>
+                                <th>CIBA Role</th>
+                                <th>Implementation in This POC</th>
+                                <th>Responsibility</th>
+                            </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <th>
+                                    Keycloak
+                                </th>
+
+                                <td>
+                                    OpenID Provider
+                                </td>
+
+                                <td>
+                                    Keycloak 26
+                                </td>
+
+                                <td>
+                                    Creates the CIBA transaction, generates
+                                    <code>auth_req_id</code>, notifies the AD and
+                                    issues tokens after successful approval.
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Consumption Device
+                                </th>
+
+                                <td>
+                                    CD
+                                </td>
+
+                                <td>
+                                    <code>curl</code>
+                                </td>
+
+                                <td>
+                                    Initiates CIBA with a
+                                    <code>login_hint</code> and polls the token
+                                    endpoint.
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Authentication Device
+                                </th>
+
+                                <td>
+                                    AD
+                                </td>
+
+                                <td>
+                                    Spring Boot
+                                    <code>ciba-approval-service</code>
+                                    on port 8092
+                                </td>
+
+                                <td>
+                                    Receives Keycloak's notification, displays
+                                    Approve/Deny and calls Keycloak back with the
+                                    decision.
+                                </td>
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             ARCHITECTURE FLOW
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Architecture Visualization
+                </div>
+
+                <h2 class="ciba-section-title">
+                    Who Talks to Whom?
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    CIBA is easier to understand when the frontchannel and
+                    backchannel responsibilities are separated visually.
+
+                </p>
+
+
+                <div class="ciba-flow-shell">
+
+                    <div class="row g-3 align-items-center">
+
+
+                        <div class="col-lg">
+
+                            <div class="ciba-flow-node">
+
+                                <i class="bi bi-terminal fs-1 text-primary"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Consumption Device
+                                </h5>
+
+                                <small class="text-muted">
+                                    curl / Client Application
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right ciba-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ciba-flow-node">
+
+                                <i class="bi bi-shield-lock-fill fs-1 text-primary"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Keycloak 26
+                                </h5>
+
+                                <small class="text-muted">
+                                    OpenID Provider
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right ciba-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ciba-flow-node">
+
+                                <i class="bi bi-phone-fill fs-1"
+                                   style="color:#7256d8;"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Approval Service
+                                </h5>
+
+                                <small class="text-muted">
+                                    Authentication Device
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right ciba-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ciba-flow-node">
+
+                                <i class="bi bi-person-check-fill fs-1 text-success"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Alice
+                                </h5>
+
+                                <small class="text-muted">
+                                    Human Decision
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             IMPORTANT CONFIG DISTINCTION
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Keycloak Configuration
+                </div>
+
+                <h2 class="ciba-section-title">
+                    Two Different CIBA Configuration Layers
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    One of the important findings in the POC is that enabling CIBA on
+                    the client is not enough. Keycloak also needs to know where its
+                    Authentication Channel Provider should send the notification.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ciba-card">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-blue mb-3">
+                                    <i class="bi bi-sliders"></i>
+                                </div>
+
+                                <div class="ciba-label text-primary">
+                                    Realm / Client Configuration
+                                </div>
+
+                                <h4 class="ciba-card-title mt-2">
+                                    CIBA Capability and Policy
+                                </h4>
+
+                                <p>
+
+                                    Configuration inside Keycloak controls whether
+                                    the client may use CIBA and governs CIBA behavior
+                                    such as timing and delivery-mode related policy.
+
+                                </p>
+
+                                <div class="alert alert-primary mb-0">
+
+                                    This configuration does
+                                    <strong>not</strong> by itself tell Keycloak where
+                                    the external Authentication Device is located.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ciba-card ciba-card-accent">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-purple mb-3">
+                                    <i class="bi bi-hdd-network"></i>
+                                </div>
+
+                                <div class="ciba-label"
+                                     style="color:#7256d8;">
+                                    Keycloak Server Configuration
+                                </div>
+
+                                <h4 class="ciba-card-title mt-2">
+                                    Authentication Channel URI
+                                </h4>
+
+                                <p>
+
+                                    In this POC, the notification destination is
+                                    supplied when Keycloak starts.
+
+                                </p>
+
+                                <pre class="ciba-code"><code>--spi-ciba-auth-channel-ciba-http-auth-channel-http-authentication-channel-uri=
+http://localhost:8092/ciba/notify</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             END TO END PROTOCOL
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    End-to-End Protocol
+                </div>
+
+                <h2 class="ciba-section-title">
+                    Follow the Complete CIBA Conversation
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    The important architectural feature is asynchronous decoupling:
+                    Keycloak can acknowledge the client's authentication request
+                    before the human has made any decision.
+
+                </p>
+
+
+                <div class="ciba-protocol-shell">
+
+
+                    <!-- 01 -->
+
+                    <div class="ciba-protocol-row">
+
+                        <div class="ciba-number">
+                            01
+                        </div>
+
+                        <div class="ciba-protocol-card ad">
+
+                            <div class="ciba-label"
+                                 style="color:#7256d8;">
+                                Authentication Device
+                            </div>
+
+                            <h4>
+                                Start the Approval Service
+                            </h4>
+
+                            <p>
+
+                                The Authentication Device must already be listening
+                                before Keycloak attempts to deliver a CIBA
+                                notification.
+
+                            </p>
+
+                            <pre class="ciba-code"><code>cd ciba-approval-service
+mvn clean spring-boot:run</code></pre>
+
+                            <div class="alert alert-primary mt-3 mb-0">
+
+                                Approval UI:
+                                <code>http://localhost:8092/</code>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 02 -->
+
+                    <div class="ciba-protocol-row">
+
+                        <div class="ciba-number">
+                            02
+                        </div>
+
+                        <div class="ciba-protocol-card op">
+
+                            <div class="ciba-label text-primary">
+                                OpenID Provider
+                            </div>
+
+                            <h4>
+                                Start Keycloak with the Authentication Channel URI
+                            </h4>
+
+                            <pre class="ciba-code"><code>bin/kc.sh start-dev \
+  --spi-ciba-auth-channel-ciba-http-auth-channel-http-authentication-channel-uri=http://localhost:8092/ciba/notify</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                This is server-level configuration in this POC rather
+                                than a realm JSON field or client attribute.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 03 -->
+
+                    <div class="ciba-protocol-row">
+
+                        <div class="ciba-number">
+                            03
+                        </div>
+
+                        <div class="ciba-protocol-card cd">
+
+                            <div class="ciba-label text-primary">
+                                Consumption Device
+                            </div>
+
+                            <h4>
+                                Client Initiates CIBA
+                            </h4>
+
+                            <pre class="ciba-code"><code>curl -s -X POST \
+  http://localhost:8080/realms/jpa-demo-realm/protocol/openid-connect/ext/ciba/auth \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=capability-demo-client" \
+  -d "client_secret=&lt;CLIENT_SECRET&gt;" \
+  -d "login_hint=alice" \
+  -d "scope=openid" \
+  -o /tmp/ciba_init.json</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                The client identifies the target human with
+                                <code>login_hint=alice</code>.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 04 -->
+
+                    <div class="ciba-protocol-row">
+
+                        <div class="ciba-number">
+                            04
+                        </div>
+
+                        <div class="ciba-protocol-card op">
+
+                            <div class="ciba-label text-primary">
+                                Keycloak Response
+                            </div>
+
+                            <h4>
+                                Keycloak Returns auth_req_id
+                            </h4>
+
+                            <pre class="ciba-code"><code>{
+  "auth_req_id":
+      "eyJhbGciOiJkaXIi...(truncated)...E96TNA",
+
+  "expires_in": 120,
+  "interval": 5
+}</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                <code>auth_req_id</code> identifies this pending CIBA
+                                authentication transaction and is later presented by
+                                the client while polling the token endpoint.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 05 -->
+
+                    <div class="ciba-protocol-row">
+
+                        <div class="ciba-number">
+                            05
+                        </div>
+
+                        <div class="ciba-protocol-card op">
+
+                            <div class="ciba-label text-primary">
+                                Backchannel
+                            </div>
+
+                            <h4>
+                                Keycloak Notifies the Authentication Device
+                            </h4>
+
+                            <pre class="ciba-code"><code>POST http://localhost:8092/ciba/notify
+
+Authorization:
+Bearer eyJhbGciOiJIUzI1NiIs...
+
+Content-Type: application/json
+
+{
+  "login_hint": "alice",
+  "scope": "openid",
+  "is_consent_required": false,
+  "binding_message": null,
+  "acr_values": null
+}</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 06 -->
+
+                    <div class="ciba-protocol-row">
+
+                        <div class="ciba-number">
+                            06
+                        </div>
+
+                        <div class="ciba-protocol-card ad">
+
+                            <div class="ciba-label"
+                                 style="color:#7256d8;">
+                                Authentication Device
+                            </div>
+
+                            <h4>
+                                AD Acknowledges Delivery
+                            </h4>
+
+                            <p>
+
+                                At this stage the Authentication Device is not yet
+                                saying that Alice approved anything.
+
+                                It is acknowledging that the request was successfully
+                                received.
+
+                            </p>
+
+                            <div class="alert alert-success mb-0">
+
+                                <strong>
+                                    HTTP 201 Created
+                                </strong>
+
+                                <br>
+
+                                Empty response body in the tested implementation.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 07 -->
+
+                    <div class="ciba-protocol-row">
+
+                        <div class="ciba-number">
+                            07
+                        </div>
+
+                        <div class="ciba-protocol-card human">
+
+                            <div class="ciba-label text-warning">
+                                Human
+                            </div>
+
+                            <h4>
+                                Alice Sees the Approval Request
+                            </h4>
+
+                            <p>
+
+                                The demonstration Approval Service changes from:
+
+                            </p>
+
+                            <div class="p-3 bg-light border rounded mb-3">
+
+                                Waiting for a CIBA request from Keycloak...
+
+                            </div>
+
+                            <p>
+
+                                to an approval card displaying:
+
+                            </p>
+
+                            <div class="alert alert-warning mb-0">
+
+                                <strong>
+                                    Approval requested
+                                </strong>
+
+                                <br>
+
+                                User: <code>alice</code>
+
+                                <br><br>
+
+                                [ Approve ] &nbsp; [ Deny ]
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 08 -->
+
+                    <div class="ciba-protocol-row">
+
+                        <div class="ciba-number">
+                            08
+                        </div>
+
+                        <div class="ciba-protocol-card ad">
+
+                            <div class="ciba-label"
+                                 style="color:#7256d8;">
+                                Callback
+                            </div>
+
+                            <h4>
+                                Approval Service Sends the Decision
+                            </h4>
+
+                            <pre class="ciba-code"><code>POST
+http://localhost:8080/realms/jpa-demo-realm/protocol/openid-connect/ext/ciba/auth/callback
+
+Authorization:
+Bearer &lt;TOKEN_RECEIVED_FROM_KEYCLOAK&gt;
+
+Content-Type: application/json
+
+{
+  "status": "SUCCEED"
+}</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                The exact bearer token Keycloak sent with the
+                                notification is retained by the POC service and used
+                                for this callback.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 09 -->
+
+                    <div class="ciba-protocol-row">
+
+                        <div class="ciba-number">
+                            09
+                        </div>
+
+                        <div class="ciba-protocol-card cd">
+
+                            <div class="ciba-label text-primary">
+                                Consumption Device
+                            </div>
+
+                            <h4>
+                                Client Polls the Token Endpoint
+                            </h4>
+
+                            <pre class="ciba-code"><code>curl -s -X POST \
+  http://localhost:8080/realms/jpa-demo-realm/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=urn:openid:params:grant-type:ciba" \
+  -d "auth_req_id=$(python3 -c 'import json; print(json.load(open("/tmp/ciba_init.json"))["auth_req_id"])')" \
+  -d "client_id=capability-demo-client" \
+  -d "client_secret=&lt;CLIENT_SECRET&gt;"</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 10 -->
+
+                    <div class="ciba-protocol-row">
+
+                        <div class="ciba-number">
+                            10
+                        </div>
+
+                        <div class="ciba-protocol-card cd">
+
+                            <div class="ciba-label text-warning">
+                                Pending State
+                            </div>
+
+                            <h4>
+                                Before Human Approval
+                            </h4>
+
+                            <pre class="ciba-code"><code>{
+  "error": "authorization_pending"
+}</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                The client waits and polls again according to the
+                                interval associated with the CIBA request.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 11 -->
+
+                    <div class="ciba-protocol-row">
+
+                        <div class="ciba-number">
+                            11
+                        </div>
+
+                        <div class="ciba-protocol-card success">
+
+                            <div class="ciba-label text-success">
+                                Success
+                            </div>
+
+                            <h4>
+                                Keycloak Issues Tokens for Alice
+                            </h4>
+
+                            <pre class="ciba-code"><code>{
+  "access_token": "...",
+  "refresh_token": "...",
+  "id_token": "...",
+  "expires_in": 300,
+  "refresh_expires_in": 1800,
+  "token_type": "Bearer",
+  "scope": "openid email profile"
+}</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             AUTH_REQ_ID
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Transaction Correlation
+                </div>
+
+                <h2 class="ciba-section-title">
+                    Understand auth_req_id
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    CIBA is asynchronous, so Keycloak needs a way for the client to
+                    refer back to the authentication transaction that was started
+                    earlier.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ciba-card">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-big-number">
+                                    01
+                                </div>
+
+                                <h4 class="ciba-card-title mt-3">
+                                    Request Created
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The client submits the CIBA authentication
+                                    request containing the target user's
+                                    <code>login_hint</code>.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ciba-card ciba-card-accent">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-big-number">
+                                    02
+                                </div>
+
+                                <h4 class="ciba-card-title mt-3">
+                                    auth_req_id Returned
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Keycloak returns an opaque value representing
+                                    that pending CIBA authentication transaction.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="ciba-card">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-big-number">
+                                    03
+                                </div>
+
+                                <h4 class="ciba-card-title mt-3">
+                                    Client Polls With It
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The client presents the same
+                                    <code>auth_req_id</code> to ask whether the human
+                                    authentication has completed.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="ciba-callout mt-4">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg-2 text-center">
+
+                            <div class="ciba-icon ciba-icon-yellow mx-auto"
+                                 style="width:80px;height:80px;font-size:2.2rem;">
+
+                                <i class="bi bi-key"></i>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-10">
+
+                            <h4 class="fw-bold">
+                                Why the POC Writes It to a File
+                            </h4>
+
+                            <p class="text-muted mb-0">
+
+                                The observed <code>auth_req_id</code> was more than
+                                900 characters. The demonstration therefore stores
+                                the initialization response in
+                                <code>/tmp/ciba_init.json</code> and extracts the
+                                value programmatically during polling rather than
+                                manually copying it through a terminal.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TWO TOKENS / DIFFERENT PURPOSE
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Do Not Confuse These
+                </div>
+
+                <h2 class="ciba-section-title">
+                    Two Different Bearer Tokens Appear
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    The backchannel notification token and the final OAuth access
+                    token participate in the same overall CIBA transaction, but they
+                    have completely different purposes.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ciba-card">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-purple mb-3">
+                                    <i class="bi bi-arrow-return-left"></i>
+                                </div>
+
+                                <div class="ciba-label"
+                                     style="color:#7256d8;">
+                                    Notification / Callback
+                                </div>
+
+                                <h4 class="ciba-card-title mt-2">
+                                    Authentication Channel Bearer Token
+                                </h4>
+
+                                <p>
+
+                                    Keycloak sends a bearer token with the
+                                    Authentication Device notification.
+
+                                </p>
+
+                                <pre class="ciba-code"><code>Keycloak
+    │
+    │ Authorization: Bearer &lt;token&gt;
+    ▼
+Authentication Device
+
+    │
+    │ same token
+    ▼
+CIBA Callback</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    In this POC, the service keeps that token so it can
+                                    authenticate the subsequent callback to Keycloak.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="ciba-card ciba-card-accent">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-green mb-3">
+                                    <i class="bi bi-file-earmark-lock"></i>
+                                </div>
+
+                                <div class="ciba-label text-success">
+                                    OAuth Result
+                                </div>
+
+                                <h4 class="ciba-card-title mt-2">
+                                    Alice's Access Token
+                                </h4>
+
+                                <p>
+
+                                    After successful approval, Keycloak returns the
+                                    normal OAuth/OIDC token set to the Consumption
+                                    Device.
+
+                                </p>
+
+                                <pre class="ciba-code"><code>{
+  "access_token": "...",
+  "refresh_token": "...",
+  "id_token": "..."
+}</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    This token set represents the successful
+                                    authentication outcome for the human user.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TOKEN FORENSICS
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Token Forensics
+                </div>
+
+                <h2 class="ciba-section-title">
+                    Prove Which Identity Was Authenticated
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    The final proof is in the access token. In the tested flow, the
+                    token identifies Alice rather than the client's service-account
+                    identity.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-5">
+
+                        <div class="ciba-card h-100">
+
+                            <div class="ciba-card-body text-center">
+
+                                <div class="ciba-icon ciba-icon-green mx-auto mb-3"
+                                     style="width:80px;height:80px;font-size:2.2rem;">
+
+                                    <i class="bi bi-person-check-fill"></i>
+
+                                </div>
+
+                                <div class="ciba-label text-success">
+                                    Authenticated Human
+                                </div>
+
+                                <h3 class="ciba-card-title mt-2">
+                                    Alice Bentley
+                                </h3>
+
+                                <p>
+                                    <code>alice</code>
+                                </p>
+
+                                <hr>
+
+                                <div class="text-start">
+
+                                    <strong>Client:</strong>
+                                    <code>capability-demo-client</code>
+
+                                    <br><br>
+
+                                    <strong>Principal:</strong>
+                                    Human User
+
+                                    <br><br>
+
+                                    <strong>Protocol:</strong>
+                                    OIDC CIBA
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-7">
+
+                        <div class="ciba-card h-100">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-label text-primary">
+                                    Decoded Access Token
+                                </div>
+
+                                <h4 class="ciba-card-title mt-2 mb-3">
+                                    Identity Evidence
+                                </h4>
+
+                                <pre class="ciba-code"><code>{
+  "sub":
+    "fc8c4820-7eda-438b-b1c8-35a1a9a612a4",
+
+  "azp":
+    "capability-demo-client",
+
+  "preferred_username":
+    "alice",
+
+  "name":
+    "Alice Bentley",
+
+  "email":
+    "alice.bentley@gmail.com"
+}</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    The client initiated the authentication request,
+                                    but the resulting identity is the human who
+                                    completed the CIBA authentication process.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             ID TOKEN
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    OpenID Connect
+                </div>
+
+                <h2 class="ciba-section-title">
+                    Why Did This Test Return an ID Token?
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    The CIBA initiation request in this demonstration explicitly
+                    requested the <code>openid</code> scope.
+
+                </p>
+
+
+                <div class="ciba-callout">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg-2 text-center">
+
+                            <div class="ciba-icon ciba-icon-blue mx-auto"
+                                 style="width:82px;height:82px;font-size:2.3rem;">
+
+                                <i class="bi bi-person-vcard"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-10">
+
+                            <pre class="ciba-code"><code>-d "scope=openid"</code></pre>
+
+                            <p class="text-muted mt-3 mb-0">
+
+                                The resulting response contained an
+                                <code>id_token</code> in addition to the access and
+                                refresh tokens. In the earlier Device Grant test,
+                                <code>scope=openid</code> was not requested, so that
+                                particular test did not produce an ID token.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             CONFIGURATION ACCORDION
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Run the POC
+                </div>
+
+                <h2 class="ciba-section-title">
+                    CIBA Configuration and Execution Checklist
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    Use this accordion while demonstrating the POC so each
+                    prerequisite can be explained independently without losing the
+                    overall flow.
+
+                </p>
+
+
+                <div class="accordion ciba-accordion"
+                     id="cibaConfigAccordion">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#cibaConfig1">
+
+                        <span class="ciba-accordion-number">
+                            01
+                        </span>
+
+                                Start ciba-approval-service
+
+                            </button>
+
+                        </h2>
+
+                        <div id="cibaConfig1"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#cibaConfigAccordion">
+
+                            <div class="accordion-body">
+
+<pre class="ciba-code"><code>cd ciba-approval-service
+mvn clean spring-boot:run</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Open <code>http://localhost:8092/</code> and leave
+                                    the page running so the demonstration can display
+                                    the incoming request.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#cibaConfig2">
+
+                        <span class="ciba-accordion-number">
+                            02
+                        </span>
+
+                                Configure Keycloak Authentication Channel
+
+                            </button>
+
+                        </h2>
+
+                        <div id="cibaConfig2"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#cibaConfigAccordion">
+
+                            <div class="accordion-body">
+
+<pre class="ciba-code"><code>bin/kc.sh start-dev \
+  --spi-ciba-auth-channel-ciba-http-auth-channel-http-authentication-channel-uri=http://localhost:8092/ciba/notify</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    This tells the Keycloak server where the POC
+                                    Authentication Channel Provider should deliver
+                                    the CIBA request.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#cibaConfig3">
+
+                        <span class="ciba-accordion-number">
+                            03
+                        </span>
+
+                                Initiate CIBA
+
+                            </button>
+
+                        </h2>
+
+                        <div id="cibaConfig3"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#cibaConfigAccordion">
+
+                            <div class="accordion-body">
+
+                                Submit the request to Keycloak's CIBA endpoint with
+                                the client credentials, target user's
+                                <code>login_hint</code> and the
+                                <code>openid</code> scope.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#cibaConfig4">
+
+                        <span class="ciba-accordion-number">
+                            04
+                        </span>
+
+                                Verify Notification Delivery
+
+                            </button>
+
+                        </h2>
+
+                        <div id="cibaConfig4"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#cibaConfigAccordion">
+
+                            <div class="accordion-body">
+
+                                Confirm that the approval page changes from its
+                                waiting state to an approval request for
+                                <code>alice</code>.
+
+                                The notification endpoint must acknowledge the
+                                request with the status expected by the tested
+                                Keycloak implementation.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#cibaConfig5">
+
+                        <span class="ciba-accordion-number">
+                            05
+                        </span>
+
+                                Approve or Deny
+
+                            </button>
+
+                        </h2>
+
+                        <div id="cibaConfig5"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#cibaConfigAccordion">
+
+                            <div class="accordion-body">
+
+                                The human decision is asynchronous.
+
+                                In the successful demonstration the approval service
+                                sends:
+
+                                <pre class="ciba-code mt-3"><code>{
+  "status": "SUCCEED"
+}</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#cibaConfig6">
+
+                        <span class="ciba-accordion-number">
+                            06
+                        </span>
+
+                                Poll for Tokens
+
+                            </button>
+
+                        </h2>
+
+                        <div id="cibaConfig6"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#cibaConfigAccordion">
+
+                            <div class="accordion-body">
+
+                                Use the CIBA grant type:
+
+                                <pre class="ciba-code mt-3"><code>urn:openid:params:grant-type:ciba</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    and present the <code>auth_req_id</code> returned
+                                    during CIBA initiation.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#cibaConfig7">
+
+                        <span class="ciba-accordion-number">
+                            07
+                        </span>
+
+                                Decode the Result
+
+                            </button>
+
+                        </h2>
+
+                        <div id="cibaConfig7"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#cibaConfigAccordion">
+
+                            <div class="accordion-body">
+
+                                Inspect the returned access token and verify:
+
+                                <ul class="mt-3 mb-0">
+
+                                    <li>
+                                        <code>preferred_username=alice</code>
+                                    </li>
+
+                                    <li>
+                                        <code>azp=capability-demo-client</code>
+                                    </li>
+
+                                    <li>
+                                        human identity claims
+                                    </li>
+
+                                    <li>
+                                        access token
+                                    </li>
+
+                                    <li>
+                                        refresh token
+                                    </li>
+
+                                    <li>
+                                        ID token
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             BUGS / LESSONS
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Real Debugging Evidence
+                </div>
+
+                <h2 class="ciba-section-title">
+                    Three Bugs We Hit Building the POC
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    These are particularly useful teaching material because each
+                    failure initially looked like a different class of problem.
+                    The actual causes only became clear after examining concrete
+                    protocol and server evidence.
+
+                </p>
+
+
+                <div class="ciba-striped-grid">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+
+                            <tr>
+                                <th>Observed Symptom</th>
+                                <th>Initially Looked Like</th>
+                                <th>Actual Cause in Our POC</th>
+                                <th>Lesson</th>
+                            </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <td>
+                                    <code>
+                                        Unexpected response from authentication device
+                                    </code>
+                                </td>
+
+                                <td>
+                                    Connectivity problem
+                                </td>
+
+                                <td>
+
+                                    Our <code>/ciba/notify</code> endpoint returned
+                                    HTTP <strong>200</strong>.
+
+                                    The tested Keycloak
+                                    <code>HttpAuthenticationChannelProvider</code>
+                                    expected <strong>201</strong>.
+
+                                </td>
+
+                                <td>
+
+                                    An endpoint can be reachable and still violate
+                                    the implementation's expected HTTP contract.
+
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <td>
+
+                                    HTTP 415:
+
+                                    <code>
+                                        Content-Type 'application/json'
+                                        is not supported
+                                    </code>
+
+                                </td>
+
+                                <td>
+                                    CORS or malformed headers
+                                </td>
+
+                                <td>
+
+                                    Our controller expected
+                                    <code>application/x-www-form-urlencoded</code>,
+                                    while the live Keycloak notification arrived as
+                                    <strong>JSON</strong>.
+
+                                </td>
+
+                                <td>
+
+                                    Inspect the actual request received by the server
+                                    rather than assuming the wire format.
+
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <td>
+                                    <code>
+                                        {"error":"unsupported_grant_type"}
+                                    </code>
+                                </td>
+
+                                <td>
+                                    Broken <code>auth_req_id</code>
+                                </td>
+
+                                <td>
+
+                                    The polling request mistakenly used the Device
+                                    Authorization grant URN.
+
+                                    CIBA uses:
+
+                                    <code>
+                                        urn:openid:params:grant-type:ciba
+                                    </code>
+
+                                </td>
+
+                                <td>
+
+                                    Similar asynchronous OAuth flows do not imply
+                                    identical grant-type identifiers.
+
+                                </td>
+                            </tr>
+
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TROUBLESHOOTING ACCORDION
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Troubleshooting
+                </div>
+
+                <h2 class="ciba-section-title">
+                    Diagnose CIBA Layer by Layer
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    Because several actors participate in CIBA, debugging is much
+                    easier when each boundary is tested separately.
+
+                </p>
+
+
+                <div class="accordion ciba-accordion"
+                     id="troubleshootingAccordion">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble1">
+
+                        <span class="ciba-accordion-number">
+                            01
+                        </span>
+
+                                Keycloak Cannot Reach the Approval Service
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble1"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Confirm that the Spring Boot Authentication Device is
+                                already running and that Keycloak was started with
+                                the correct Authentication Channel URI.
+
+                                Test the network path before investigating OAuth
+                                claims.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble2">
+
+                        <span class="ciba-accordion-number">
+                            02
+                        </span>
+
+                                Notification Arrives but Keycloak Reports an Error
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble2"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Inspect the HTTP status returned by
+                                <code>/ciba/notify</code>.
+
+                                In the tested POC, returning 200 produced an
+                                unexpected-response error while returning 201 matched
+                                the behavior expected by the Keycloak implementation
+                                being tested.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble3">
+
+                        <span class="ciba-accordion-number">
+                            03
+                        </span>
+
+                                Approval Service Returns HTTP 415
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble3"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Inspect the actual request Content-Type.
+
+                                The live test showed Keycloak sending
+                                <code>application/json</code>, so a Spring controller
+                                restricted to form-urlencoded input rejected the
+                                request.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble4">
+
+                        <span class="ciba-accordion-number">
+                            04
+                        </span>
+
+                                Token Endpoint Returns authorization_pending
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble4"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                This is an expected state while the human decision is
+                                outstanding.
+
+                                Verify that the Authentication Device received the
+                                request and that the approval callback has actually
+                                reached Keycloak.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble5">
+
+                        <span class="ciba-accordion-number">
+                            05
+                        </span>
+
+                                Token Endpoint Returns unsupported_grant_type
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble5"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Verify that the request uses the CIBA grant type:
+
+                                <pre class="ciba-code mt-3"><code>grant_type=urn:openid:params:grant-type:ciba</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Do not substitute the Device Authorization grant
+                                    type simply because both flows involve polling.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble6">
+
+                        <span class="ciba-accordion-number">
+                            06
+                        </span>
+
+                                Callback Fails After the User Clicks Approve
+
+                            </button>
+
+                        </h2>
+
+                        <div id="trouble6"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Verify that the POC retained the bearer token sent by
+                                Keycloak with the original Authentication Device
+                                notification and supplied that token on the callback.
+
+                                This is a different concern from the final OAuth
+                                access token issued for Alice.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             ENTERPRISE INTERPRETATION
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Enterprise Interpretation
+                </div>
+
+                <h2 class="ciba-section-title">
+                    Why CIBA Is Architecturally Interesting
+                </h2>
+
+                <p class="ciba-section-lead mb-5">
+
+                    The POC is intentionally simple, but it demonstrates several
+                    architectural characteristics that matter in larger systems.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="ciba-card">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-blue mb-3">
+                                    <i class="bi bi-diagram-3"></i>
+                                </div>
+
+                                <h4 class="ciba-card-title">
+                                    Decoupled Actors
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The client requesting authentication does not have
+                                    to be the device on which authentication occurs.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="ciba-card">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-purple mb-3">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </div>
+
+                                <h4 class="ciba-card-title">
+                                    Backchannel
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Authentication initiation can move through
+                                    server-to-server infrastructure rather than
+                                    relying entirely on browser redirects.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="ciba-card">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-yellow mb-3">
+                                    <i class="bi bi-hourglass-split"></i>
+                                </div>
+
+                                <h4 class="ciba-card-title">
+                                    Asynchronous
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Request delivery and human approval are separate
+                                    events that can occur at different times.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="ciba-card">
+
+                            <div class="ciba-card-body">
+
+                                <div class="ciba-icon ciba-icon-green mb-3">
+                                    <i class="bi bi-person-check"></i>
+                                </div>
+
+                                <h4 class="ciba-card-title">
+                                    Human Identity
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The final OAuth/OIDC token represents the person
+                                    who successfully completed authentication.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             COMPLETE TRUST CHAIN
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+                <div class="ciba-kicker mb-3">
+                    Complete Trust Chain
+                </div>
+
+                <h2 class="ciba-section-title">
+                    From Client Request to Human Token
+                </h2>
+
+
+                <div class="ciba-flow-shell mt-5">
+
+                    <div class="row g-3 align-items-center">
+
+
+                        <div class="col-lg">
+
+                            <div class="ciba-flow-node">
+
+                                <i class="bi bi-laptop fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    Client
+                                </strong>
+
+                                <small class="text-muted">
+                                    login_hint=alice
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ciba-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ciba-flow-node">
+
+                                <i class="bi bi-key fs-1 text-primary"></i>
+
+                                <strong class="mt-2">
+                                    auth_req_id
+                                </strong>
+
+                                <small class="text-muted">
+                                    Pending Transaction
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ciba-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ciba-flow-node">
+
+                                <i class="bi bi-phone fs-1"
+                                   style="color:#7256d8;"></i>
+
+                                <strong class="mt-2">
+                                    Authentication Device
+                                </strong>
+
+                                <small class="text-muted">
+                                    Receives Notification
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ciba-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ciba-flow-node">
+
+                                <i class="bi bi-person-check fs-1 text-success"></i>
+
+                                <strong class="mt-2">
+                                    Alice Approves
+                                </strong>
+
+                                <small class="text-muted">
+                                    Human Decision
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+                            <i class="bi bi-arrow-right ciba-flow-arrow"></i>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="ciba-flow-node">
+
+                                <i class="bi bi-file-earmark-lock fs-1 text-success"></i>
+
+                                <strong class="mt-2">
+                                    Tokens
+                                </strong>
+
+                                <small class="text-muted">
+                                    Alice's Identity
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TAKEAWAY
+             ========================================================= -->
+
+        <section class="ciba-section">
+
+            <div class="container">
+
+
+                <div class="ciba-takeaway">
+
+                    <div class="row align-items-center g-4">
+
+
+                        <div class="col-lg-2 text-center">
+
+                            <div class="ciba-icon ciba-icon-blue mx-auto"
+                                 style="
+                            width:90px;
+                            height:90px;
+                            font-size:2.6rem;
+                         ">
+
+                                <i class="bi bi-phone-vibrate"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-10">
+
+                            <div class="ciba-label text-primary mb-2">
+                                Key Takeaway
+                            </div>
+
+                            <h2 class="fw-bold"
+                                style="color:#102b69;">
+
+                                CIBA Moves Authentication Away from the
+                                Requesting Client
+
+                            </h2>
+
+                            <p class="lead text-muted">
+
+                                The client knows
+                                <strong>who</strong> it needs authenticated, but it
+                                does not perform that human authentication itself.
+
+                            </p>
+
+                            <p class="text-muted mb-0">
+
+                                The client initiates a CIBA request with Keycloak.
+                                Keycloak creates a pending transaction and sends a
+                                backchannel notification to the Authentication
+                                Device. The human makes the decision there. The
+                                Authentication Device returns the decision to
+                                Keycloak, and the original client eventually obtains
+                                the OAuth/OIDC token set representing the
+                                authenticated human.
+
+                                The difficult part of the POC was therefore not
+                                simply turning on a Keycloak switch—it was making the
+                                <strong>
+                                    Keycloak ↔ Authentication Device contract
+                                </strong>
+                                work correctly from end to end.
+
+                            </p>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+                <!-- =====================================================
+                     NAVIGATION
+                     ===================================================== -->
+
+                <div class="d-flex flex-wrap justify-content-between gap-3
+                    mt-5 pt-4"
+                     style="
+                border-top:1px solid rgba(255,255,255,.18);
+             ">
+
+
+                    <a href="/training/capability-config"
+                       class="btn btn-outline-light btn-lg px-4">
+
+                        <i class="bi bi-arrow-left me-2"></i>
+
+                        Back: Capability Config
+
+                    </a>
+
+
+                    <a href="/training/custom-client-authenticator"
+                       class="btn btn-light btn-lg px-4"
+                       style="color:#12346f;">
+
+                        Next: Custom Client Authenticator
+
+                        <i class="bi bi-arrow-right ms-2"></i>
+
+                    </a>
+
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

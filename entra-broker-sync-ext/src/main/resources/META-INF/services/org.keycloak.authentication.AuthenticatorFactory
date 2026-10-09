@@ -1,0 +1,2 @@
+com.rollingstone.kc.entra.ExtendedEntraCreateUserAuthenticatorFactory
+com.rollingstone.kc.entra.EntraPostLoginRoleGroupSyncAuthenticatorFactory

@@ -1,0 +1,3100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Generate Keys for Signed JWT — rollingstone JPA &amp; Keycloak Lab</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/bright-blue.css}">
+
+    <style>
+        :root {
+            --sj-navy: #06142f;
+            --sj-navy-2: #0b2455;
+            --sj-blue: #315df1;
+            --sj-electric: #19c9f5;
+            --sj-white: #ffffff;
+            --sj-panel: rgba(255,255,255,.97);
+            --sj-text: #17243d;
+            --sj-heading: #102b69;
+            --sj-muted: #5d6c80;
+            --sj-border: #dbe6f2;
+            --sj-code: #061536;
+            --sj-green: #15945d;
+            --sj-red: #d63c4c;
+            --sj-yellow: #eba900;
+            --sj-purple: #7256d8;
+        }
+
+        html {
+            min-height: 100%;
+            background: #06142f;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: white;
+
+            background:
+                radial-gradient(
+                    circle at 92% 12%,
+                    rgba(39,103,246,.92) 0,
+                    rgba(39,103,246,.44) 24%,
+                    transparent 44%
+                ),
+                radial-gradient(
+                    circle at 82% 54%,
+                    rgba(24,112,244,.44) 0,
+                    transparent 37%
+                ),
+                linear-gradient(
+                    112deg,
+                    #06142f 0%,
+                    #0b2150 34%,
+                    #173a91 66%,
+                    #315df1 100%
+                );
+
+            background-attachment: fixed;
+        }
+
+        .navbar {
+            position: relative;
+            z-index: 100;
+        }
+
+        .sj-page,
+        .sj-section,
+        .sj-hero {
+            background: transparent !important;
+        }
+
+        .sj-page {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sj-layer {
+            position: relative;
+            z-index: 2;
+        }
+
+        .sj-section {
+            padding: 5rem 0;
+        }
+
+        .sj-section + .sj-section {
+            border-top: 1px solid rgba(255,255,255,.09);
+        }
+
+        .sj-kicker {
+            color: #45d6ff;
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .19em;
+            text-transform: uppercase;
+        }
+
+        .sj-section-title {
+            color: white;
+            font-size: clamp(2rem,3vw,3.1rem);
+            font-weight: 800;
+            letter-spacing: -.035em;
+            margin-bottom: 1rem;
+        }
+
+        .sj-section-lead {
+            max-width: 1000px;
+            color: rgba(255,255,255,.80);
+            font-size: 1.08rem;
+            line-height: 1.8;
+        }
+
+        .sj-electric {
+            color: #22c8f3;
+        }
+
+        /* HERO */
+
+        .sj-hero {
+            padding: 3rem 0 5.5rem;
+        }
+
+        .sj-hero-title {
+            color: white;
+            font-size: clamp(3rem,5vw,5rem);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -.045em;
+        }
+
+        .sj-hero-lead {
+            max-width: 850px;
+            color: rgba(255,255,255,.82);
+            font-size: 1.14rem;
+            line-height: 1.75;
+        }
+
+        .sj-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .45rem .88rem;
+            color: white;
+            font-size: .78rem;
+            font-weight: 700;
+            border: 1px solid #21c9f5;
+            border-radius: 999px;
+            background: rgba(4,21,55,.42);
+        }
+
+        /* ARCHITECTURE */
+
+        .sj-architecture {
+            padding: 1.6rem;
+            background: rgba(7,30,77,.72);
+            border: 1px solid #1bc9f5;
+            border-radius: 21px;
+            box-shadow: 0 25px 65px rgba(0,0,0,.18);
+            backdrop-filter: blur(8px);
+        }
+
+        .sj-architecture-title {
+            color: white;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .sj-architecture-subtitle {
+            color: rgba(255,255,255,.70);
+        }
+
+        .sj-arch-node {
+            padding: 1rem;
+            text-align: center;
+            color: white;
+            background: rgba(255,255,255,.055);
+            border: 1px solid rgba(255,255,255,.70);
+            border-radius: 16px;
+        }
+
+        .sj-arch-node.highlight {
+            border-color: #20c9f4;
+            box-shadow: 0 0 0 1px rgba(32,201,244,.14);
+        }
+
+        .sj-arrow {
+            color: #1ed0fa;
+            font-size: 1.55rem;
+        }
+
+        /* CARDS */
+
+        .sj-card {
+            height: 100%;
+            color: var(--sj-text);
+            background: var(--sj-panel);
+            border: 1px solid var(--sj-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 45px rgba(1,15,45,.16);
+            overflow: hidden;
+        }
+
+        .sj-card-accent {
+            border-color: #32c7f2;
+        }
+
+        .sj-card-body {
+            padding: 1.8rem;
+        }
+
+        .sj-card-title {
+            color: #111b2e;
+            font-weight: 800;
+        }
+
+        .sj-card p,
+        .sj-card li {
+            color: #4f5d70;
+        }
+
+        .sj-label {
+            font-size: .71rem;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+        .sj-icon {
+            width: 54px;
+            height: 54px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-size: 1.55rem;
+        }
+
+        .sj-icon-blue {
+            color: #1479df;
+            background: #e9f7ff;
+        }
+
+        .sj-icon-green {
+            color: #148e59;
+            background: #eaf9f1;
+        }
+
+        .sj-icon-red {
+            color: #d93e4e;
+            background: #fff0f2;
+        }
+
+        .sj-icon-yellow {
+            color: #e5a600;
+            background: #fff6d9;
+        }
+
+        .sj-icon-purple {
+            color: #7256d8;
+            background: #f0ecff;
+        }
+
+        /* CODE */
+
+        .sj-code {
+            margin: 0;
+            padding: 1.2rem 1.35rem;
+            color: #f8fbff;
+            background: var(--sj-code);
+            border: 1px solid rgba(66,203,255,.24);
+            border-radius: 12px;
+            font-size: .84rem;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* STRIPED TABLE */
+
+        .sj-striped-grid {
+            overflow: hidden;
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--sj-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 42px rgba(0,0,0,.14);
+        }
+
+        .sj-striped-grid table {
+            margin: 0;
+            --bs-table-bg: transparent;
+            --bs-table-color: #27344a;
+            --bs-table-border-color: #e1e8f1;
+        }
+
+        .sj-striped-grid thead th {
+            padding: 1.2rem;
+            color: white;
+            background: #0b285f;
+            border: 0;
+        }
+
+        .sj-striped-grid tbody td,
+        .sj-striped-grid tbody th {
+            padding: 1.05rem 1.2rem;
+            vertical-align: middle;
+        }
+
+        .sj-striped-grid tbody tr:nth-child(even) {
+            background: #f1f6fc;
+        }
+
+        /* FLOW */
+
+        .flow-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .flow-node {
+            height: 100%;
+            padding: 1.4rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid #dce7f4;
+            border-radius: 17px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .flow-node h4 {
+            color: #102b69;
+            font-weight: 800;
+        }
+
+        .flow-arrow {
+            color: #38d6fa;
+            font-size: 2rem;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        /* TIMELINE */
+
+        .sj-protocol-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .sj-protocol-row {
+            position: relative;
+            display: grid;
+            grid-template-columns: 58px 1fr;
+            gap: 1.2rem;
+            padding: .8rem 0;
+        }
+
+        .sj-protocol-row:not(:last-child)::before {
+            content: "";
+            position: absolute;
+            left: 27px;
+            top: 60px;
+            bottom: -8px;
+            width: 2px;
+            background: linear-gradient(
+                #30d0f7,
+                rgba(255,255,255,.22)
+            );
+        }
+
+        .sj-number {
+            position: relative;
+            z-index: 2;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            background: linear-gradient(135deg,#1765e8,#18c8f4);
+            border: 4px solid rgba(255,255,255,.95);
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(0,0,0,.18);
+        }
+
+        .sj-protocol-card {
+            padding: 1.45rem;
+            color: var(--sj-text);
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--sj-border);
+            border-radius: 17px;
+            box-shadow: 0 12px 32px rgba(0,0,0,.10);
+        }
+
+        .sj-protocol-card h4 {
+            color: #10275d;
+            font-weight: 800;
+        }
+
+        .sj-protocol-card p,
+        .sj-protocol-card li {
+            color: #536276;
+        }
+
+        /* ACCORDION */
+
+        .sj-accordion {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 18px 45px rgba(0,0,0,.14);
+        }
+
+        .sj-accordion .accordion-item {
+            border-color: #dbe5f0;
+        }
+
+        .sj-accordion .accordion-button {
+            padding: 1.25rem 1.4rem;
+            color: #15233e;
+            background: rgba(255,255,255,.98);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .sj-accordion .accordion-button:not(.collapsed) {
+            color: #0d347a;
+            background: #e9f4ff;
+            box-shadow: none;
+        }
+
+        .sj-accordion .accordion-button:focus {
+            box-shadow: none;
+        }
+
+        .sj-accordion .accordion-body {
+            padding: 1.6rem;
+            color: #4e5c70;
+            background: white;
+            line-height: 1.7;
+        }
+
+        .sj-accordion-number {
+            min-width: 37px;
+            height: 37px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: .9rem;
+            color: white;
+            background: linear-gradient(135deg,#1765e8,#18c8f4);
+            border-radius: 50%;
+            font-size: .78rem;
+            font-weight: 800;
+        }
+
+        /* CALLOUT */
+
+        .sj-callout {
+            padding: 1.6rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .sj-takeaway {
+            padding: 2.7rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid #36cef5;
+            border-radius: 22px;
+            box-shadow: 0 22px 55px rgba(0,0,0,.16);
+        }
+
+        .security-boundary {
+            border-left: 5px solid #d63c4c;
+        }
+
+        @media (max-width: 991.98px) {
+            .flow-arrow {
+                padding: .5rem 0;
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+
+
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+
+<div class="sj-page">
+    <div class="sj-layer">
+
+
+        <!-- =========================================================
+             HERO
+             ========================================================= -->
+
+        <header class="sj-hero">
+
+            <div class="container">
+
+                <div class="row align-items-center g-5">
+
+                    <div class="col-lg-6">
+
+                        <div class="sj-kicker mb-4">
+                            Episode A • private_key_jwt • Key Generation
+                        </div>
+
+                        <h1 class="sj-hero-title mb-4">
+
+                            Generating Keys
+
+                            <span class="d-block sj-electric">
+                        Inside Keycloak
+                    </span>
+
+                        </h1>
+
+                        <p class="sj-hero-lead">
+
+                            A <code>private_key_jwt</code> client needs asymmetric
+                            cryptographic material: the client signs an assertion
+                            with a private key and Keycloak verifies that signature
+                            with the corresponding public key.
+
+                        </p>
+
+                        <p class="sj-hero-lead">
+
+                            Instead of generating the keypair externally with
+                            <code>keytool</code> or OpenSSL and importing it,
+                            this lab lets Keycloak generate the material and
+                            provides the client-side key material as a
+                            password-protected PKCS12 archive.
+
+                        </p>
+
+
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+
+                    <span class="sj-pill">
+                        <i class="bi bi-key-fill"></i>
+                        RSA Keypair
+                    </span>
+
+                            <span class="sj-pill">
+                        <i class="bi bi-file-earmark-lock"></i>
+                        PKCS12
+                    </span>
+
+                            <span class="sj-pill">
+                        <i class="bi bi-patch-check"></i>
+                        X.509 Certificate
+                    </span>
+
+                            <span class="sj-pill">
+                        <i class="bi bi-shield-lock"></i>
+                        private_key_jwt
+                    </span>
+
+                            <span class="sj-pill">
+                        <i class="bi bi-box-arrow-down"></i>
+                        Client Keystore
+                    </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="sj-architecture">
+
+                            <div class="sj-architecture-title">
+                                Key Generation Result
+                            </div>
+
+                            <div class="sj-architecture-subtitle small mb-4">
+                                Two cryptographic halves — two different responsibilities
+                            </div>
+
+
+                            <div class="sj-arch-node highlight">
+
+                                <i class="bi bi-gear-wide-connected text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Keycloak
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Generate RSA keypair
+                                </small>
+
+                            </div>
+
+
+                            <div class="text-center">
+                                <div class="sj-arrow">↓</div>
+                            </div>
+
+
+                            <div class="row g-3">
+
+                                <div class="col-md-6">
+
+                                    <div class="sj-arch-node h-100">
+
+                                        <i class="bi bi-key-fill text-warning fs-2"></i>
+
+                                        <h5 class="fw-bold mt-2 mb-1">
+                                            Private Key
+                                        </h5>
+
+                                        <small class="text-white-50">
+                                            Client-side signing material
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <div class="sj-arch-node h-100">
+
+                                        <i class="bi bi-patch-check-fill text-info fs-2"></i>
+
+                                        <h5 class="fw-bold mt-2 mb-1">
+                                            Public Certificate
+                                        </h5>
+
+                                        <small class="text-white-50">
+                                            Verification material
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="row g-3 mt-1">
+
+                                <div class="col-md-6">
+
+                                    <div class="sj-arch-node highlight h-100">
+
+                                        <i class="bi bi-file-earmark-lock2 text-info fs-2"></i>
+
+                                        <h6 class="fw-bold mt-2">
+                                            PKCS12
+                                        </h6>
+
+                                        <small class="text-white-50">
+                                            Delivered to client
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <div class="sj-arch-node highlight h-100">
+
+                                        <i class="bi bi-database-lock text-info fs-2"></i>
+
+                                        <h6 class="fw-bold mt-2">
+                                            Keycloak Client
+                                        </h6>
+
+                                        <small class="text-white-50">
+                                            Certificate used for verification
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =========================================================
+             WHY KEYS
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    First Principle
+                </div>
+
+                <h2 class="sj-section-title">
+                    Why Does private_key_jwt Need a Keypair?
+                </h2>
+
+                <p class="sj-section-lead mb-5">
+
+                    With ordinary client-secret authentication, both parties know
+                    the same secret. With <code>private_key_jwt</code>, the
+                    cryptographic responsibilities are separated. The OAuth client
+                    possesses private signing material while Keycloak verifies the
+                    resulting digital signature using the corresponding public
+                    material.
+
+                </p>
+
+
+                <div class="row g-4">
+
+                    <div class="col-lg-4">
+
+                        <div class="sj-card">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-icon sj-icon-yellow mb-3">
+                                    <i class="bi bi-key-fill"></i>
+                                </div>
+
+                                <div class="sj-label text-warning">
+                                    Private
+                                </div>
+
+                                <h4 class="sj-card-title mt-2">
+                                    Private Key
+                                </h4>
+
+                                <p>
+
+                                    Used by the client to cryptographically sign
+                                    its JWT client assertion.
+
+                                </p>
+
+                                <div class="alert alert-warning mb-0">
+
+                                    Treat this as sensitive client credential
+                                    material.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="sj-card">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-icon sj-icon-blue mb-3">
+                                    <i class="bi bi-patch-check-fill"></i>
+                                </div>
+
+                                <div class="sj-label text-primary">
+                                    Public
+                                </div>
+
+                                <h4 class="sj-card-title mt-2">
+                                    Public Key / Certificate
+                                </h4>
+
+                                <p>
+
+                                    Allows Keycloak to verify that an assertion was
+                                    signed using the corresponding private key.
+
+                                </p>
+
+                                <div class="alert alert-primary mb-0">
+
+                                    Public verification material does not need the
+                                    same secrecy as the private key.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="sj-card sj-card-accent">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-icon sj-icon-green mb-3">
+                                    <i class="bi bi-filetype-json"></i>
+                                </div>
+
+                                <div class="sj-label text-success">
+                                    Runtime
+                                </div>
+
+                                <h4 class="sj-card-title mt-2">
+                                    Signed JWT Assertion
+                                </h4>
+
+                                <p>
+
+                                    The private key itself is not sent to Keycloak
+                                    during normal client authentication.
+
+                                </p>
+
+                                <pre class="sj-code"><code>Client
+  |
+  | signs JWT
+  v
+client_assertion
+  |
+  v
+Keycloak verifies</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             GENERATION OPTIONS
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Two Provisioning Paths
+                </div>
+
+                <h2 class="sj-section-title">
+                    Where Can the Keypair Come From?
+                </h2>
+
+
+                <div class="row g-4 mt-4">
+
+                    <div class="col-lg-6">
+
+                        <div class="sj-card">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-icon sj-icon-purple mb-3">
+                                    <i class="bi bi-terminal"></i>
+                                </div>
+
+                                <div class="sj-label"
+                                     style="color:#7256d8;">
+                                    Option A
+                                </div>
+
+                                <h4 class="sj-card-title mt-2">
+                                    Generate Externally
+                                </h4>
+
+                                <p>
+
+                                    Build the cryptographic material outside
+                                    Keycloak using tooling such as:
+
+                                </p>
+
+                                <ul>
+                                    <li>Java <code>keytool</code></li>
+                                    <li>OpenSSL</li>
+                                    <li>Enterprise PKI tooling</li>
+                                    <li>Other controlled key-management processes</li>
+                                </ul>
+
+                                <div class="text-muted">
+
+                                    The required public verification material is
+                                    then configured for the Keycloak client.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="sj-card sj-card-accent">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-icon sj-icon-blue mb-3">
+                                    <i class="bi bi-shield-lock-fill"></i>
+                                </div>
+
+                                <div class="sj-label text-primary">
+                                    Option B — This Lab
+                                </div>
+
+                                <h4 class="sj-card-title mt-2">
+                                    Generate Inside Keycloak
+                                </h4>
+
+                                <p>
+
+                                    Use the client's <strong>Keys</strong> page and
+                                    ask Keycloak to generate the material.
+
+                                </p>
+
+                                <pre class="sj-code"><code>Clients
+  → signed-jwt-client
+  → Keys
+  → Generate new keys</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    This is the path demonstrated on this training
+                                    page.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             CONFIGURATION STEPS
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Keycloak Configuration
+                </div>
+
+                <h2 class="sj-section-title">
+                    Generate the Client Key Material
+                </h2>
+
+                <p class="sj-section-lead mb-5">
+
+                    The original lab follows a six-step Keycloak Admin Console
+                    workflow. The important result is a PKCS12 archive for the
+                    client and corresponding verification material associated with
+                    the Keycloak client configuration.
+
+                </p>
+
+
+                <div class="sj-protocol-shell">
+
+
+                    <div class="sj-protocol-row">
+
+                        <div class="sj-number">01</div>
+
+                        <div class="sj-protocol-card">
+
+                            <div class="sj-label text-primary">
+                                Admin Console
+                            </div>
+
+                            <h4>
+                                Open the Client
+                            </h4>
+
+                            <pre class="sj-code"><code>Clients
+  → signed-jwt-client
+  → Keys</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sj-protocol-row">
+
+                        <div class="sj-number">02</div>
+
+                        <div class="sj-protocol-card">
+
+                            <div class="sj-label text-primary">
+                                Keys
+                            </div>
+
+                            <h4>
+                                Generate New Keys
+                            </h4>
+
+                            <p class="mb-0">
+
+                                Click <strong>Generate new keys</strong>.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sj-protocol-row">
+
+                        <div class="sj-number">03</div>
+
+                        <div class="sj-protocol-card">
+
+                            <div class="sj-label text-success">
+                                Archive
+                            </div>
+
+                            <h4>
+                                Choose PKCS12
+                            </h4>
+
+                            <pre class="sj-code"><code>Archive Format: PKCS12</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sj-protocol-row">
+
+                        <div class="sj-number">04</div>
+
+                        <div class="sj-protocol-card">
+
+                            <div class="sj-label text-warning">
+                                Keystore
+                            </div>
+
+                            <h4>
+                                Enter the Alias and Password
+                            </h4>
+
+                            <pre class="sj-code"><code>Key alias:
+signed-jwt-client
+
+Store password:
+changeit</code></pre>
+
+                            <div class="alert alert-warning mt-3 mb-0">
+
+                                <strong>Training value:</strong>
+                                <code>changeit</code> is suitable as an easily
+                                recognizable lab placeholder, not as a production
+                                credential policy.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sj-protocol-row">
+
+                        <div class="sj-number">05</div>
+
+                        <div class="sj-protocol-card">
+
+                            <div class="sj-label text-primary">
+                                Generate
+                            </div>
+
+                            <h4>
+                                Click Generate
+                            </h4>
+
+                            <p class="mb-0">
+
+                                Keycloak performs the server-side generation process
+                                and prepares the archive.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sj-protocol-row">
+
+                        <div class="sj-number">06</div>
+
+                        <div class="sj-protocol-card">
+
+                            <div class="sj-label text-danger">
+                                Important
+                            </div>
+
+                            <h4>
+                                Protect the Downloaded .p12
+                            </h4>
+
+                            <p>
+
+                                The downloaded PKCS12 contains sensitive private-key
+                                material required by the OAuth client.
+
+                            </p>
+
+                            <pre class="sj-code"><code>signed-jwt-client.p12
+
+        ↓
+
+CLIENT SECURITY BOUNDARY</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             WHAT GENERATE DOES
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Behind the Button
+                </div>
+
+                <h2 class="sj-section-title">
+                    What Does “Generate” Actually Produce?
+                </h2>
+
+                <p class="sj-section-lead mb-5">
+
+                    Conceptually, asymmetric key generation produces two related
+                    pieces of cryptographic material. They serve completely
+                    different purposes in the subsequent OAuth client
+                    authentication process.
+
+                </p>
+
+
+                <div class="flow-shell">
+
+                    <div class="row align-items-stretch g-4">
+
+                        <div class="col-lg-3">
+
+                            <div class="flow-node">
+
+                                <div class="sj-label text-primary">
+                                    Keycloak
+                                </div>
+
+                                <h4 class="mt-2">
+                                    Generate
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Create the RSA keypair and associated
+                                    certificate material.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto d-flex align-items-center justify-content-center">
+                            <div class="flow-arrow">→</div>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="flow-node"
+                                 style="border-color:#eba900;">
+
+                                <div class="sj-label text-warning">
+                                    Private Half
+                                </div>
+
+                                <h4 class="mt-2">
+                                    Private Key
+                                </h4>
+
+                                <p>
+
+                                    Used later to sign
+                                    <code>client_assertion</code> JWTs.
+
+                                </p>
+
+                                <span class="badge text-bg-warning">
+                            SECRET
+                        </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto d-flex align-items-center justify-content-center">
+                            <div class="flow-arrow">+</div>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="flow-node"
+                                 style="border-color:#32c7f2;">
+
+                                <div class="sj-label text-primary">
+                                    Public Half
+                                </div>
+
+                                <h4 class="mt-2">
+                                    Public Certificate
+                                </h4>
+
+                                <p>
+
+                                    Allows verification of signatures created by
+                                    the corresponding private key.
+
+                                </p>
+
+                                <span class="badge text-bg-primary">
+                            VERIFICATION
+                        </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             PRIVATE KEY BOUNDARY
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Security Boundary
+                </div>
+
+                <h2 class="sj-section-title">
+                    The Private Key Becomes the Client's Responsibility
+                </h2>
+
+
+                <div class="row g-4 mt-4">
+
+                    <div class="col-lg-7">
+
+                        <div class="sj-card security-boundary">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-label text-danger">
+                                    Sensitive Material
+                                </div>
+
+                                <h4 class="sj-card-title mt-2">
+                                    Protect the PKCS12 Archive
+                                </h4>
+
+                                <p>
+
+                                    The archive contains the credential material
+                                    that allows the application to produce valid
+                                    cryptographic signatures.
+
+                                </p>
+
+                                <p>
+
+                                    For a real deployment, avoid casually placing
+                                    the file in:
+
+                                </p>
+
+                                <ul>
+                                    <li>source-control repositories,</li>
+                                    <li>container images,</li>
+                                    <li>shared network folders,</li>
+                                    <li>public artifact repositories,</li>
+                                    <li>application source directories.</li>
+                                </ul>
+
+                                <p class="mb-0">
+
+                                    The appropriate storage model depends on the
+                                    deployment environment and organizational
+                                    secrets/key-management controls.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-5">
+
+                        <div class="sj-card">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-icon sj-icon-red mb-3">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                </div>
+
+                                <h4 class="sj-card-title">
+                                    Think Like a Credential
+                                </h4>
+
+                                <p>
+
+                                    Possession of private signing material is
+                                    security-sensitive because it is what allows
+                                    the legitimate client to prove possession of
+                                    the key.
+
+                                </p>
+
+                                <pre class="sj-code"><code>Private Key
+    ↓
+Sign Assertion
+    ↓
+Valid Signature
+    ↓
+Client Authentication</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             PKCS12
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Container Format
+                </div>
+
+                <h2 class="sj-section-title">
+                    What Is PKCS12?
+                </h2>
+
+
+                <div class="row g-4 mt-4">
+
+                    <div class="col-lg-4">
+
+                        <div class="sj-card">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-icon sj-icon-blue mb-3">
+                                    <i class="bi bi-archive-fill"></i>
+                                </div>
+
+                                <h4 class="sj-card-title">
+                                    A Container
+                                </h4>
+
+                                <p>
+
+                                    PKCS12 is not the private key algorithm itself.
+                                    It is a container format capable of packaging
+                                    cryptographic material.
+
+                                </p>
+
+                                <pre class="sj-code"><code>.p12
+.pfx</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="sj-card">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-icon sj-icon-yellow mb-3">
+                                    <i class="bi bi-key"></i>
+                                </div>
+
+                                <h4 class="sj-card-title">
+                                    Key Material
+                                </h4>
+
+                                <p>
+
+                                    A PKCS12 archive can contain private keys and
+                                    certificates organized under aliases.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="sj-card sj-card-accent">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-icon sj-icon-green mb-3">
+                                    <i class="bi bi-lock-fill"></i>
+                                </div>
+
+                                <h4 class="sj-card-title">
+                                    Password Protected
+                                </h4>
+
+                                <p>
+
+                                    The archive is protected by the store password
+                                    supplied during generation.
+
+                                </p>
+
+                                <pre class="sj-code"><code>alias:
+signed-jwt-client
+
+store password:
+changeit</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             PKCS12 VS JKS
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Format Comparison
+                </div>
+
+                <h2 class="sj-section-title">
+                    PKCS12 vs. JKS
+                </h2>
+
+                <p class="sj-section-lead mb-5">
+
+                    Both formats can store key and certificate entries, but they
+                    come from different histories and have different portability
+                    characteristics.
+
+                </p>
+
+
+                <div class="sj-striped-grid">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+                            <tr>
+                                <th>Characteristic</th>
+                                <th>PKCS12</th>
+                                <th>JKS</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <th>Purpose</th>
+
+                                <td>
+                                    Standardized container for private keys,
+                                    certificates and certificate chains.
+                                </td>
+
+                                <td>
+                                    Java keystore format originating in the Java
+                                    ecosystem.
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>Common Extension</th>
+
+                                <td>
+                                    <code>.p12</code> /
+                                    <code>.pfx</code>
+                                </td>
+
+                                <td>
+                                    <code>.jks</code>
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>Portability</th>
+
+                                <td>
+                                    Broad interoperability across Java, OpenSSL,
+                                    operating systems and other X.509 tooling.
+                                </td>
+
+                                <td>
+                                    Primarily associated with Java tooling.
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>Modern Java</th>
+
+                                <td>
+                                    PKCS12 became the default keystore type beginning
+                                    with Java 9.
+                                </td>
+
+                                <td>
+                                    Older Java-specific format still encountered in
+                                    existing systems.
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>Multiple Entries</th>
+
+                                <td>
+                                    Supports multiple entries organized by alias.
+                                </td>
+
+                                <td>
+                                    Also supports multiple alias-based entries.
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>Training Choice</th>
+
+                                <td>
+                            <span class="badge text-bg-success">
+                                Used in this lab
+                            </span>
+                                </td>
+
+                                <td>
+                                    Not selected for this walkthrough.
+                                </td>
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             ALIAS
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Keystore Vocabulary
+                </div>
+
+                <h2 class="sj-section-title">
+                    What Is the Key Alias?
+                </h2>
+
+
+                <div class="row g-4 mt-4">
+
+                    <div class="col-lg-7">
+
+                        <div class="sj-card">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-label text-primary">
+                                    Logical Entry Name
+                                </div>
+
+                                <h4 class="sj-card-title mt-2">
+                                    signed-jwt-client
+                                </h4>
+
+                                <p>
+
+                                    A keystore can contain multiple entries. The
+                                    alias provides a logical name used to identify a
+                                    particular entry.
+
+                                </p>
+
+                                <pre class="sj-code"><code>PKCS12 Keystore
+
++ signed-jwt-client
+    |
+    + Private Key
+    |
+    + Certificate
+
++ another-alias
+    |
+    + Other Material</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-5">
+
+                        <div class="sj-card">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-icon sj-icon-purple mb-3">
+                                    <i class="bi bi-tag-fill"></i>
+                                </div>
+
+                                <h4 class="sj-card-title">
+                                    Alias ≠ Password
+                                </h4>
+
+                                <p>
+
+                                    The alias identifies an entry. The store
+                                    password protects access to the keystore.
+
+                                </p>
+
+                                <div class="alert alert-primary mb-0">
+
+                                    They serve different purposes even though both
+                                    are entered during key generation.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             RUNTIME
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Why We Are Doing This
+                </div>
+
+                <h2 class="sj-section-title">
+                    How These Keys Are Used Later
+                </h2>
+
+                <p class="sj-section-lead mb-5">
+
+                    Key generation is provisioning. The real value appears later
+                    when the application authenticates to Keycloak's token
+                    endpoint.
+
+                </p>
+
+
+                <div class="flow-shell">
+
+                    <div class="row align-items-center g-3">
+
+                        <div class="col-lg">
+
+                            <div class="flow-node text-center">
+
+                                <i class="bi bi-file-earmark-lock2
+                                  text-primary fs-2"></i>
+
+                                <h4 class="mt-3">
+                                    Client Loads Private Key
+                                </h4>
+
+                                <small class="text-muted">
+                                    from protected key material
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto">
+                            <div class="flow-arrow">→</div>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="flow-node text-center">
+
+                                <i class="bi bi-filetype-json
+                                  text-primary fs-2"></i>
+
+                                <h4 class="mt-3">
+                                    Build JWT Assertion
+                                </h4>
+
+                                <small class="text-muted">
+                                    client authentication claims
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto">
+                            <div class="flow-arrow">→</div>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="flow-node text-center">
+
+                                <i class="bi bi-pen-fill
+                                  text-warning fs-2"></i>
+
+                                <h4 class="mt-3">
+                                    Sign Assertion
+                                </h4>
+
+                                <small class="text-muted">
+                                    using private key
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto">
+                            <div class="flow-arrow">→</div>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="flow-node text-center"
+                                 style="border-color:#32c7f2;">
+
+                                <i class="bi bi-shield-check
+                                  text-success fs-2"></i>
+
+                                <h4 class="mt-3">
+                                    Keycloak Verifies
+                                </h4>
+
+                                <small class="text-muted">
+                                    using public verification material
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             CLIENT ASSERTION
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Runtime Authentication
+                </div>
+
+                <h2 class="sj-section-title">
+                    The Private Key Does Not Travel with the Token Request
+                </h2>
+
+
+                <div class="sj-card mt-5">
+
+                    <div class="sj-card-body p-lg-5">
+
+                        <div class="row g-5 align-items-center">
+
+                            <div class="col-lg-5">
+
+                                <div class="sj-label text-warning">
+                                    Client Security Boundary
+                                </div>
+
+                                <h3 class="sj-card-title mt-2">
+                                    Private Key
+                                </h3>
+
+                                <p>
+
+                                    Remains under the control of the client
+                                    environment and is used locally for signing.
+
+                                </p>
+
+                                <pre class="sj-code"><code>PRIVATE KEY
+
+     |
+     | cryptographic signing
+     v
+
+JWT ASSERTION</code></pre>
+
+                            </div>
+
+
+                            <div class="col-lg-7">
+
+                                <div class="sj-label text-primary">
+                                    HTTP Request
+                                </div>
+
+                                <h3 class="sj-card-title mt-2">
+                                    Token Endpoint Receives the Assertion
+                                </h3>
+
+                                <pre class="sj-code"><code>POST /protocol/openid-connect/token
+
+grant_type=client_credentials
+
+client_id=signed-jwt-client
+
+client_assertion_type=
+urn:ietf:params:oauth:
+client-assertion-type:jwt-bearer
+
+client_assertion=
+&lt;SIGNED-JWT&gt;</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Keycloak verifies the JWT signature using the
+                                    configured public verification material.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             LAB IMPORT ISSUE
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Lab-Specific Finding
+                </div>
+
+                <h2 class="sj-section-title">
+                    Why Did This POC Generate Keys Inside Keycloak?
+                </h2>
+
+
+                <div class="row g-4 mt-4">
+
+                    <div class="col-lg-7">
+
+                        <div class="sj-card sj-card-accent">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-label text-primary">
+                                    Observed in This Lab
+                                </div>
+
+                                <h4 class="sj-card-title mt-2">
+                                    External PKCS12 Import Hit a Parsing Problem
+                                </h4>
+
+                                <p>
+
+                                    The original lab found that externally created
+                                    PKCS12 material produced through either
+                                    <code>keytool</code> or OpenSSL encountered a
+                                    parsing problem on this environment's import
+                                    path.
+
+                                </p>
+
+                                <p class="mb-0">
+
+                                    Generating the material inside Keycloak avoided
+                                    that specific path because Keycloak was working
+                                    with material produced through its own
+                                    generation workflow.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-5">
+
+                        <div class="sj-card">
+
+                            <div class="sj-card-body">
+
+                                <div class="sj-icon sj-icon-yellow mb-3">
+                                    <i class="bi bi-lightbulb-fill"></i>
+                                </div>
+
+                                <h4 class="sj-card-title">
+                                    Important Distinction
+                                </h4>
+
+                                <p>
+
+                                    This lab result does not mean external key
+                                    generation is conceptually invalid.
+
+                                </p>
+
+                                <div class="alert alert-primary mb-0">
+
+                                    It explains why this particular POC chose the
+                                    Keycloak-generated path.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             ACCORDION
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Key Generation Deep Dive
+                </div>
+
+                <h2 class="sj-section-title">
+                    Questions to Understand Before Moving On
+                </h2>
+
+
+                <div class="accordion sj-accordion mt-5"
+                     id="keyGenerationAccordion">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#keyQ1">
+
+                                <span class="sj-accordion-number">01</span>
+
+                                What exactly is being generated?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="keyQ1"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#keyGenerationAccordion">
+
+                            <div class="accordion-body">
+
+                                The workflow creates asymmetric cryptographic
+                                material for the client authentication use case.
+                                The private half is used for signing while the
+                                corresponding public material is used for
+                                verification.
+
+                                <pre class="sj-code mt-3"><code>Private Key
+     +
+Public Key / Certificate
+
+     =
+
+Asymmetric Keypair</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#keyQ2">
+
+                                <span class="sj-accordion-number">02</span>
+
+                                Is the .p12 file itself a private key?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="keyQ2"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#keyGenerationAccordion">
+
+                            <div class="accordion-body">
+
+                                Not exactly. PKCS12 is a container format. The
+                                archive can contain a private-key entry together
+                                with associated certificate material and can hold
+                                multiple alias-based entries.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#keyQ3">
+
+                                <span class="sj-accordion-number">03</span>
+
+                                Why does Keycloak need the public half?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="keyQ3"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#keyGenerationAccordion">
+
+                            <div class="accordion-body">
+
+                                When the client later submits a signed JWT client
+                                assertion, Keycloak needs trusted public
+                                verification material corresponding to the client's
+                                signing key so it can validate the digital
+                                signature.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#keyQ4">
+
+                                <span class="sj-accordion-number">04</span>
+
+                                Why can't the public key sign the assertion?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="keyQ4"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#keyGenerationAccordion">
+
+                            <div class="accordion-body">
+
+                                The asymmetric model separates the two operations.
+
+                                <pre class="sj-code mt-3"><code>Private Key
+    → Sign
+
+Public Key
+    → Verify</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    That separation is the foundation of this
+                                    client-authentication approach.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#keyQ5">
+
+                                <span class="sj-accordion-number">05</span>
+
+                                Why protect the PKCS12 password?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="keyQ5"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#keyGenerationAccordion">
+
+                            <div class="accordion-body">
+
+                                The password protects access to the keystore
+                                contents. In production, both the archive and its
+                                unlocking credential should be handled according
+                                to the deployment's key/secrets-management
+                                controls.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#keyQ6">
+
+                                <span class="sj-accordion-number">06</span>
+
+                                Why use PKCS12 instead of JKS?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="keyQ6"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#keyGenerationAccordion">
+
+                            <div class="accordion-body">
+
+                                PKCS12 is standardized and broadly interoperable
+                                beyond the Java ecosystem. Modern Java also uses
+                                PKCS12 as its default keystore type.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#keyQ7">
+
+                                <span class="sj-accordion-number">07</span>
+
+                                What happens when the key must be replaced?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="keyQ7"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#keyGenerationAccordion">
+
+                            <div class="accordion-body">
+
+                                Key replacement requires coordinating the client's
+                                signing material with the verification material
+                                trusted by Keycloak.
+
+                                <p class="mt-3 mb-0">
+
+                                    In an enterprise deployment, that process
+                                    should be treated as credential/key lifecycle
+                                    management rather than as a one-time setup
+                                    exercise.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TROUBLESHOOTING
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Troubleshooting
+                </div>
+
+                <h2 class="sj-section-title">
+                    If private_key_jwt Fails Later, Check the Key Chain First
+                </h2>
+
+
+                <div class="sj-striped-grid mt-5">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+                            <tr>
+                                <th>Check</th>
+                                <th>Question</th>
+                                <th>Why It Matters</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <th>Keystore</th>
+
+                                <td>
+                                    Is the application loading the intended
+                                    <code>.p12</code> file?
+                                </td>
+
+                                <td>
+                                    The wrong archive means the wrong signing key.
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>Password</th>
+
+                                <td>
+                                    Can the application unlock the keystore?
+                                </td>
+
+                                <td>
+                                    The private-key entry cannot be used if the
+                                    required keystore access fails.
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>Alias</th>
+
+                                <td>
+                                    Is the application selecting
+                                    <code>signed-jwt-client</code>?
+                                </td>
+
+                                <td>
+                                    A keystore can contain multiple entries.
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>Key Match</th>
+
+                                <td>
+                                    Does the client's private key correspond to the
+                                    public verification material configured in
+                                    Keycloak?
+                                </td>
+
+                                <td>
+                                    A mismatched keypair causes signature
+                                    verification to fail.
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>JWT</th>
+
+                                <td>
+                                    Is the assertion actually signed with the
+                                    expected private key?
+                                </td>
+
+                                <td>
+                                    Key generation alone does not create a valid
+                                    runtime assertion.
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <th>Client Configuration</th>
+
+                                <td>
+                                    Is the intended signed-JWT client authentication
+                                    mechanism configured?
+                                </td>
+
+                                <td>
+                                    Key material and client-authentication
+                                    configuration must agree.
+                                </td>
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TRUST CHAIN
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-kicker mb-3">
+                    Complete Trust Chain
+                </div>
+
+                <h2 class="sj-section-title">
+                    From Key Generation to Client Authentication
+                </h2>
+
+
+                <div class="flow-shell mt-5">
+
+                    <div class="row align-items-center g-3">
+
+                        <div class="col-lg">
+
+                            <div class="flow-node text-center">
+
+                                <i class="bi bi-gear-fill text-primary fs-2"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Generate
+                                </h5>
+
+                                <small class="text-muted">
+                                    keypair
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto">
+                            <div class="flow-arrow">→</div>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="flow-node text-center">
+
+                                <i class="bi bi-file-earmark-lock
+                                  text-warning fs-2"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Protect
+                                </h5>
+
+                                <small class="text-muted">
+                                    private material
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto">
+                            <div class="flow-arrow">→</div>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="flow-node text-center">
+
+                                <i class="bi bi-filetype-json
+                                  text-primary fs-2"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Build
+                                </h5>
+
+                                <small class="text-muted">
+                                    JWT assertion
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto">
+                            <div class="flow-arrow">→</div>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="flow-node text-center">
+
+                                <i class="bi bi-pen-fill
+                                  text-warning fs-2"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Sign
+                                </h5>
+
+                                <small class="text-muted">
+                                    with private key
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto">
+                            <div class="flow-arrow">→</div>
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="flow-node text-center"
+                                 style="border-color:#32c7f2;">
+
+                                <i class="bi bi-shield-check
+                                  text-success fs-2"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Verify
+                                </h5>
+
+                                <small class="text-muted">
+                                    in Keycloak
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             CRYPTOGRAPHIC FOUNDATIONS + JAVA ASSERTION GENERATOR
+             ========================================================= -->
+        <section class="sj-section">
+          <div class="container">
+            <div class="sj-kicker mb-3">Natural Dependency Order</div>
+            <h2 class="sj-section-title">RSA → PKI → CA → X.509 → Keystore / Truststore → Tools → Java</h2>
+            <p class="sj-section-lead mb-5">Before reading the Java implementation, establish the dependency chain. RSA supplies asymmetric signing mathematics. PKI organizes trust around public keys. Certificate Authorities issue signed X.509 certificates. Keystores and truststores persist identity and trust material. keytool and OpenSSL manipulate those artifacts. Finally, Java loads the private key and Nimbus JOSE + JWT creates an RS256 client assertion.</p>
+            <div class="flow-shell"><div class="row align-items-center g-3">
+              <div class="col-lg"><div class="flow-node text-center"><i class="bi bi-calculator fs-2 text-primary"></i><h4 class="mt-3">RSA</h4><small class="text-muted">asymmetric algorithm</small></div></div><div class="col-lg-auto"><div class="flow-arrow">→</div></div>
+              <div class="col-lg"><div class="flow-node text-center"><i class="bi bi-diagram-3 fs-2 text-primary"></i><h4 class="mt-3">PKI</h4><small class="text-muted">trust framework</small></div></div><div class="col-lg-auto"><div class="flow-arrow">→</div></div>
+              <div class="col-lg"><div class="flow-node text-center"><i class="bi bi-patch-check fs-2 text-success"></i><h4 class="mt-3">CA / X.509</h4><small class="text-muted">identity + public key</small></div></div><div class="col-lg-auto"><div class="flow-arrow">→</div></div>
+              <div class="col-lg"><div class="flow-node text-center"><i class="bi bi-archive fs-2 text-warning"></i><h4 class="mt-3">Stores</h4><small class="text-muted">identity + trust</small></div></div><div class="col-lg-auto"><div class="flow-arrow">→</div></div>
+              <div class="col-lg"><div class="flow-node text-center" style="border-color:#32c7f2"><i class="bi bi-filetype-java fs-2 text-primary"></i><h4 class="mt-3">Java</h4><small class="text-muted">load → claims → sign</small></div></div>
+            </div></div>
+          </div>
+        </section>
+
+        <section class="sj-section"><div class="container">
+          <div class="sj-kicker mb-3">1 — Cryptographic Primitive</div><h2 class="sj-section-title">RSA and RS256</h2>
+          <p class="sj-section-lead mb-5">RSA is an asymmetric public-key algorithm: the private key performs the signing operation while the corresponding public key verifies the result. RS256 is the JOSE algorithm identifier for an RSA signature using SHA-256. That is exactly what <code>JWSAlgorithm.RS256</code> selects in the Java class.</p>
+          <div class="row g-4">
+            <div class="col-lg-4"><div class="sj-card"><div class="sj-card-body"><div class="sj-icon sj-icon-yellow mb-3"><i class="bi bi-key-fill"></i></div><h4 class="sj-card-title">Private Key</h4><p>Sensitive material retained by the client. In this POC it is retrieved from PKCS12 and passed to the Nimbus RSA signer.</p><pre class="sj-code"><code>PrivateKey privateKey =
+ (PrivateKey) keyStore.getKey(
+   keyAlias, password);</code></pre></div></div></div>
+            <div class="col-lg-4"><div class="sj-card"><div class="sj-card-body"><div class="sj-icon sj-icon-blue mb-3"><i class="bi bi-key"></i></div><h4 class="sj-card-title">Public Key</h4><p>Non-secret verification material. Keycloak can verify a signature without obtaining the client's private key.</p><pre class="sj-code"><code>PRIVATE KEY → SIGN
+PUBLIC KEY  → VERIFY</code></pre></div></div></div>
+            <div class="col-lg-4"><div class="sj-card sj-card-accent"><div class="sj-card-body"><div class="sj-icon sj-icon-green mb-3"><i class="bi bi-pen-fill"></i></div><h4 class="sj-card-title">RS256</h4><p>The JWT's JWS header declares the algorithm that was used to produce the signature.</p><pre class="sj-code"><code>new JWSHeader(
+ JWSAlgorithm.RS256
+)</code></pre></div></div></div>
+          </div>
+        </div></section>
+
+        <section class="sj-section"><div class="container">
+          <div class="sj-kicker mb-3">2 — Trust Framework</div><h2 class="sj-section-title">PKI, Certificate Authorities and X.509</h2>
+          <p class="sj-section-lead mb-5">Public Key Infrastructure (PKI) is the wider trust framework for public/private keys and digital certificates. A Certificate Authority (CA) issues and digitally signs certificates. An X.509 certificate is a standardized structure that binds a subject identity to public-key material and includes information such as issuer, serial number and validity period.</p>
+          <div class="sj-striped-grid"><div class="table-responsive"><table class="table table-striped align-middle"><thead><tr><th>Concept</th><th>Meaning</th><th>Responsibility</th></tr></thead><tbody>
+            <tr><th>PKI</th><td>Infrastructure of keys, certificates, issuers, policies and lifecycle processes.</td><td>Establish and operate public-key trust.</td></tr>
+            <tr><th>Certificate Authority</th><td>Trusted certificate issuer.</td><td>Signs certificates so relying parties can validate their provenance through a trust chain.</td></tr>
+            <tr><th>X.509 Certificate</th><td>Digital certificate containing identity and public-key information.</td><td>Binds a subject to a public key.</td></tr>
+            <tr><th>Private Key</th><td>Secret half of an asymmetric pair.</td><td>Sign or otherwise prove possession.</td></tr>
+            <tr><th>Public Key</th><td>Shareable half of the pair.</td><td>Verify operations produced with the private key.</td></tr>
+          </tbody></table></div></div>
+          <div class="flow-shell mt-5"><div class="row align-items-center g-3">
+            <div class="col-lg"><div class="flow-node text-center"><h4>CA</h4><small class="text-muted">trusted issuer</small></div></div><div class="col-lg-auto"><div class="flow-arrow">→</div></div>
+            <div class="col-lg"><div class="flow-node text-center"><h4>Signs</h4><small class="text-muted">certificate</small></div></div><div class="col-lg-auto"><div class="flow-arrow">→</div></div>
+            <div class="col-lg"><div class="flow-node text-center"><h4>X.509</h4><small class="text-muted">subject + public key</small></div></div><div class="col-lg-auto"><div class="flow-arrow">→</div></div>
+            <div class="col-lg"><div class="flow-node text-center" style="border-color:#32c7f2"><h4>Relying Party</h4><small class="text-muted">validates trust</small></div></div>
+          </div></div>
+        </div></section>
+
+        <!-- =========================================================
+     mTLS PROCESS DIAGRAM
+     ========================================================= -->
+        <section class="py-5 bg-white">
+            <div class="container">
+
+                <div class="text-center mb-4">
+            <span class="badge rounded-pill text-bg-primary mb-3 px-3 py-2">
+                MUTUAL TLS
+            </span>
+
+                    <h2 class="fw-bold">
+                        How Mutual TLS (mTLS) Works
+                    </h2>
+
+                    <p class="text-secondary mx-auto"
+                       style="max-width: 850px;">
+                        Mutual TLS allows both the client and the server to prove
+                        their identities using digital certificates before establishing
+                        an encrypted connection. The diagram below shows certificate
+                        creation, certificate exchange, mutual authentication,
+                        encrypted communication, and certificate rotation.
+                    </p>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-body p-2 p-lg-4">
+
+                        <img
+                                th:src="@{/images/mtls.png}"
+                                src="/images/mtls.png"
+                                alt="Mutual TLS mTLS process showing client and server certificate generation, certificate authority validation, mutual authentication, encrypted communication, and certificate rotation"
+                                class="img-fluid w-100 rounded-3">
+
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <small class="text-secondary">
+                        In mTLS, authentication works in both directions:
+                        the client verifies the server certificate and the server
+                        verifies the client certificate.
+                    </small>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- =========================================================
+             KEYSTORE VS TRUSTSTORE
+             Your existing section starts below this point
+             ========================================================= -->
+
+        <section class="sj-section"><div class="container">
+          <div class="sj-kicker mb-3">3 — Storage Vocabulary</div><h2 class="sj-section-title">Keystore vs. Truststore</h2>
+          <p class="sj-section-lead mb-5">The names describe two different security responsibilities. A keystore answers, “What private identity/signing material do I possess?” A truststore answers, “Which certificates or issuing authorities do I trust?” Both can use PKCS12 as the physical container format.</p>
+          <div class="row g-4">
+            <div class="col-lg-6"><div class="sj-card sj-card-accent"><div class="sj-card-body"><div class="sj-label text-primary">Possession</div><h3 class="sj-card-title mt-2">Keystore</h3><p>Can contain a private-key entry and its associated certificate chain, organized by alias.</p><pre class="sj-code"><code>signed-jwt-client-keystore.p12
+└── signed-jwt-client (alias)
+    ├── RSA Private Key
+    └── Certificate / chain</code></pre><div class="alert alert-warning mt-3 mb-0">A keystore containing a private key is sensitive credential material.</div></div></div></div>
+            <div class="col-lg-6"><div class="sj-card"><div class="sj-card-body"><div class="sj-label text-success">Trust</div><h3 class="sj-card-title mt-2">Truststore</h3><p>Normally contains trusted certificate entries, such as a CA certificate used to decide which peer certificates are trusted.</p><pre class="sj-code"><code>truststore.p12
+└── jpa-demo-lab-ca
+    └── CA Certificate
+        ↓ trusts
+   certificates issued by CA</code></pre><div class="alert alert-primary mt-3 mb-0">The X.509/mTLS lab uses a truststore because TLS peers must validate certificate trust. This signed-JWT generator only needs its signing keystore to create the assertion.</div></div></div></div>
+          </div>
+          <div class="sj-striped-grid mt-5"><div class="table-responsive"><table class="table table-striped align-middle"><thead><tr><th>Question</th><th>Keystore</th><th>Truststore</th></tr></thead><tbody>
+            <tr><th>Primary purpose</th><td>Identity / private-key material</td><td>Trusted certificate material</td></tr>
+            <tr><th>Private key?</th><td>May contain one</td><td>Trust entries normally do not contain the peer's private key</td></tr>
+            <tr><th>mTLS client</th><td>Client key + certificate for its identity</td><td>CA/certificates used to trust server</td></tr>
+            <tr><th>Signed JWT generator</th><td>Loads RSA signing key</td><td>Not required merely to perform the local signing operation</td></tr>
+            <tr><th>PKCS12 usable?</th><td>Yes</td><td>Yes</td></tr>
+          </tbody></table></div></div>
+        </div></section>
+
+        <section class="sj-section"><div class="container">
+          <div class="sj-kicker mb-3">4 — Tooling</div><h2 class="sj-section-title">keytool and OpenSSL</h2>
+          <p class="sj-section-lead mb-5"><code>keytool</code> and OpenSSL are tools, not trust models. They create, inspect, convert and manage the keys, certificates and stores used by RSA, X.509, PKI, TLS and Java.</p>
+          <div class="accordion sj-accordion" id="toolsAccordion">
+            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#kt"><span class="sj-accordion-number">01</span>What is Java keytool?</button></h2><div id="kt" class="accordion-collapse collapse show" data-bs-parent="#toolsAccordion"><div class="accordion-body"><p><code>keytool</code> ships with the JDK and is especially convenient for Java keystores/truststores and PKCS12.</p><pre class="sj-code"><code># Inspect PKCS12
+keytool -list -v   -keystore signed-jwt-client-keystore.p12   -storetype PKCS12
+
+# Import a trusted CA certificate
+keytool -importcert   -alias jpa-demo-lab-ca   -file ca-cert.pem   -keystore truststore.p12   -storetype PKCS12</code></pre></div></div></div>
+            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#ossl"><span class="sj-accordion-number">02</span>What is OpenSSL?</button></h2><div id="ossl" class="accordion-collapse collapse" data-bs-parent="#toolsAccordion"><div class="accordion-body"><p>OpenSSL is a broad cryptography and TLS toolkit. The mTLS lab uses it to generate RSA keys, certificate signing requests, certificates and a PKCS12 archive.</p><pre class="sj-code"><code>openssl genrsa -out client-key.pem 2048
+
+openssl req -new   -key client-key.pem   -out client.csr   -subj "/CN=x509-cert-client"
+
+openssl pkcs12 -export   -inkey client-key.pem   -in client-cert.pem   -name x509-cert-client   -out client-keystore.p12</code></pre></div></div></div>
+            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#toolmental"><span class="sj-accordion-number">03</span>How should I remember the difference?</button></h2><div id="toolmental" class="accordion-collapse collapse" data-bs-parent="#toolsAccordion"><div class="accordion-body"><div class="alert alert-primary mb-0"><strong>RSA/X.509/PKI</strong> describe algorithms, formats and trust concepts. <strong>Keystore/truststore</strong> describe storage roles. <strong>PKCS12</strong> is a container format. <strong>keytool/OpenSSL</strong> are utilities that operate on the artifacts.</div></div></div>
+          </div>
+        </div></section>
+
+        <section class="sj-section"><div class="container">
+          <div class="sj-kicker mb-3">5 — Java Runtime</div><h2 class="sj-section-title">SignedJwtAssertionGenerator — Line by Line in Dependency Order</h2>
+          <p class="sj-section-lead mb-5">Now the Java class has no unexplained prerequisite: Spring injects the configuration; Java loads PKCS12; the alias locates the RSA private key; Nimbus builds the JWT claims and JWS header; RSASSASigner signs; and serialization produces the compact <code>client_assertion</code>.</p>
+          <div class="sj-protocol-shell">
+            <div class="sj-protocol-row"><div class="sj-number">01</div><div class="sj-protocol-card"><h4><code>@Component</code> — Make It a Spring Bean</h4><p>Spring discovers and manages <code>SignedJwtAssertionGenerator</code>, allowing another service/controller to inject and call it.</p><pre class="sj-code"><code>@Component
+public class SignedJwtAssertionGenerator {</code></pre></div></div>
+            <div class="sj-protocol-row"><div class="sj-number">02</div><div class="sj-protocol-card"><h4>Configuration Dependencies</h4><p>The constructor receives the OAuth client identity, expected audience, keystore location, password and alias. The audience expression falls back to the configured token endpoint when no separate audience is supplied.</p><pre class="sj-code"><code>@Value("${signed-jwt.client-id}")
+@Value("${signed-jwt.audience:${signed-jwt.token-endpoint}}")
+@Value("${signed-jwt.keystore-path}")
+@Value("${signed-jwt.keystore-password}")
+@Value("${signed-jwt.key-alias}")</code></pre></div></div>
+            <div class="sj-protocol-row"><div class="sj-number">03</div><div class="sj-protocol-card"><h4>Create a PKCS12 KeyStore Object</h4><p>This line selects the container format. It does not yet read the file.</p><pre class="sj-code"><code>KeyStore keyStore =
+    KeyStore.getInstance("PKCS12");</code></pre></div></div>
+            <div class="sj-protocol-row"><div class="sj-number">04</div><div class="sj-protocol-card"><h4>Read and Unlock the Keystore</h4><p><code>FileInputStream</code> opens the configured file. <code>load()</code> initializes the Java keystore from it using the password.</p><pre class="sj-code"><code>try (FileInputStream fis =
+         new FileInputStream(keystorePath)) {
+    keyStore.load(
+        fis,
+        keystorePassword.toCharArray());
+}</code></pre></div></div>
+            <div class="sj-protocol-row"><div class="sj-number">05</div><div class="sj-protocol-card"><h4>Find the Private Key by Alias</h4><p>The alias identifies the intended entry inside the container. Java returns key material which the code casts to <code>PrivateKey</code>.</p><pre class="sj-code"><code>PrivateKey privateKey =
+    (PrivateKey) keyStore.getKey(
+        keyAlias,
+        keystorePassword.toCharArray());</code></pre></div></div>
+            <div class="sj-protocol-row"><div class="sj-number">06</div><div class="sj-protocol-card"><h4>Fail Before Cryptography if the Key Is Missing</h4><p>A missing/wrong alias must not silently continue into JWT generation.</p><pre class="sj-code"><code>if (privateKey == null) {
+    throw new IllegalStateException(
+        "No private key found under alias '"
+        + keyAlias + "' in " + keystorePath);
+}</code></pre></div></div>
+            <div class="sj-protocol-row"><div class="sj-number">07</div><div class="sj-protocol-card"><h4>Give the Assertion a Short Lifetime</h4><p><code>now</code> becomes the issued-at time and expiry is set 60 seconds later.</p><pre class="sj-code"><code>Date now = new Date();
+Date expiry =
+    new Date(now.getTime() + 60_000L);</code></pre></div></div>
+            <div class="sj-protocol-row"><div class="sj-number">08</div><div class="sj-protocol-card"><h4>Build the JWT Claims</h4><p><code>iss</code> and <code>sub</code> identify the client; <code>aud</code> identifies the intended receiver; <code>exp</code>/<code>iat</code> bound the lifetime; <code>jti</code> uniquely identifies this assertion.</p><pre class="sj-code"><code>JWTClaimsSet claims =
+    new JWTClaimsSet.Builder()
+      .issuer(clientId)
+      .subject(clientId)
+      .audience(audience)
+      .expirationTime(expiry)
+      .issueTime(now)
+      .jwtID(UUID.randomUUID().toString())
+      .build();</code></pre></div></div>
+            <div class="sj-protocol-row"><div class="sj-number">09</div><div class="sj-protocol-card"><h4>Create the JWS Header and Signed JWT</h4><p>The JOSE header explicitly declares <code>RS256</code>; the claims are the JWT payload.</p><pre class="sj-code"><code>SignedJWT signedJWT =
+    new SignedJWT(
+      new JWSHeader(JWSAlgorithm.RS256),
+      claims);</code></pre></div></div>
+            <div class="sj-protocol-row"><div class="sj-number">10</div><div class="sj-protocol-card"><h4>Perform the RSA Signature</h4><p><code>RSASSASigner</code> receives the private key. The private key stays local; the resulting signature becomes part of the JWS.</p><pre class="sj-code"><code>signedJWT.sign(
+    new RSASSASigner(privateKey));</code></pre></div></div>
+            <div class="sj-protocol-row"><div class="sj-number">11</div><div class="sj-protocol-card"><h4>Serialize the client_assertion</h4><p>The result is the compact three-part JWS representation that can be placed in the OAuth token request.</p><pre class="sj-code"><code>return signedJWT.serialize();
+
+BASE64URL(header)
+.
+BASE64URL(payload)
+.
+BASE64URL(signature)</code></pre></div></div>
+          </div>
+        </div></section>
+
+        <section class="sj-section"><div class="container">
+          <div class="sj-kicker mb-3">6 — Complete Source</div><h2 class="sj-section-title">SignedJwtAssertionGenerator</h2>
+          <p class="sj-section-lead mb-5">After the dependency walkthrough, the complete class can now be read naturally from imports to serialization.</p>
+          <div class="sj-card"><div class="sj-card-body p-lg-5"><pre class="sj-code"><code>package com.rollingstone.demo.service;
+
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.util.Date;
+import java.util.UUID;
+
+@Component
+public class SignedJwtAssertionGenerator {
+
+    private final String clientId;
+    private final String audience;
+    private final String keystorePath;
+    private final String keystorePassword;
+    private final String keyAlias;
+
+    public SignedJwtAssertionGenerator(
+            @Value("${signed-jwt.client-id}") String clientId,
+            @Value("${signed-jwt.audience:${signed-jwt.token-endpoint}}") String audience,
+            @Value("${signed-jwt.keystore-path}") String keystorePath,
+            @Value("${signed-jwt.keystore-password}") String keystorePassword,
+            @Value("${signed-jwt.key-alias}") String keyAlias) {
+        this.clientId = clientId;
+        this.audience = audience;
+        this.keystorePath = keystorePath;
+        this.keystorePassword = keystorePassword;
+        this.keyAlias = keyAlias;
+    }
+
+    public String generateSignedAssertion() throws Exception {
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+
+        try (FileInputStream fis = new FileInputStream(keystorePath)) {
+            keyStore.load(fis, keystorePassword.toCharArray());
+        }
+
+        PrivateKey privateKey = (PrivateKey) keyStore.getKey(
+                keyAlias, keystorePassword.toCharArray());
+
+        if (privateKey == null) {
+            throw new IllegalStateException(
+                    "No private key found under alias '"
+                    + keyAlias + "' in " + keystorePath);
+        }
+
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + 60_000L);
+
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .issuer(clientId)
+                .subject(clientId)
+                .audience(audience)
+                .expirationTime(expiry)
+                .issueTime(now)
+                .jwtID(UUID.randomUUID().toString())
+                .build();
+
+        SignedJWT signedJWT = new SignedJWT(
+                new JWSHeader(JWSAlgorithm.RS256),
+                claims);
+
+        signedJWT.sign(new RSASSASigner(privateKey));
+
+        return signedJWT.serialize();
+    }
+}</code></pre></div></div>
+        </div></section>
+
+        <section class="sj-section"><div class="container">
+          <div class="sj-kicker mb-3">7 — Imports Decoded</div><h2 class="sj-section-title">Why Every Java Import Exists</h2>
+          <div class="sj-striped-grid mt-5"><div class="table-responsive"><table class="table table-striped align-middle"><thead><tr><th>Import / Type</th><th>Job</th><th>Concept</th></tr></thead><tbody>
+            <tr><td><code>JWSAlgorithm</code></td><td>Selects RS256.</td><td>JOSE signature algorithm</td></tr>
+            <tr><td><code>JWSHeader</code></td><td>Creates JWS metadata/header.</td><td>JOSE</td></tr>
+            <tr><td><code>RSASSASigner</code></td><td>Signs using the RSA private key.</td><td>RSA</td></tr>
+            <tr><td><code>JWTClaimsSet</code></td><td>Builds JWT claims.</td><td>JWT payload</td></tr>
+            <tr><td><code>SignedJWT</code></td><td>Represents and serializes the signed JWT.</td><td>JWT + JWS</td></tr>
+            <tr><td><code>@Value</code></td><td>Injects externalized configuration.</td><td>Spring configuration</td></tr>
+            <tr><td><code>@Component</code></td><td>Registers the generator as a Spring bean.</td><td>Dependency injection</td></tr>
+            <tr><td><code>FileInputStream</code></td><td>Reads the .p12 file.</td><td>File I/O</td></tr>
+            <tr><td><code>KeyStore</code></td><td>Loads/queries PKCS12 entries.</td><td>Java security storage</td></tr>
+            <tr><td><code>PrivateKey</code></td><td>Represents signing key.</td><td>Asymmetric crypto</td></tr>
+            <tr><td><code>Date</code></td><td>Supplies <code>iat</code>/<code>exp</code>.</td><td>Assertion lifetime</td></tr>
+            <tr><td><code>UUID</code></td><td>Creates unique <code>jti</code>.</td><td>Assertion identity</td></tr>
+          </tbody></table></div></div>
+        </div></section>
+
+        <section class="sj-section"><div class="container">
+          <div class="sj-kicker mb-3">8 — Critical Distinction</div><h2 class="sj-section-title">private_key_jwt vs. X.509 mTLS</h2>
+          <p class="sj-section-lead mb-5">Both use asymmetric cryptography and may involve certificates, but they prove client identity at different protocol layers.</p>
+          <div class="sj-striped-grid"><div class="table-responsive"><table class="table table-striped align-middle"><thead><tr><th>Dimension</th><th>private_key_jwt</th><th>X.509 / mTLS</th></tr></thead><tbody>
+            <tr><th>Proof happens</th><td>OAuth token request carries signed <code>client_assertion</code>.</td><td>TLS handshake presents client certificate and proves private-key possession.</td></tr>
+            <tr><th>Private-key operation</th><td>Signs JWT.</td><td>Used by TLS protocol.</td></tr>
+            <tr><th>OAuth-layer credential</th><td>Signed JWT assertion.</td><td>Certificate authentication proof has already occurred in TLS.</td></tr>
+            <tr><th>Keystore</th><td>Supplies signing private key.</td><td>Supplies client private key and certificate.</td></tr>
+            <tr><th>Truststore</th><td>Not needed merely to create the local JWT signature.</td><td>Used to establish certificate trust for TLS peers.</td></tr>
+            <tr><th>Mental model</th><td>“I possess this key because I can sign this fresh assertion.”</td><td>“I possess the private key corresponding to the certificate I present during TLS.”</td></tr>
+          </tbody></table></div></div>
+        </div></section>
+
+
+        <!-- =========================================================
+             TAKEAWAY
+             ========================================================= -->
+
+        <section class="sj-section">
+
+            <div class="container">
+
+                <div class="sj-takeaway">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg-2 text-center">
+
+                            <div class="sj-icon sj-icon-blue mx-auto"
+                                 style="width:90px;height:90px;font-size:2.6rem;">
+
+                                <i class="bi bi-key-fill"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-10">
+
+                            <div class="sj-label text-primary mb-2">
+                                Key Takeaway
+                            </div>
+
+                            <h2 class="fw-bold"
+                                style="color:#102b69;">
+
+                                Key Generation Establishes the Cryptographic Trust
+                                Relationship
+                            </h2>
+
+                            <p class="lead text-muted">
+
+                                The private key signs. The public material verifies.
+                            </p>
+
+                            <p class="text-muted mb-0">
+
+                                The PKCS12 archive gives the client access to its
+                                sensitive signing material. Keycloak is configured
+                                with the corresponding verification material.
+                                Later, the client proves possession of its private
+                                key by creating a signed JWT assertion rather than
+                                transmitting the private key itself.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

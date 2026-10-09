@@ -1,0 +1,3862 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Capability Config | Training</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/bright-blue.css}">
+
+    <style>
+
+        :root {
+            --cc-navy: #06142f;
+            --cc-navy-2: #0b2455;
+            --cc-blue: #315df1;
+            --cc-cyan: #19c9f5;
+
+            --cc-white: #ffffff;
+            --cc-panel: rgba(255,255,255,.97);
+
+            --cc-text: #17243d;
+            --cc-heading: #102b69;
+            --cc-muted: #5d6c80;
+
+            --cc-border: #dbe6f2;
+            --cc-code: #061536;
+
+            --cc-green: #15945d;
+            --cc-red: #d63c4c;
+            --cc-yellow: #eba900;
+            --cc-purple: #7256d8;
+        }
+
+
+        /* =========================================================
+           ONE CONTINUOUS PAGE BACKGROUND
+           ========================================================= */
+
+        html {
+            min-height: 100%;
+            background: #06142f;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: white;
+
+            background:
+                radial-gradient(
+                    circle at 92% 12%,
+                    rgba(39,103,246,.92) 0,
+                    rgba(39,103,246,.44) 24%,
+                    transparent 44%
+                ),
+                radial-gradient(
+                    circle at 82% 54%,
+                    rgba(24,112,244,.44) 0,
+                    transparent 37%
+                ),
+                linear-gradient(
+                    112deg,
+                    #06142f 0%,
+                    #0b2150 34%,
+                    #173a91 66%,
+                    #315df1 100%
+                );
+
+            background-attachment: fixed;
+        }
+
+        .navbar {
+            position: relative;
+            z-index: 100;
+        }
+
+        .cc-page {
+            position: relative;
+            overflow: hidden;
+            background: transparent !important;
+        }
+
+        .cc-layer {
+            position: relative;
+            z-index: 2;
+        }
+
+        .cc-section {
+            padding: 5rem 0;
+            background: transparent !important;
+        }
+
+        .cc-section + .cc-section {
+            border-top: 1px solid rgba(255,255,255,.09);
+        }
+
+
+        /* =========================================================
+           TYPOGRAPHY
+           ========================================================= */
+
+        .cc-kicker {
+            color: #45d6ff;
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .19em;
+            text-transform: uppercase;
+        }
+
+        .cc-section-title {
+            color: white;
+            font-size: clamp(2rem,3vw,3.1rem);
+            font-weight: 800;
+            letter-spacing: -.035em;
+            margin-bottom: 1rem;
+        }
+
+        .cc-section-lead {
+            max-width: 980px;
+            color: rgba(255,255,255,.80);
+            font-size: 1.08rem;
+            line-height: 1.8;
+        }
+
+        .cc-electric {
+            color: #22c8f3;
+        }
+
+
+        /* =========================================================
+           HERO
+           ========================================================= */
+
+        .cc-hero {
+            padding: 2.5rem 0 5.5rem;
+            background: transparent !important;
+        }
+
+        .cc-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            margin-bottom: 4rem;
+            color: #8ae4ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .cc-back-link:hover {
+            color: white;
+        }
+
+        .cc-hero-title {
+            color: white;
+            font-size: clamp(3rem,5vw,5.1rem);
+            font-weight: 800;
+            line-height: .99;
+            letter-spacing: -.045em;
+        }
+
+        .cc-hero-lead {
+            max-width: 730px;
+            color: rgba(255,255,255,.82);
+            font-size: 1.14rem;
+            line-height: 1.75;
+        }
+
+        .cc-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .45rem .88rem;
+            color: white;
+            font-size: .78rem;
+            font-weight: 700;
+            border: 1px solid #21c9f5;
+            border-radius: 999px;
+            background: rgba(4,21,55,.42);
+        }
+
+
+        /* =========================================================
+           HERO ARCHITECTURE
+           ========================================================= */
+
+        .cc-architecture {
+            padding: 1.6rem;
+            background: rgba(7,30,77,.72);
+            border: 1px solid #1bc9f5;
+            border-radius: 21px;
+            box-shadow: 0 25px 65px rgba(0,0,0,.18);
+            backdrop-filter: blur(8px);
+        }
+
+        .cc-architecture-title {
+            color: white;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .cc-architecture-subtitle {
+            color: rgba(255,255,255,.70);
+        }
+
+        .cc-arch-node {
+            padding: 1.25rem;
+            text-align: center;
+            color: white;
+            background: rgba(255,255,255,.055);
+            border: 1px solid rgba(255,255,255,.72);
+            border-radius: 16px;
+        }
+
+        .cc-arch-node.highlight {
+            border-color: #20c9f4;
+        }
+
+        .cc-arrow {
+            color: #1ed0fa;
+            font-size: 1.8rem;
+            line-height: 1;
+        }
+
+
+        /* =========================================================
+           LIGHT CARDS
+           ========================================================= */
+
+        .cc-card {
+            height: 100%;
+            color: var(--cc-text);
+            background: var(--cc-panel);
+            border: 1px solid var(--cc-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 45px rgba(1,15,45,.16);
+            overflow: hidden;
+        }
+
+        .cc-card-accent {
+            border-color: #32c7f2;
+        }
+
+        .cc-card-body {
+            padding: 1.8rem;
+        }
+
+        .cc-card-title {
+            color: #111b2e;
+            font-weight: 800;
+        }
+
+        .cc-card p,
+        .cc-card li {
+            color: #4f5d70;
+        }
+
+        .cc-label {
+            font-size: .71rem;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+        .cc-icon {
+            width: 54px;
+            height: 54px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-size: 1.55rem;
+        }
+
+        .cc-icon-blue {
+            color: #1479df;
+            background: #e9f7ff;
+        }
+
+        .cc-icon-green {
+            color: #148e59;
+            background: #eaf9f1;
+        }
+
+        .cc-icon-red {
+            color: #d93e4e;
+            background: #fff0f2;
+        }
+
+        .cc-icon-yellow {
+            color: #e5a600;
+            background: #fff6d9;
+        }
+
+        .cc-icon-purple {
+            color: #7256d8;
+            background: #f0ecff;
+        }
+
+
+        /* =========================================================
+           CODE
+           ========================================================= */
+
+        .cc-code {
+            margin: 0;
+            padding: 1.2rem 1.35rem;
+            color: #f8fbff;
+            background: var(--cc-code);
+            border: 1px solid rgba(66,203,255,.24);
+            border-radius: 12px;
+            font-size: .84rem;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .cc-code-inline {
+            padding: .12rem .42rem;
+            color: #164d8e;
+            background: #edf6ff;
+            border: 1px solid #d4e9fa;
+            border-radius: 6px;
+        }
+
+
+        /* =========================================================
+           STRIPED GRID
+           ========================================================= */
+
+        .cc-striped-grid {
+            overflow: hidden;
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--cc-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 42px rgba(0,0,0,.14);
+        }
+
+        .cc-striped-grid table {
+            margin: 0;
+            --bs-table-bg: transparent;
+            --bs-table-color: #27344a;
+            --bs-table-border-color: #e1e8f1;
+        }
+
+        .cc-striped-grid thead th {
+            padding: 1.2rem;
+            color: white;
+            background: #0b285f;
+            border: 0;
+        }
+
+        .cc-striped-grid tbody td,
+        .cc-striped-grid tbody th {
+            padding: 1.05rem 1.2rem;
+            vertical-align: middle;
+        }
+
+        .cc-striped-grid tbody tr:nth-child(even) {
+            background: #f1f6fc;
+        }
+
+
+        /* =========================================================
+           FLOW
+           ========================================================= */
+
+        .cc-flow-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .cc-flow-node {
+            min-height: 155px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1.3rem;
+            text-align: center;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--cc-border);
+            border-radius: 17px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .cc-flow-arrow {
+            color: #34d5fb;
+            font-size: 2rem;
+        }
+
+
+        /* =========================================================
+           TIMELINE
+           ========================================================= */
+
+        .cc-protocol-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .cc-protocol-row {
+            position: relative;
+            display: grid;
+            grid-template-columns: 58px 1fr;
+            gap: 1.2rem;
+            padding: .8rem 0;
+        }
+
+        .cc-protocol-row:not(:last-child)::before {
+            content: "";
+            position: absolute;
+            left: 27px;
+            top: 60px;
+            bottom: -8px;
+            width: 2px;
+            background: linear-gradient(
+                #30d0f7,
+                rgba(255,255,255,.22)
+            );
+        }
+
+        .cc-number {
+            position: relative;
+            z-index: 2;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            background: linear-gradient(
+                135deg,
+                #1765e8,
+                #18c8f4
+            );
+            border: 4px solid rgba(255,255,255,.95);
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(0,0,0,.18);
+        }
+
+        .cc-protocol-card {
+            padding: 1.45rem;
+            color: var(--cc-text);
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--cc-border);
+            border-radius: 17px;
+            box-shadow: 0 12px 32px rgba(0,0,0,.10);
+        }
+
+        .cc-protocol-card h4 {
+            color: #10275d;
+            font-weight: 800;
+        }
+
+        .cc-protocol-card p,
+        .cc-protocol-card li {
+            color: #536276;
+        }
+
+        .cc-protocol-card.machine {
+            border-left: 5px solid #20c6f2;
+        }
+
+        .cc-protocol-card.human {
+            border-left: 5px solid #7256d8;
+        }
+
+        .cc-protocol-card.success {
+            border-left: 5px solid #19a468;
+        }
+
+
+        /* =========================================================
+           ACCORDION
+           ========================================================= */
+
+        .cc-accordion {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 18px 45px rgba(0,0,0,.14);
+        }
+
+        .cc-accordion .accordion-item {
+            border-color: #dbe5f0;
+        }
+
+        .cc-accordion .accordion-button {
+            padding: 1.25rem 1.4rem;
+            color: #15233e;
+            background: rgba(255,255,255,.98);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .cc-accordion .accordion-button:not(.collapsed) {
+            color: #0d347a;
+            background: #e9f4ff;
+            box-shadow: none;
+        }
+
+        .cc-accordion .accordion-button:focus {
+            box-shadow: none;
+        }
+
+        .cc-accordion .accordion-body {
+            padding: 1.6rem;
+            color: #4e5c70;
+            background: white;
+            line-height: 1.7;
+        }
+
+        .cc-accordion-number {
+            min-width: 37px;
+            height: 37px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: .9rem;
+            color: white;
+            background: linear-gradient(
+                135deg,
+                #1765e8,
+                #18c8f4
+            );
+            border-radius: 50%;
+            font-size: .78rem;
+            font-weight: 800;
+        }
+
+
+        /* =========================================================
+           IDENTITY VISUAL
+           ========================================================= */
+
+        .identity-box {
+            padding: 1.6rem;
+            color: #17243d;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .identity-avatar {
+            width: 74px;
+            height: 74px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            border-radius: 50%;
+            font-size: 2rem;
+        }
+
+
+        /* =========================================================
+           TAKEAWAY
+           ========================================================= */
+
+        .cc-takeaway {
+            padding: 2.7rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid #36cef5;
+            border-radius: 22px;
+            box-shadow: 0 22px 55px rgba(0,0,0,.16);
+        }
+
+
+        @media (max-width: 991.98px) {
+
+            .cc-flow-arrow {
+                transform: rotate(90deg);
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+
+<div class="cc-page">
+    <div class="cc-layer">
+
+
+        <!-- =========================================================
+             HERO
+             ========================================================= -->
+
+        <header class="cc-hero">
+
+            <div class="container">
+
+                <a href="/training"
+                   class="cc-back-link">
+
+                    <i class="bi bi-arrow-left"></i>
+                    Back
+
+                </a>
+
+
+                <div class="row align-items-center g-5">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="cc-kicker mb-4">
+                            Episode D • Tested • Keycloak 26
+                        </div>
+
+
+                        <h1 class="cc-hero-title mb-4">
+
+                            OAuth Client
+
+                            <span class="d-block cc-electric">
+                        Capability Configuration.
+                    </span>
+
+                        </h1>
+
+
+                        <p class="cc-hero-lead">
+
+                            One Keycloak client can expose very different OAuth
+                            capabilities depending on which switches are enabled.
+
+                            In this episode we test two fundamentally different
+                            authorization models:
+                            <strong>Client Credentials</strong> and
+                            <strong>OAuth 2.0 Device Authorization Grant</strong>.
+
+                        </p>
+
+
+                        <p class="cc-hero-lead">
+
+                            The first authenticates an
+                            <strong>application</strong>.
+
+                            The second ultimately authenticates a
+                            <strong>human user</strong> even when the originating
+                            device has a poor keyboard or browser experience.
+
+                        </p>
+
+
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+
+                    <span class="cc-pill">
+                        <i class="bi bi-shield-lock"></i>
+                        Keycloak 26
+                    </span>
+
+                            <span class="cc-pill">
+                        <i class="bi bi-gear"></i>
+                        Client Capabilities
+                    </span>
+
+                            <span class="cc-pill">
+                        <i class="bi bi-cpu"></i>
+                        Client Credentials
+                    </span>
+
+                            <span class="cc-pill">
+                        <i class="bi bi-display"></i>
+                        Device Grant
+                    </span>
+
+                            <span class="cc-pill">
+                        <i class="bi bi-person-check"></i>
+                        Human Approval
+                    </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="cc-architecture">
+
+                            <div class="cc-architecture-title">
+                                Same Client — Two Different Trust Questions
+                            </div>
+
+                            <div class="cc-architecture-subtitle small mb-4">
+                                capability-demo-client
+                            </div>
+
+
+                            <div class="cc-arch-node highlight">
+
+                                <i class="bi bi-sliders text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Keycloak Client Configuration
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Enable Different OAuth Capabilities
+                                </small>
+
+                            </div>
+
+
+                            <div class="row g-3 mt-2">
+
+
+                                <div class="col-md-6">
+
+                                    <div class="cc-arch-node h-100">
+
+                                        <i class="bi bi-cpu text-info fs-2"></i>
+
+                                        <h6 class="fw-bold mt-2">
+                                            Client Credentials
+                                        </h6>
+
+                                        <small class="text-white-50">
+                                            Which application is this?
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <div class="cc-arch-node h-100">
+
+                                        <i class="bi bi-person-badge text-info fs-2"></i>
+
+                                        <h6 class="fw-bold mt-2">
+                                            Device Grant
+                                        </h6>
+
+                                        <small class="text-white-50">
+                                            Which human approved this?
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+
+
+                            <div class="text-center py-2">
+
+                                <div class="cc-arrow">↓</div>
+
+                                <small class="text-white-50">
+                                    Different Identity Semantics
+                                </small>
+
+                            </div>
+
+
+                            <div class="cc-arch-node">
+
+                                <i class="bi bi-file-earmark-lock-fill text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Access Token
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Machine Identity or Human Identity
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =========================================================
+             WHAT WAS TESTED
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Test Configuration
+                </div>
+
+                <h2 class="cc-section-title">
+                    What Did We Actually Enable?
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    The demonstration uses the
+                    <strong>capability-demo-client</strong> in
+                    <strong>jpa-demo-realm</strong>.
+
+                    Multiple client capabilities were enabled so that the same
+                    Keycloak client could participate in more than one OAuth flow.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-md-4">
+
+                        <div class="cc-card cc-card-accent">
+
+                            <div class="cc-card-body text-center">
+
+                                <div class="cc-icon cc-icon-blue mx-auto mb-3">
+                                    <i class="bi bi-person-gear"></i>
+                                </div>
+
+                                <div class="cc-label text-primary">
+                                    Enabled
+                                </div>
+
+                                <h4 class="cc-card-title mt-2">
+                                    Service Accounts
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Allows the client to authenticate using the
+                                    Client Credentials grant and obtain a token
+                                    representing its service-account identity.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-4">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body text-center">
+
+                                <div class="cc-icon cc-icon-green mx-auto mb-3">
+                                    <i class="bi bi-shield-check"></i>
+                                </div>
+
+                                <div class="cc-label text-success">
+                                    Enabled
+                                </div>
+
+                                <h4 class="cc-card-title mt-2">
+                                    Authorization
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Enables Keycloak Authorization Services for the
+                                    client and changes capabilities associated with
+                                    its service account.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-4">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body text-center">
+
+                                <div class="cc-icon cc-icon-purple mx-auto mb-3">
+                                    <i class="bi bi-tv"></i>
+                                </div>
+
+                                <div class="cc-label"
+                                     style="color:#7256d8;">
+                                    Enabled
+                                </div>
+
+                                <h4 class="cc-card-title mt-2">
+                                    Device Authorization
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Allows an input-constrained device to initiate
+                                    authentication and have the user approve the
+                                    request through another browser-capable device.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             FUNDAMENTAL CONCEPT
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Core Concept
+                </div>
+
+                <h2 class="cc-section-title">
+                    OAuth Grant Types Answer Different Trust Questions
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    A grant type is not merely a different parameter sent to the
+                    token endpoint. It describes the security context under which
+                    authorization is being obtained.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="cc-card cc-card-accent">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-blue mb-3">
+                                    <i class="bi bi-cpu-fill"></i>
+                                </div>
+
+                                <div class="cc-label text-primary">
+                                    Client Credentials
+                                </div>
+
+                                <h3 class="cc-card-title h4 mt-2">
+                                    Which Application Is This?
+                                </h3>
+
+                                <p class="mt-3">
+
+                                    No human user logs in.
+
+                                    The client proves its own identity and receives
+                                    an access token representing the client.
+
+                                </p>
+
+                                <div class="p-3 bg-light border rounded-3">
+
+                                    <strong>Identity:</strong><br>
+
+                                    <code>
+                                        service-account-capability-demo-client
+                                    </code>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-purple mb-3">
+                                    <i class="bi bi-person-check-fill"></i>
+                                </div>
+
+                                <div class="cc-label"
+                                     style="color:#7256d8;">
+                                    Device Authorization
+                                </div>
+
+                                <h3 class="cc-card-title h4 mt-2">
+                                    Which Human Approved This?
+                                </h3>
+
+                                <p class="mt-3">
+
+                                    The originating device does not collect the
+                                    person's password.
+
+                                    The user authenticates and approves the request
+                                    through a separate browser interaction.
+
+                                </p>
+
+                                <div class="p-3 bg-light border rounded-3">
+
+                                    <strong>Identity in our test:</strong><br>
+
+                                    <code>alice</code>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             CLIENT CREDENTIALS
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Capability 01
+                </div>
+
+                <h2 class="cc-section-title">
+                    Client Credentials Grant
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    Client Credentials is a machine-to-machine flow.
+
+                    A backend application, scheduled process, batch job or
+                    microservice authenticates as itself rather than impersonating
+                    a human user.
+
+                </p>
+
+
+                <div class="cc-flow-shell">
+
+                    <div class="row g-3 align-items-center">
+
+
+                        <div class="col-lg">
+
+                            <div class="cc-flow-node">
+
+                                <i class="bi bi-server fs-1 text-primary"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Backend Service
+                                </h5>
+
+                                <small class="text-muted">
+                                    capability-demo-client
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right cc-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="cc-flow-node">
+
+                                <i class="bi bi-shield-lock fs-1 text-primary"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Keycloak 26
+                                </h5>
+
+                                <small class="text-muted">
+                                    Authenticates Client
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right cc-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="cc-flow-node">
+
+                                <i class="bi bi-person-gear fs-1 text-success"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Service Account
+                                </h5>
+
+                                <small class="text-muted">
+                                    Machine Identity
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right cc-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="cc-flow-node">
+
+                                <i class="bi bi-file-earmark-lock fs-1 text-primary"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Access Token
+                                </h5>
+
+                                <small class="text-muted">
+                                    Represents Client
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SERVICE ACCOUNT
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Keycloak Internals
+                </div>
+
+                <h2 class="cc-section-title">
+                    The Service Account Becomes an Identity
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    In the tested setup, enabling service accounts caused Keycloak
+                    to associate the client with a service-account user identity.
+
+                    This is why the resulting access token can contain a
+                    <code>preferred_username</code> that looks like a user even
+                    though no person authenticated.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-5">
+
+                        <div class="identity-box h-100">
+
+                            <div class="identity-avatar cc-icon-blue">
+
+                                <i class="bi bi-person-gear"></i>
+
+                            </div>
+
+                            <div class="text-center mt-3">
+
+                                <div class="cc-label text-primary">
+                                    Keycloak Service Account
+                                </div>
+
+                                <h4 class="fw-bold mt-2">
+                                    service-account-<br>
+                                    capability-demo-client
+                                </h4>
+
+                            </div>
+
+
+                            <hr>
+
+
+                            <div class="row g-3">
+
+                                <div class="col-6">
+
+                                    <small class="text-muted">
+                                        Identity Type
+                                    </small>
+
+                                    <div class="fw-bold">
+                                        Machine
+                                    </div>
+
+                                </div>
+
+                                <div class="col-6">
+
+                                    <small class="text-muted">
+                                        Human Login
+                                    </small>
+
+                                    <div class="fw-bold">
+                                        None
+                                    </div>
+
+                                </div>
+
+                                <div class="col-6">
+
+                                    <small class="text-muted">
+                                        Roles
+                                    </small>
+
+                                    <div class="fw-bold">
+                                        Assignable
+                                    </div>
+
+                                </div>
+
+                                <div class="col-6">
+
+                                    <small class="text-muted">
+                                        Groups
+                                    </small>
+
+                                    <div class="fw-bold">
+                                        Assignable
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-7">
+
+                        <div class="cc-card h-100">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-label text-primary">
+                                    Internal Relationship
+                                </div>
+
+                                <h4 class="cc-card-title mt-2">
+                                    Client → Service Account Identity
+                                </h4>
+
+                                <p>
+
+                                    The tested Keycloak database represented the
+                                    service account through a user record named:
+
+                                </p>
+
+                                <pre class="cc-code"><code>service-account-capability-demo-client</code></pre>
+
+                                <p class="mt-4">
+
+                                    The original test observed the relationship
+                                    through:
+
+                                </p>
+
+                                <pre class="cc-code"><code>USER_ENTITY
+
+        │
+        │ SERVICE_ACCOUNT_CLIENT_LINK
+        ▼
+
+CLIENT</code></pre>
+
+                                <p class="mt-4 mb-0">
+
+                                    This gives Keycloak a concrete identity to which
+                                    service-account roles and group memberships can
+                                    be associated.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             CLIENT CREDENTIAL REQUEST
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    HTTP Exchange
+                </div>
+
+                <h2 class="cc-section-title">
+                    Client Credentials — End-to-End
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    The entire flow can occur without a browser because no human
+                    authentication or consent interaction is required.
+
+                </p>
+
+
+                <div class="cc-protocol-shell">
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">01</div>
+
+                        <div class="cc-protocol-card machine">
+
+                            <div class="cc-label text-primary">
+                                Application
+                            </div>
+
+                            <h4 class="mt-1">
+                                Backend Needs an Access Token
+                            </h4>
+
+                            <p class="mb-0">
+
+                                A machine workload needs authorization to call a
+                                protected resource.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">02</div>
+
+                        <div class="cc-protocol-card machine">
+
+                            <div class="cc-label text-primary">
+                                HTTP Request
+                            </div>
+
+                            <h4 class="mt-1">
+                                POST to the Token Endpoint
+                            </h4>
+
+                            <pre class="cc-code mt-3"><code>curl -X POST \
+  http://localhost:8080/realms/jpa-demo-realm/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=capability-demo-client" \
+  -d "client_secret=&lt;CLIENT_SECRET&gt;"</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">03</div>
+
+                        <div class="cc-protocol-card machine">
+
+                            <div class="cc-label text-primary">
+                                Authentication
+                            </div>
+
+                            <h4 class="mt-1">
+                                Keycloak Authenticates the Client
+                            </h4>
+
+                            <p class="mb-0">
+
+                                Keycloak validates the configured client credentials
+                                and resolves the client's service-account identity.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">04</div>
+
+                        <div class="cc-protocol-card success">
+
+                            <div class="cc-label text-success">
+                                Token Issuance
+                            </div>
+
+                            <h4 class="mt-1">
+                                Access Token Represents the Service Account
+                            </h4>
+
+                            <pre class="cc-code mt-3"><code>{
+  "azp": "capability-demo-client",
+  "sub": "3cd10bea-ae47-4d54-b44c-f4440e509fb2",
+  "typ": "Bearer",
+  "preferred_username":
+      "service-account-capability-demo-client",
+
+  "realm_access": {
+    "roles": [
+      "offline_access",
+      "uma_authorization",
+      "default-roles-jpa-demo-realm"
+    ]
+  },
+
+  "resource_access": {
+    "capability-demo-client": {
+      "roles": ["uma_protection"]
+    }
+  },
+
+  "scope": "email profile"
+}</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TOKEN EVIDENCE
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Token Forensics
+                </div>
+
+                <h2 class="cc-section-title">
+                    What Does the Token Tell Us?
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    Instead of merely confirming that Keycloak returned HTTP 200,
+                    inspect the claims. They reveal what identity Keycloak actually
+                    authenticated and which client capabilities affected the token.
+
+                </p>
+
+
+                <div class="cc-striped-grid">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+
+                            <tr>
+                                <th>Token Evidence</th>
+                                <th>Observed Value</th>
+                                <th>What It Demonstrates</th>
+                            </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <th>
+                                    <code>azp</code>
+                                </th>
+
+                                <td>
+                                    <code>capability-demo-client</code>
+                                </td>
+
+                                <td>
+                                    Identifies the authorized party associated with
+                                    the token.
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    <code>preferred_username</code>
+                                </th>
+
+                                <td>
+                                    <code>
+                                        service-account-capability-demo-client
+                                    </code>
+                                </td>
+
+                                <td>
+                                    Shows that the token represents the service-account
+                                    identity rather than a human user.
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Client role
+                                </th>
+
+                                <td>
+                                    <code>uma_protection</code>
+                                </td>
+
+                                <td>
+                                    In this test, this was evidence of Authorization
+                                    Services being enabled for the client.
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Refresh token
+                                </th>
+
+                                <td>
+                                    None
+                                </td>
+
+                                <td>
+                                    The tested Client Credentials response did not
+                                    contain a user refresh token.
+                                </td>
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             DEVICE GRANT
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Capability 02
+                </div>
+
+                <h2 class="cc-section-title">
+                    OAuth 2.0 Device Authorization Grant
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    Device Authorization is designed for an application running on a
+                    device that can communicate over HTTP but may not provide a
+                    convenient browser or keyboard.
+
+                    The authentication experience is therefore split across
+                    <strong>two devices</strong>.
+
+                </p>
+
+
+                <div class="cc-flow-shell">
+
+                    <div class="row g-3 align-items-center">
+
+
+                        <div class="col-lg">
+
+                            <div class="cc-flow-node">
+
+                                <i class="bi bi-tv fs-1 text-primary"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Device
+                                </h5>
+
+                                <small class="text-muted">
+                                    TV / CLI / Kiosk
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right cc-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="cc-flow-node">
+
+                                <i class="bi bi-shield-lock fs-1 text-primary"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Keycloak
+                                </h5>
+
+                                <small class="text-muted">
+                                    Issues Device + User Codes
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right cc-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="cc-flow-node">
+
+                                <i class="bi bi-phone fs-1"
+                                   style="color:#7256d8;"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Human's Device
+                                </h5>
+
+                                <small class="text-muted">
+                                    Browser Login + Approval
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right cc-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="cc-flow-node">
+
+                                <i class="bi bi-file-earmark-lock fs-1 text-success"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    User Token
+                                </h5>
+
+                                <small class="text-muted">
+                                    Represents Human
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             WHY DEVICE GRANT
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Why It Exists
+                </div>
+
+                <h2 class="cc-section-title">
+                    The Device Should Not Need Your Password
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    Device Authorization separates the device requesting access from
+                    the browser in which the person authenticates.
+
+                    That distinction is the core architectural idea.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-blue mb-3">
+                                    <i class="bi bi-tv"></i>
+                                </div>
+
+                                <h4 class="cc-card-title">
+                                    Limited Device
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The originating device may have no keyboard,
+                                    inconvenient input or no practical browser.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-yellow mb-3">
+                                    <i class="bi bi-123"></i>
+                                </div>
+
+                                <h4 class="cc-card-title">
+                                    User Code
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The device displays a short code that the person
+                                    can enter or follow through a verification URL.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-purple mb-3">
+                                    <i class="bi bi-phone"></i>
+                                </div>
+
+                                <h4 class="cc-card-title">
+                                    Trusted Browser
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    The person performs the actual Keycloak login
+                                    using a browser-capable device.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-green mb-3">
+                                    <i class="bi bi-person-check"></i>
+                                </div>
+
+                                <h4 class="cc-card-title">
+                                    Human Token
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    After approval, the originating device receives
+                                    tokens representing the authenticated user.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             DEVICE FLOW
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    End-to-End Device Flow
+                </div>
+
+                <h2 class="cc-section-title">
+                    Follow Every Step
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    Unlike Client Credentials, Device Authorization is asynchronous:
+                    the device begins the flow, waits while a human authenticates
+                    elsewhere, and polls Keycloak until authorization succeeds or
+                    the request expires.
+
+                </p>
+
+
+                <div class="cc-protocol-shell">
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">01</div>
+
+                        <div class="cc-protocol-card machine">
+
+                            <div class="cc-label text-primary">
+                                Device
+                            </div>
+
+                            <h4>
+                                Device Requests Authorization Codes
+                            </h4>
+
+                            <pre class="cc-code mt-3"><code>POST
+/realms/jpa-demo-realm/protocol/openid-connect/auth/device
+
+client_id=capability-demo-client
+client_secret=&lt;CLIENT_SECRET&gt;</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">02</div>
+
+                        <div class="cc-protocol-card success">
+
+                            <div class="cc-label text-success">
+                                Keycloak Response
+                            </div>
+
+                            <h4>
+                                Keycloak Returns Two Different Codes
+                            </h4>
+
+                            <pre class="cc-code mt-3"><code>{
+  "device_code": "HYuO4dhusIu8SQnhpOHSqXuXd4UFpKCwTYTZp6zeO-c",
+  "user_code": "YDQB-WFPT",
+  "verification_uri":
+      "http://localhost:8080/realms/jpa-demo-realm/device",
+  "verification_uri_complete":
+      "http://localhost:8080/realms/jpa-demo-realm/device?user_code=YDQB-WFPT",
+  "expires_in": 600,
+  "interval": 5
+}</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">03</div>
+
+                        <div class="cc-protocol-card machine">
+
+                            <div class="cc-label text-primary">
+                                Originating Device
+                            </div>
+
+                            <h4>
+                                Device Displays Instructions
+                            </h4>
+
+                            <p>
+
+                                The device presents the short
+                                <code>user_code</code> or a URL that contains it.
+
+                            </p>
+
+                            <div class="alert alert-primary mb-0">
+
+                                <strong>User Code:</strong>
+                                YDQB-WFPT
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">04</div>
+
+                        <div class="cc-protocol-card human">
+
+                            <div class="cc-label"
+                                 style="color:#7256d8;">
+                                Human Interaction
+                            </div>
+
+                            <h4>
+                                User Opens Keycloak on Another Device
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The person uses a phone, laptop or other
+                                browser-capable system to visit the verification URL.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">05</div>
+
+                        <div class="cc-protocol-card human">
+
+                            <div class="cc-label"
+                                 style="color:#7256d8;">
+                                Authentication
+                            </div>
+
+                            <h4>
+                                Human Logs In
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The person's authentication happens directly with
+                                Keycloak through the browser interaction.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">06</div>
+
+                        <div class="cc-protocol-card human">
+
+                            <div class="cc-label"
+                                 style="color:#7256d8;">
+                                Authorization
+                            </div>
+
+                            <h4>
+                                User Approves the Device
+                            </h4>
+
+                            <p>
+
+                                In the tested flow, Keycloak displayed:
+
+                            </p>
+
+                            <div class="alert alert-success mb-0">
+
+                                <strong>Device Login Successful</strong><br>
+
+                                You may close this browser window and go back to
+                                your device.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">07</div>
+
+                        <div class="cc-protocol-card machine">
+
+                            <div class="cc-label text-primary">
+                                Device
+                            </div>
+
+                            <h4>
+                                Device Polls the Token Endpoint
+                            </h4>
+
+                            <pre class="cc-code mt-3"><code>POST
+/realms/jpa-demo-realm/protocol/openid-connect/token
+
+grant_type=
+urn:ietf:params:oauth:grant-type:device_code
+
+device_code=
+HYuO4dhusIu8SQnhpOHSqXuXd4UFpKCwTYTZp6zeO-c
+
+client_id=capability-demo-client
+
+client_secret=&lt;CLIENT_SECRET&gt;</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">08</div>
+
+                        <div class="cc-protocol-card machine">
+
+                            <div class="cc-label text-warning">
+                                Before Approval
+                            </div>
+
+                            <h4>
+                                Keycloak Can Tell the Device to Wait
+                            </h4>
+
+                            <pre class="cc-code mt-3"><code>{
+  "error": "authorization_pending"
+}</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                The device continues polling according to the
+                                interval returned by Keycloak.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="cc-protocol-row">
+
+                        <div class="cc-number">09</div>
+
+                        <div class="cc-protocol-card success">
+
+                            <div class="cc-label text-success">
+                                After Approval
+                            </div>
+
+                            <h4>
+                                Keycloak Returns User Tokens
+                            </h4>
+
+                            <pre class="cc-code mt-3"><code>{
+  "azp": "capability-demo-client",
+  "sub": "fc8c4820-7eda-438b-b1c8-35a1a9a612a4",
+  "typ": "Bearer",
+  "preferred_username": "alice",
+  "name": "Alice Bentley",
+  "given_name": "Alice",
+  "family_name": "Bentley",
+  "email": "alice.bentley@gmail.com",
+
+  "realm_access": {
+    "roles": [
+      "offline_access",
+      "admin",
+      "uma_authorization",
+      "default-roles-jpa-demo-realm"
+    ]
+  },
+
+  "scope": "email profile"
+}</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TWO CODES
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Important Distinction
+                </div>
+
+                <h2 class="cc-section-title">
+                    device_code Is Not user_code
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    The Device Authorization response contains two codes because
+                    they serve different actors in the protocol.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="cc-card cc-card-accent">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-blue mb-3">
+                                    <i class="bi bi-cpu"></i>
+                                </div>
+
+                                <div class="cc-label text-primary">
+                                    Machine-Facing
+                                </div>
+
+                                <h3 class="cc-card-title h4 mt-2">
+                                    device_code
+                                </h3>
+
+                                <p>
+
+                                    The originating device retains this value and
+                                    presents it while polling the token endpoint.
+
+                                </p>
+
+                                <div class="alert alert-primary mb-0">
+
+                                    <strong>Actor:</strong>
+                                    Device / Application
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-purple mb-3">
+                                    <i class="bi bi-person"></i>
+                                </div>
+
+                                <div class="cc-label"
+                                     style="color:#7256d8;">
+                                    Human-Facing
+                                </div>
+
+                                <h3 class="cc-card-title h4 mt-2">
+                                    user_code
+                                </h3>
+
+                                <p>
+
+                                    This shorter value is intended to participate in
+                                    the human verification and approval experience.
+
+                                </p>
+
+                                <div class="alert mb-0"
+                                     style="
+                                background:#f0ecff;
+                                border-color:#d8ceff;
+                                color:#4c369d;
+                             ">
+
+                                    <strong>Actor:</strong>
+                                    Human User
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             POLLING STATE MACHINE
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Asynchronous Behavior
+                </div>
+
+                <h2 class="cc-section-title">
+                    The Device Is Waiting on a Human Event
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    The device does not know when the person will complete
+                    authentication. Polling bridges that asynchronous gap.
+
+                </p>
+
+
+                <div class="cc-striped-grid">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+
+                            <tr>
+                                <th>State</th>
+                                <th>Meaning</th>
+                                <th>Device Behavior</th>
+                            </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <th>
+                                    Code Issued
+                                </th>
+
+                                <td>
+                                    Keycloak created the device authorization request.
+                                </td>
+
+                                <td>
+                                    Display instructions to the user.
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    <code>authorization_pending</code>
+                                </th>
+
+                                <td>
+                                    The person has not completed authorization yet.
+                                </td>
+
+                                <td>
+                                    Continue polling according to the configured
+                                    interval.
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Approved
+                                </th>
+
+                                <td>
+                                    The user authenticated and approved the request.
+                                </td>
+
+                                <td>
+                                    Token endpoint can return tokens.
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    <code>expired_token</code>
+                                </th>
+
+                                <td>
+                                    The authorization window ended before successful
+                                    completion.
+                                </td>
+
+                                <td>
+                                    Stop polling and begin a new device flow if
+                                    appropriate.
+                                </td>
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             IDENTITY COMPARISON
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Identity Semantics
+                </div>
+
+                <h2 class="cc-section-title">
+                    Look at the Tokens Side by Side
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    The clearest demonstration of the difference between these two
+                    grants is not the HTTP endpoint. It is the identity encoded in
+                    the resulting token.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="identity-box h-100">
+
+                            <div class="identity-avatar cc-icon-blue">
+
+                                <i class="bi bi-cpu"></i>
+
+                            </div>
+
+                            <div class="text-center mt-3">
+
+                                <div class="cc-label text-primary">
+                                    Client Credentials
+                                </div>
+
+                                <h4 class="fw-bold mt-2">
+                                    Machine Identity
+                                </h4>
+
+                            </div>
+
+                            <hr>
+
+                            <pre class="cc-code"><code>"azp": "capability-demo-client"
+
+"preferred_username":
+"service-account-capability-demo-client"</code></pre>
+
+                            <p class="text-muted mt-3 mb-0">
+
+                                The application is the authenticated principal.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="identity-box h-100">
+
+                            <div class="identity-avatar cc-icon-purple">
+
+                                <i class="bi bi-person"></i>
+
+                            </div>
+
+                            <div class="text-center mt-3">
+
+                                <div class="cc-label"
+                                     style="color:#7256d8;">
+                                    Device Grant
+                                </div>
+
+                                <h4 class="fw-bold mt-2">
+                                    Human Identity
+                                </h4>
+
+                            </div>
+
+                            <hr>
+
+                            <pre class="cc-code"><code>"azp": "capability-demo-client"
+
+"preferred_username": "alice"
+
+"name": "Alice Bentley"</code></pre>
+
+                            <p class="text-muted mt-3 mb-0">
+
+                                The client initiated the flow, but the resulting token
+                                represents the authenticated person.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             COMPARISON GRID
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Side-by-Side
+                </div>
+
+                <h2 class="cc-section-title">
+                    Client Credentials vs. Device Authorization
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    These capabilities may coexist on the same client, but they
+                    should not be confused: they solve different authentication
+                    problems and produce different identity semantics.
+
+                </p>
+
+
+                <div class="cc-striped-grid">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+
+                            <tr>
+                                <th>Characteristic</th>
+                                <th>Client Credentials</th>
+                                <th>Device Authorization</th>
+                            </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <th>
+                                    Primary actor
+                                </th>
+
+                                <td>
+                                    Application
+                                </td>
+
+                                <td>
+                                    Human + device
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Token represents
+                                </th>
+
+                                <td>
+                                    Client service account
+                                </td>
+
+                                <td>
+                                    Authenticated human
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Human login
+                                </th>
+
+                                <td>
+                                    No
+                                </td>
+
+                                <td>
+                                    Yes
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Browser required
+                                </th>
+
+                                <td>
+                                    No
+                                </td>
+
+                                <td>
+                                    Yes, for the approving user on another device
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Tested username
+                                </th>
+
+                                <td>
+                                    <code>
+                                        service-account-capability-demo-client
+                                    </code>
+                                </td>
+
+                                <td>
+                                    <code>alice</code>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Refresh token in our test
+                                </th>
+
+                                <td>
+                                    No
+                                </td>
+
+                                <td>
+                                    Yes
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Interaction model
+                                </th>
+
+                                <td>
+                                    Synchronous machine authentication
+                                </td>
+
+                                <td>
+                                    Asynchronous human approval
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Typical examples
+                                </th>
+
+                                <td>
+                                    Backend job, scheduled task, microservice
+                                </td>
+
+                                <td>
+                                    Smart TV, CLI, kiosk, input-constrained device
+                                </td>
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             REFRESH TOKEN
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Another Useful Clue
+                </div>
+
+                <h2 class="cc-section-title">
+                    Why Did the Responses Look Different?
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    The original tests also showed a visible difference in token
+                    lifecycle behavior.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-blue mb-3">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </div>
+
+                                <div class="cc-label text-primary">
+                                    Client Credentials
+                                </div>
+
+                                <h4 class="cc-card-title mt-2">
+                                    Request Another Token
+                                </h4>
+
+                                <p>
+
+                                    In the tested response there was no refresh token
+                                    and:
+
+                                </p>
+
+                                <pre class="cc-code"><code>"refresh_expires_in": 0</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    The client can authenticate itself again whenever
+                                    another access token is required.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="cc-card cc-card-accent">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-green mb-3">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </div>
+
+                                <div class="cc-label text-success">
+                                    Device Grant
+                                </div>
+
+                                <h4 class="cc-card-title mt-2">
+                                    User Session Context
+                                </h4>
+
+                                <p>
+
+                                    The tested Device Grant response did include a
+                                    refresh token and:
+
+                                </p>
+
+                                <pre class="cc-code"><code>"refresh_expires_in": 1800</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    That provides another observable difference
+                                    between the two test scenarios.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             CONFIGURATION ACCORDION
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Keycloak Configuration
+                </div>
+
+                <h2 class="cc-section-title">
+                    Configure the Capability Demo Client
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    These accordion steps provide a compact structure for explaining
+                    the Keycloak client configuration during the video.
+
+                </p>
+
+
+                <div class="accordion cc-accordion"
+                     id="configurationAccordion">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#configOne">
+
+                        <span class="cc-accordion-number">
+                            01
+                        </span>
+
+                                Open capability-demo-client
+
+                            </button>
+
+                        </h2>
+
+                        <div id="configOne"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#configurationAccordion">
+
+                            <div class="accordion-body">
+
+                                Open the Keycloak Admin Console and navigate to the
+                                client used by this demonstration.
+
+                                <div class="p-3 bg-light border rounded mt-3 fw-bold">
+
+                                    Clients
+                                    →
+                                    capability-demo-client
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#configTwo">
+
+                        <span class="cc-accordion-number">
+                            02
+                        </span>
+
+                                Enable Client Authentication
+
+                            </button>
+
+                        </h2>
+
+                        <div id="configTwo"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configurationAccordion">
+
+                            <div class="accordion-body">
+
+                                The tested client authenticates to Keycloak and uses
+                                a client secret in the demonstrated curl requests.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#configThree">
+
+                        <span class="cc-accordion-number">
+                            03
+                        </span>
+
+                                Enable Service Accounts Roles
+
+                            </button>
+
+                        </h2>
+
+                        <div id="configThree"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configurationAccordion">
+
+                            <div class="accordion-body">
+
+                                This enables the Client Credentials scenario used in
+                                the demonstration and gives the client a
+                                service-account identity.
+
+                                <div class="alert alert-primary mt-3 mb-0">
+
+                                    <strong>
+                                        Service accounts roles: On
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#configFour">
+
+                        <span class="cc-accordion-number">
+                            04
+                        </span>
+
+                                Enable Authorization
+
+                            </button>
+
+                        </h2>
+
+                        <div id="configFour"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configurationAccordion">
+
+                            <div class="accordion-body">
+
+                                Authorization Services was enabled in the tested
+                                configuration.
+
+                                The resulting service-account token contained the
+                                client role:
+
+                                <pre class="cc-code mt-3"><code>"resource_access": {
+  "capability-demo-client": {
+    "roles": ["uma_protection"]
+  }
+}</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#configFive">
+
+                        <span class="cc-accordion-number">
+                            05
+                        </span>
+
+                                Enable OAuth 2.0 Device Authorization Grant
+
+                            </button>
+
+                        </h2>
+
+                        <div id="configFive"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configurationAccordion">
+
+                            <div class="accordion-body">
+
+                                Enable the Device Authorization capability used by the
+                                second half of the demonstration.
+
+                                <div class="alert alert-primary mt-3 mb-0">
+
+                                    <strong>
+                                        OAuth 2.0 Device Authorization Grant: On
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#configSix">
+
+                        <span class="cc-accordion-number">
+                            06
+                        </span>
+
+                                Test Client Credentials
+
+                            </button>
+
+                        </h2>
+
+                        <div id="configSix"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configurationAccordion">
+
+                            <div class="accordion-body">
+
+                                Request a token with:
+
+                                <pre class="cc-code mt-3"><code>grant_type=client_credentials</code></pre>
+
+                                <p class="mt-3">
+
+                                    Decode the resulting access token and confirm that
+                                    the principal is the service-account identity.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#configSeven">
+
+                        <span class="cc-accordion-number">
+                            07
+                        </span>
+
+                                Test Device Authorization
+
+                            </button>
+
+                        </h2>
+
+                        <div id="configSeven"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configurationAccordion">
+
+                            <div class="accordion-body">
+
+                                Request the device/user code pair, complete the
+                                browser approval, then poll the token endpoint using:
+
+                                <pre class="cc-code mt-3"><code>grant_type=
+urn:ietf:params:oauth:grant-type:device_code</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#configEight">
+
+                        <span class="cc-accordion-number">
+                            08
+                        </span>
+
+                                Compare the Two Tokens
+
+                            </button>
+
+                        </h2>
+
+                        <div id="configEight"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#configurationAccordion">
+
+                            <div class="accordion-body">
+
+                                Do not stop after confirming that both requests
+                                returned tokens.
+
+                                Compare:
+
+                                <ul class="mt-3 mb-0">
+
+                                    <li>
+                                        <code>sub</code>
+                                    </li>
+
+                                    <li>
+                                        <code>preferred_username</code>
+                                    </li>
+
+                                    <li>
+                                        <code>azp</code>
+                                    </li>
+
+                                    <li>
+                                        Realm roles
+                                    </li>
+
+                                    <li>
+                                        Client roles
+                                    </li>
+
+                                    <li>
+                                        Refresh-token behavior
+                                    </li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TROUBLESHOOTING
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Troubleshooting
+                </div>
+
+                <h2 class="cc-section-title">
+                    Common Failure Points
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    Separate configuration failures from protocol-state failures.
+                    The two grant types fail for very different reasons.
+
+                </p>
+
+
+                <div class="accordion cc-accordion"
+                     id="troubleshootingAccordion">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#troubleOne">
+
+                        <span class="cc-accordion-number">
+                            01
+                        </span>
+
+                                Client Credentials Does Not Work
+
+                            </button>
+
+                        </h2>
+
+                        <div id="troubleOne"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Confirm that the client is configured for
+                                authentication and that service accounts are enabled.
+
+                                Also verify the client ID and credential used in the
+                                token request.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#troubleTwo">
+
+                        <span class="cc-accordion-number">
+                            02
+                        </span>
+
+                                Token Has Unexpected Roles
+
+                            </button>
+
+                        </h2>
+
+                        <div id="troubleTwo"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Inspect the service-account user's role assignments
+                                and the client's role mappings rather than assuming
+                                the machine identity has the same permissions as a
+                                human administrator.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#troubleThree">
+
+                        <span class="cc-accordion-number">
+                            03
+                        </span>
+
+                                Device Endpoint Is Not Available
+
+                            </button>
+
+                        </h2>
+
+                        <div id="troubleThree"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Verify that OAuth 2.0 Device Authorization Grant is
+                                enabled for the client before debugging the curl
+                                request itself.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#troubleFour">
+
+                        <span class="cc-accordion-number">
+                            04
+                        </span>
+
+                                authorization_pending Keeps Appearing
+
+                            </button>
+
+                        </h2>
+
+                        <div id="troubleFour"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                This does not necessarily mean the flow failed.
+
+                                It means the authorization process has not yet
+                                completed.
+
+                                Verify that the user opened the correct verification
+                                URI, authenticated and approved the request.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#troubleFive">
+
+                        <span class="cc-accordion-number">
+                            05
+                        </span>
+
+                                Device Code Expired
+
+                            </button>
+
+                        </h2>
+
+                        <div id="troubleFive"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                The original test returned:
+
+                                <pre class="cc-code mt-3"><code>"expires_in": 600</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    If the user does not complete the flow before the
+                                    authorization request expires, begin a new Device
+                                    Authorization flow.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#troubleSix">
+
+                        <span class="cc-accordion-number">
+                            06
+                        </span>
+
+                                Device Is Polling Too Aggressively
+
+                            </button>
+
+                        </h2>
+
+                        <div id="troubleSix"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Respect the polling interval supplied in the device
+                                authorization response.
+
+                                The tested response contained:
+
+                                <pre class="cc-code mt-3"><code>"interval": 5</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             USE CASES
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+                <div class="cc-kicker mb-3">
+                    Practical Architecture
+                </div>
+
+                <h2 class="cc-section-title">
+                    Match the Grant to the Actor
+                </h2>
+
+                <p class="cc-section-lead mb-5">
+
+                    The simplest way to distinguish these flows is to ask whose
+                    identity the protected API actually needs.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-blue mb-3">
+                                    <i class="bi bi-clock-history"></i>
+                                </div>
+
+                                <h4 class="cc-card-title">
+                                    Scheduled Job
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    No person is present.
+
+                                    The job should authenticate as a machine identity.
+
+                                </p>
+
+                                <div class="badge text-bg-primary mt-3">
+                                    Client Credentials
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-green mb-3">
+                                    <i class="bi bi-diagram-3"></i>
+                                </div>
+
+                                <h4 class="cc-card-title">
+                                    Microservice
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    One backend service needs to call another using
+                                    its own application identity.
+
+                                </p>
+
+                                <div class="badge text-bg-primary mt-3">
+                                    Client Credentials
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-purple mb-3">
+                                    <i class="bi bi-tv"></i>
+                                </div>
+
+                                <h4 class="cc-card-title">
+                                    Smart TV
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    A person needs to authorize an application on a
+                                    device with inconvenient credential entry.
+
+                                </p>
+
+                                <div class="badge mt-3"
+                                     style="background:#7256d8;">
+                                    Device Grant
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="cc-card">
+
+                            <div class="cc-card-body">
+
+                                <div class="cc-icon cc-icon-purple mb-3">
+                                    <i class="bi bi-terminal"></i>
+                                </div>
+
+                                <h4 class="cc-card-title">
+                                    CLI Application
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    A command-line application can initiate the flow
+                                    while authentication occurs through a browser.
+
+                                </p>
+
+                                <div class="badge mt-3"
+                                     style="background:#7256d8;">
+                                    Device Grant
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TAKEAWAY
+             ========================================================= -->
+
+        <section class="cc-section">
+
+            <div class="container">
+
+
+                <div class="cc-takeaway">
+
+                    <div class="row align-items-center g-4">
+
+
+                        <div class="col-lg-2 text-center">
+
+                            <div class="cc-icon cc-icon-blue mx-auto"
+                                 style="
+                            width:90px;
+                            height:90px;
+                            font-size:2.6rem;
+                         ">
+
+                                <i class="bi bi-sliders"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-10">
+
+                            <div class="cc-label text-primary mb-2">
+                                Key Takeaway
+                            </div>
+
+                            <h2 class="fw-bold"
+                                style="color:#102b69;">
+
+                                Client Capabilities Change the Trust Model
+
+                            </h2>
+
+                            <p class="lead text-muted">
+
+                                The important question is not simply:
+                                “Did Keycloak return a token?”
+
+                            </p>
+
+                            <p class="text-muted mb-0">
+
+                                <strong>Client Credentials</strong> answers:
+                                “Which application is this?”
+
+                                Keycloak represents that application through its
+                                service-account identity.
+
+                                <strong>Device Authorization</strong> answers:
+                                “Which person approved access?”
+
+                                The originating device never needs to collect that
+                                person's credentials; authentication occurs through
+                                the browser-capable device, and the resulting token
+                                represents the human user.
+
+                            </p>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+                <!-- =====================================================
+                     NAVIGATION
+                     ===================================================== -->
+
+                <div class="d-flex flex-wrap justify-content-between gap-3
+                    mt-5 pt-4"
+                     style="
+                border-top:1px solid rgba(255,255,255,.18);
+             ">
+
+
+                    <a href="/training/signed-jwt-client-secret"
+                       class="btn btn-outline-light btn-lg px-4">
+
+                        <i class="bi bi-arrow-left me-2"></i>
+
+                        Back: Signed JWT with Client Secret
+
+                    </a>
+
+
+                    <a href="/training/ciba"
+                       class="btn btn-light btn-lg px-4"
+                       style="color:#12346f;">
+
+                        Next: OIDC CIBA Grant
+
+                        <i class="bi bi-arrow-right ms-2"></i>
+
+                    </a>
+
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

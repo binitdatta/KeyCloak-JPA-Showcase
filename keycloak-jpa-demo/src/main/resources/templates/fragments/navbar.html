@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark navbar-brightblue sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+            <i class="bi bi-shield-lock-fill me-1"></i> rollingstone JPA &amp; Keycloak Lab
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="jpaDropdown" role="button" data-bs-toggle="dropdown">
+                        JPA Pages
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="jpaDropdown">
+                        <li><a class="dropdown-item" href="/jpa/customers">Customers (1:1 profile, 1:many orders)</a></li>
+                        <li><a class="dropdown-item" href="/jpa/products">Products (many:one category, many:many tags)</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="trainingDropdown" role="button" data-bs-toggle="dropdown">
+                        Training
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="trainingDropdown">
+                        <li><a class="dropdown-item" href="/training">Training Index</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Keycloak Client Authentication</h6></li>
+                        <li><a class="dropdown-item" href="/training/signed-jwt">A. Signed JWT</a></li>
+                        <li><a class="dropdown-item" href="/training/signed-jwt-demo">A. Signed JWT &mdash; Live Demo</a></li>
+                        <li><a class="dropdown-item" href="/training/signed-jwt-generate-keys">A. Signed JWT &mdash; Generate Keys (PKCS12 vs JKS)</a></li>
+                        <li><a class="dropdown-item" href="/training/x509-certificate">B. X509 Certificate</a></li>
+                        <li><a class="dropdown-item" href="/training/x509-certificate-demo">B. X509 Certificate &mdash; Live Demo</a></li>
+                        <li><a class="dropdown-item" href="/training/x509-mtls-concepts-java-commands">B. X509 Certificate &mdash; Explanation</a></li>
+                        <li><a class="dropdown-item" href="/training/signed-jwt-client-secret">C. Signed JWT with Client Secret</a></li>
+<!--                        <li><a class="dropdown-item" href="/training/capability-config">D. Capability Config (Authz, Device Grant)</a></li>-->
+                        <li><a class="dropdown-item" href="/training/capability-config">D. Capability Config (Authz, Device Grant)</a></li>
+                        <li><a class="dropdown-item" href="/training/fine-grained-authz-demo">D1. Fine-Grained Authorization — Live Demo</a></li>
+                        <li><a class="dropdown-item" href="/training/fine-grained-authz-explained">D2. Fine-Grained Authorization — Explained</a></li>
+                        <li><a class="dropdown-item" href="/training/device-grant-demo">D3. Device Authorization Grant &mdash; Live Demo</a></li>
+                        <li><a class="dropdown-item" href="/training/ciba">E. OIDC CIBA Grant</a></li>
+                        <li><a class="dropdown-item" href="/training/ciba-demo">E1. OIDC CIBA Grant &mdash; Live Demo</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Custom SPI &amp; Broker Login</h6></li>
+                        <li><a class="dropdown-item" href="/training/custom-client-authenticator">F1. Custom Client Authenticator</a></li>
+                        <li><a class="dropdown-item" href="/training/first-broker-login">F2. First Broker Login + Create User If Unique</a></li>
+                        <li><a class="dropdown-item" href="/training/post-login-flow">F3. Post-Login Flow (Roles / Groups)</a></li>
+                        <li><a class="dropdown-item" href="/training/keycloak-ext">F4. KeyCloak Extension Classes</a></li>
+                        <li><a class="dropdown-item" href="/training/keycloak-browser-flow">F5. KeyCloak Browser Flow</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Spring Data JPA</h6></li>
+                        <li><a class="dropdown-item" href="/training/jpa-relationships">G. 1:1, 1:Many, Many:Many Relationships</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="btn btn-brightblue btn-sm" href="/oauth2/authorization/keycloak">Login via Keycloak</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <span class="navbar-text text-white me-2" sec:authentication="principal.attributes['preferred_username']">user</span>
+                    <form th:action="@{/logout}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+</body>
+</html>

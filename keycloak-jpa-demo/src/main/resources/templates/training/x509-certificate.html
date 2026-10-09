@@ -1,0 +1,3860 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>X.509 Certificate Client Authentication | Training</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/bright-blue.css}">
+
+    <style>
+
+        /* =========================================================
+           X.509 CERTIFICATE TRAINING PAGE
+           Same continuous visual language as Signed JWT page
+           ========================================================= */
+
+        :root {
+            --x-navy: #06142f;
+            --x-navy-2: #0b2455;
+            --x-blue: #315df1;
+            --x-electric: #19c9f5;
+
+            --x-white: #ffffff;
+            --x-panel: rgba(255, 255, 255, 0.96);
+
+            --x-text: #13213c;
+            --x-heading: #102b69;
+            --x-muted: #5f6f86;
+
+            --x-border: #dce7f4;
+            --x-cyan-border: #32c7f2;
+
+            --x-green: #15945d;
+            --x-red: #d63c4c;
+            --x-yellow: #eba900;
+
+            --x-code: #061536;
+        }
+
+
+        html {
+            min-height: 100%;
+            background: #06142f;
+        }
+
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: white;
+
+            background:
+                radial-gradient(
+                    circle at 92% 12%,
+                    rgba(39, 103, 246, 0.92) 0,
+                    rgba(39, 103, 246, 0.44) 24%,
+                    transparent 44%
+                ),
+                radial-gradient(
+                    circle at 82% 54%,
+                    rgba(24, 112, 244, 0.44) 0,
+                    transparent 37%
+                ),
+                linear-gradient(
+                    112deg,
+                    #06142f 0%,
+                    #0b2150 34%,
+                    #173a91 66%,
+                    #315df1 100%
+                );
+
+            background-attachment: fixed;
+        }
+
+
+        .navbar {
+            position: relative;
+            z-index: 100;
+        }
+
+
+        /* =========================================================
+           PAGE
+           ========================================================= */
+
+        .x-page {
+            position: relative;
+            overflow: hidden;
+            background: transparent;
+        }
+
+
+        .x-page::before {
+            content: "";
+            position: absolute;
+
+            width: 950px;
+            height: 950px;
+
+            right: -520px;
+            top: 520px;
+
+            border: 1px solid rgba(86, 220, 255, .10);
+            border-radius: 50%;
+
+            pointer-events: none;
+        }
+
+
+        .x-page::after {
+            content: "";
+            position: absolute;
+
+            width: 760px;
+            height: 760px;
+
+            left: -520px;
+            top: 2300px;
+
+            border: 1px solid rgba(86, 220, 255, .08);
+            border-radius: 50%;
+
+            pointer-events: none;
+        }
+
+
+        .x-layer {
+            position: relative;
+            z-index: 2;
+        }
+
+
+        /* =========================================================
+           COMMON TYPOGRAPHY
+           ========================================================= */
+
+        .x-kicker {
+            color: #45d6ff;
+
+            font-size: .76rem;
+            font-weight: 800;
+
+            letter-spacing: .19em;
+            text-transform: uppercase;
+        }
+
+
+        .x-section {
+            padding: 5.2rem 0;
+            background: transparent !important;
+        }
+
+
+        .x-section + .x-section {
+            border-top: 1px solid rgba(255, 255, 255, .09);
+        }
+
+
+        .x-section-title {
+            color: white;
+
+            font-size: clamp(2rem, 3vw, 3.1rem);
+            font-weight: 800;
+
+            letter-spacing: -.035em;
+
+            margin-bottom: 1rem;
+        }
+
+
+        .x-section-lead {
+            max-width: 930px;
+
+            color: rgba(255, 255, 255, .78);
+
+            font-size: 1.08rem;
+            line-height: 1.8;
+        }
+
+
+        /* =========================================================
+           HERO
+           ========================================================= */
+
+        .x-hero {
+            position: relative;
+
+            padding: 2.5rem 0 5.5rem;
+
+            background: transparent;
+        }
+
+
+        .x-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+
+            margin-bottom: 4.2rem;
+
+            color: #89e3ff;
+
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+
+        .x-back-link:hover {
+            color: white;
+        }
+
+
+        .x-hero-title {
+            color: white;
+
+            font-size: clamp(3.3rem, 5.1vw, 5.5rem);
+            font-weight: 800;
+
+            line-height: .98;
+            letter-spacing: -.045em;
+        }
+
+
+        .x-electric {
+            color: #22c8f3;
+        }
+
+
+        .x-hero-lead {
+            max-width: 700px;
+
+            color: rgba(255, 255, 255, .82);
+
+            font-size: 1.16rem;
+            line-height: 1.75;
+        }
+
+
+        .x-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+
+            padding: .45rem .88rem;
+
+            color: white;
+
+            font-size: .78rem;
+            font-weight: 700;
+
+            border: 1px solid #21c9f5;
+            border-radius: 999px;
+
+            background: rgba(4, 21, 55, .42);
+        }
+
+
+        /* =========================================================
+           ARCHITECTURE PANEL
+           ========================================================= */
+
+        .x-architecture {
+            padding: 1.6rem;
+
+            background: rgba(7, 30, 77, .72);
+
+            border: 1px solid #1bc9f5;
+            border-radius: 21px;
+
+            box-shadow: 0 25px 65px rgba(0, 0, 0, .18);
+
+            backdrop-filter: blur(8px);
+        }
+
+
+        .x-architecture-title {
+            color: white;
+
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+
+        .x-architecture-subtitle {
+            color: rgba(255, 255, 255, .70);
+        }
+
+
+        .x-arch-node {
+            padding: 1.35rem;
+
+            text-align: center;
+
+            color: white;
+
+            background: rgba(255, 255, 255, .055);
+
+            border: 1px solid rgba(255, 255, 255, .75);
+            border-radius: 16px;
+        }
+
+
+        .x-arch-node.highlight {
+            border-color: #20c9f4;
+        }
+
+
+        .x-arrow {
+            color: #1ed0fa;
+
+            font-size: 1.8rem;
+            line-height: 1;
+        }
+
+
+        /* =========================================================
+           LIGHT CARDS
+           ========================================================= */
+
+        .x-card {
+            height: 100%;
+
+            color: var(--x-text);
+
+            background: var(--x-panel);
+
+            border: 1px solid var(--x-border);
+            border-radius: 20px;
+
+            box-shadow: 0 18px 45px rgba(1, 15, 45, .16);
+
+            overflow: hidden;
+        }
+
+
+        .x-card-accent {
+            border-color: var(--x-cyan-border);
+        }
+
+
+        .x-card-body {
+            padding: 1.8rem;
+        }
+
+
+        .x-card-title {
+            color: #111b2e;
+            font-weight: 800;
+        }
+
+
+        .x-card p,
+        .x-card li {
+            color: #4f5d70;
+        }
+
+
+        .x-label {
+            font-size: .71rem;
+            font-weight: 800;
+
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+
+        .x-icon {
+            width: 54px;
+            height: 54px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 14px;
+
+            font-size: 1.55rem;
+        }
+
+
+        .x-icon-blue {
+            color: #1479df;
+            background: #e9f7ff;
+        }
+
+
+        .x-icon-green {
+            color: #148e59;
+            background: #eaf9f1;
+        }
+
+
+        .x-icon-red {
+            color: #d93e4e;
+            background: #fff0f2;
+        }
+
+
+        .x-icon-yellow {
+            color: #e5a600;
+            background: #fff6d9;
+        }
+
+
+        /* =========================================================
+           CODE
+           ========================================================= */
+
+        .x-code {
+            margin: 0;
+            padding: 1.2rem 1.35rem;
+
+            color: #f8fbff;
+            background: var(--x-code);
+
+            border: 1px solid rgba(66, 203, 255, .24);
+            border-radius: 12px;
+
+            font-size: .84rem;
+            line-height: 1.65;
+
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+
+        /* =========================================================
+           STRIPED GRID
+           ========================================================= */
+
+        .x-striped-grid {
+            overflow: hidden;
+
+            background: rgba(255, 255, 255, .97);
+
+            border: 1px solid var(--x-border);
+            border-radius: 20px;
+
+            box-shadow: 0 18px 42px rgba(0, 0, 0, .14);
+        }
+
+
+        .x-striped-grid table {
+            margin: 0;
+
+            --bs-table-bg: transparent;
+            --bs-table-color: #27344a;
+            --bs-table-border-color: #e1e8f1;
+        }
+
+
+        .x-striped-grid thead th {
+            padding: 1.2rem;
+
+            color: white;
+            background: #0b285f;
+
+            border: 0;
+        }
+
+
+        .x-striped-grid tbody td,
+        .x-striped-grid tbody th {
+            padding: 1.05rem 1.2rem;
+            vertical-align: middle;
+        }
+
+
+        .x-striped-grid tbody tr:nth-child(even) {
+            background: #f1f6fc;
+        }
+
+
+        /* =========================================================
+           TRUST FLOW
+           ========================================================= */
+
+        .x-flow-shell {
+            padding: 2rem;
+
+            background: rgba(255, 255, 255, .12);
+
+            border: 1px solid rgba(255, 255, 255, .22);
+            border-radius: 24px;
+
+            backdrop-filter: blur(7px);
+        }
+
+
+        .x-flow-node {
+            min-height: 155px;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            padding: 1.3rem;
+
+            text-align: center;
+
+            color: #17243d;
+
+            background: rgba(255, 255, 255, .97);
+
+            border: 1px solid var(--x-border);
+            border-radius: 17px;
+
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .10);
+        }
+
+
+        .x-flow-arrow {
+            color: #34d5fb;
+            font-size: 2rem;
+        }
+
+
+        /* =========================================================
+           PROTOCOL TIMELINE
+           ========================================================= */
+
+        .x-protocol-shell {
+            padding: 2rem;
+
+            background: rgba(255, 255, 255, .12);
+
+            border: 1px solid rgba(255, 255, 255, .22);
+            border-radius: 24px;
+
+            backdrop-filter: blur(7px);
+        }
+
+
+        .x-protocol-row {
+            position: relative;
+
+            display: grid;
+            grid-template-columns: 58px 1fr;
+
+            gap: 1.2rem;
+
+            padding: .8rem 0;
+        }
+
+
+        .x-protocol-row:not(:last-child)::before {
+            content: "";
+
+            position: absolute;
+
+            left: 27px;
+            top: 60px;
+            bottom: -8px;
+
+            width: 2px;
+
+            background:
+                linear-gradient(
+                    #30d0f7,
+                    rgba(255, 255, 255, .22)
+                );
+        }
+
+
+        .x-number {
+            position: relative;
+            z-index: 2;
+
+            width: 56px;
+            height: 56px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: white;
+            font-weight: 800;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #1765e8,
+                    #18c8f4
+                );
+
+            border: 4px solid rgba(255, 255, 255, .95);
+            border-radius: 50%;
+
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .18);
+        }
+
+
+        .x-protocol-card {
+            padding: 1.45rem;
+
+            color: var(--x-text);
+
+            background: rgba(255, 255, 255, .97);
+
+            border: 1px solid var(--x-border);
+            border-radius: 17px;
+
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .10);
+        }
+
+
+        .x-protocol-card h4 {
+            color: #10275d;
+            font-weight: 800;
+        }
+
+
+        .x-protocol-card p,
+        .x-protocol-card li {
+            color: #536276;
+        }
+
+
+        .x-protocol-card.request {
+            border-left: 5px solid #20c6f2;
+        }
+
+
+        .x-protocol-card.verify {
+            border-left: 5px solid #19a468;
+        }
+
+
+        .x-protocol-card.response {
+            border-left: 5px solid #3e70ef;
+        }
+
+
+        /* =========================================================
+           CONFIGURATION PATH
+           ========================================================= */
+
+        .x-config-shell {
+            padding: 2rem;
+
+            background: rgba(255, 255, 255, .12);
+
+            border: 1px solid rgba(255, 255, 255, .22);
+            border-radius: 24px;
+
+            backdrop-filter: blur(6px);
+        }
+
+
+        .x-config-path {
+            display: grid;
+
+            grid-template-columns: repeat(5, 1fr);
+
+            gap: 1rem;
+        }
+
+
+        .x-config-step {
+            position: relative;
+
+            padding: 1.5rem 1rem;
+
+            text-align: center;
+
+            color: var(--x-text);
+
+            background: rgba(255, 255, 255, .97);
+
+            border: 1px solid var(--x-border);
+            border-radius: 17px;
+
+            box-shadow: 0 10px 28px rgba(0, 0, 0, .08);
+        }
+
+
+        .x-config-step:not(:last-child)::after {
+            content: "→";
+
+            position: absolute;
+
+            right: -.82rem;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            z-index: 5;
+
+            color: #25c8f4;
+
+            font-size: 1.55rem;
+            font-weight: 900;
+        }
+
+
+        .x-config-step.active {
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0b2a69,
+                    #1760d5
+                );
+
+            border-color: #24cff7;
+        }
+
+
+        /* =========================================================
+           ACCORDION
+           ========================================================= */
+
+        .x-accordion {
+            border-radius: 20px;
+            overflow: hidden;
+
+            box-shadow: 0 18px 45px rgba(0, 0, 0, .14);
+        }
+
+
+        .x-accordion .accordion-item {
+            border-color: #dbe5f0;
+        }
+
+
+        .x-accordion .accordion-button {
+            padding: 1.25rem 1.4rem;
+
+            color: #15233e;
+            background: rgba(255, 255, 255, .98);
+
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+
+        .x-accordion .accordion-button:not(.collapsed) {
+            color: #0d347a;
+            background: #e9f4ff;
+
+            box-shadow: none;
+        }
+
+
+        .x-accordion .accordion-button:focus {
+            box-shadow: none;
+        }
+
+
+        .x-accordion .accordion-body {
+            padding: 1.6rem;
+
+            color: #4e5c70;
+            background: white;
+
+            line-height: 1.7;
+        }
+
+
+        .x-accordion-number {
+            min-width: 37px;
+            height: 37px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            margin-right: .9rem;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #1765e8,
+                    #18c8f4
+                );
+
+            border-radius: 50%;
+
+            font-size: .78rem;
+            font-weight: 800;
+        }
+
+
+        /* =========================================================
+           CERTIFICATE ANATOMY
+           ========================================================= */
+
+        .x-cert {
+            padding: 2rem;
+
+            color: #17243d;
+            background: rgba(255, 255, 255, .97);
+
+            border: 1px solid #35cef5;
+            border-radius: 22px;
+
+            box-shadow: 0 20px 48px rgba(0, 0, 0, .14);
+        }
+
+
+        .x-cert-field {
+            padding: 1rem 1.1rem;
+
+            border-bottom: 1px solid #e1e9f2;
+        }
+
+
+        .x-cert-field:nth-child(even) {
+            background: #f4f8fd;
+        }
+
+
+        .x-cert-field:last-child {
+            border-bottom: 0;
+        }
+
+
+        .x-cert-label {
+            color: #116cce;
+
+            font-size: .73rem;
+            font-weight: 800;
+
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+
+        /* =========================================================
+           TAKEAWAY
+           ========================================================= */
+
+        .x-takeaway {
+            position: relative;
+            overflow: hidden;
+
+            padding: 2.7rem;
+
+            color: #17243d;
+
+            background: rgba(255, 255, 255, .97);
+
+            border: 1px solid #36cef5;
+            border-radius: 22px;
+
+            box-shadow: 0 22px 55px rgba(0, 0, 0, .16);
+        }
+
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+        @media (max-width: 991.98px) {
+
+            .x-config-path {
+                grid-template-columns: 1fr;
+            }
+
+
+            .x-config-step:not(:last-child)::after {
+                content: "↓";
+
+                right: auto;
+                left: 50%;
+                top: auto;
+                bottom: -.95rem;
+
+                transform: translateX(-50%);
+            }
+
+
+            .x-flow-arrow {
+                transform: rotate(90deg);
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+
+<div class="x-page">
+    <div class="x-layer">
+
+
+        <!-- =========================================================
+             HERO
+             ========================================================= -->
+
+        <header class="x-hero">
+
+            <div class="container">
+
+
+                <a href="/training"
+                   class="x-back-link">
+
+                    <i class="bi bi-arrow-left"></i>
+                    Back
+
+                </a>
+
+
+                <div class="row align-items-center g-5">
+
+
+                    <!-- LEFT -->
+
+                    <div class="col-lg-6">
+
+
+                        <div class="x-kicker mb-4">
+
+                            OAuth 2.0 • Keycloak 26 • mTLS • X.509
+
+                        </div>
+
+
+                        <h1 class="x-hero-title mb-4">
+
+                            X.509 Certificate
+
+                            <span class="d-block x-electric">
+                        Client Authentication.
+                    </span>
+
+                        </h1>
+
+
+                        <p class="x-hero-lead mb-4">
+
+                            Authenticate an OAuth client using a digital certificate
+                            presented during mutual TLS instead of sending a reusable
+                            client secret.
+
+                        </p>
+
+
+                        <p class="x-hero-lead mb-4">
+
+                            The client proves possession of the certificate's private
+                            key during the TLS handshake.
+
+                            Keycloak can then authenticate the client using the
+                            presented X.509 certificate and configured certificate
+                            identity rules.
+
+                        </p>
+
+
+                        <div class="d-flex flex-wrap gap-2">
+
+                    <span class="x-pill">
+                        <i class="bi bi-shield-lock"></i>
+                        Keycloak 26
+                    </span>
+
+                            <span class="x-pill">
+                        <i class="bi bi-patch-check"></i>
+                        X.509
+                    </span>
+
+                            <span class="x-pill">
+                        <i class="bi bi-arrow-left-right"></i>
+                        mTLS
+                    </span>
+
+                            <span class="x-pill">
+                        <i class="bi bi-key"></i>
+                        Private Key
+                    </span>
+
+                            <span class="x-pill">
+                        <i class="bi bi-file-earmark-check"></i>
+                        Certificate
+                    </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- RIGHT -->
+
+                    <div class="col-lg-6">
+
+                        <div class="x-architecture">
+
+
+                            <div class="x-architecture-title">
+                                X.509 Client Authentication
+                            </div>
+
+
+                            <div class="x-architecture-subtitle small mb-4">
+
+                                Client identity begins at the TLS layer.
+
+                            </div>
+
+
+                            <div class="x-arch-node">
+
+                                <i class="bi bi-window-stack text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Spring Boot Client
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Owns Certificate + Private Key
+                                </small>
+
+                            </div>
+
+
+                            <div class="text-center py-2">
+
+                                <div class="x-arrow">
+                                    ↓
+                                </div>
+
+                                <small class="text-white-50">
+                                    TLS Client Certificate
+                                </small>
+
+                            </div>
+
+
+                            <div class="x-arch-node highlight">
+
+                                <i class="bi bi-arrow-left-right text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Mutual TLS Handshake
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Server + Client Authentication
+                                </small>
+
+                            </div>
+
+
+                            <div class="text-center py-2">
+
+                                <div class="x-arrow">
+                                    ↓
+                                </div>
+
+                                <small class="text-white-50">
+                                    Certificate Identity
+                                </small>
+
+                            </div>
+
+
+                            <div class="x-arch-node">
+
+                                <i class="bi bi-shield-lock-fill text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Keycloak 26
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Validates Certificate / Client Identity
+                                </small>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =========================================================
+             SECTION 1 — WHAT PROBLEM?
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    Concept
+                </div>
+
+
+                <h2 class="x-section-title">
+                    What Problem Are We Solving?
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    Machine-to-machine OAuth clients need a way to prove who they are
+                    before an authorization server issues tokens.
+
+                    X.509 client authentication moves that proof into a mature
+                    certificate-based trust model.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-4">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-yellow mb-4">
+                                    <i class="bi bi-key-fill"></i>
+                                </div>
+
+                                <div class="x-label text-warning">
+                                    Shared Secret
+                                </div>
+
+                                <h3 class="x-card-title h4 mt-2">
+                                    Client Secret
+                                </h3>
+
+                                <p>
+
+                                    Client and authorization server both depend on
+                                    knowledge of the same reusable credential.
+
+                                </p>
+
+                                <pre class="x-code"><code>client_id=service-a
+client_secret=secret-value</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="x-card x-card-accent">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-blue mb-4">
+                                    <i class="bi bi-file-earmark-lock"></i>
+                                </div>
+
+                                <div class="x-label text-primary">
+                                    Signed Proof
+                                </div>
+
+                                <h3 class="x-card-title h4 mt-2">
+                                    private_key_jwt
+                                </h3>
+
+                                <p>
+
+                                    Client signs a short-lived JWT assertion using
+                                    its private key.
+
+                                </p>
+
+                                <pre class="x-code"><code>client_assertion=
+eyJhbGciOiJSUzI1Ni...</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="x-card x-card-accent">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-green mb-4">
+                                    <i class="bi bi-patch-check-fill"></i>
+                                </div>
+
+                                <div class="x-label text-success">
+                                    Certificate Identity
+                                </div>
+
+                                <h3 class="x-card-title h4 mt-2">
+                                    X.509 / mTLS
+                                </h3>
+
+                                <p>
+
+                                    Client presents its certificate and proves
+                                    possession of the associated private key during
+                                    TLS.
+
+                                </p>
+
+                                <pre class="x-code"><code>curl --cert client.pem \
+     --key client.key \
+     https://...</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 2 — TLS VS MTLS
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    Foundation
+                </div>
+
+
+                <h2 class="x-section-title">
+                    TLS vs. Mutual TLS
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    Normal HTTPS typically authenticates the server to the client.
+                    Mutual TLS adds authentication in the opposite direction:
+                    the server also requests and validates a client certificate.
+
+                </p>
+
+
+                <div class="x-striped-grid">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+
+                            <tr>
+
+                                <th>Capability</th>
+                                <th>Normal TLS / HTTPS</th>
+                                <th>Mutual TLS</th>
+
+                            </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                            <tr>
+
+                                <th>
+                                    Server presents certificate
+                                </th>
+
+                                <td>
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    Yes
+                                </td>
+
+                                <td>
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    Yes
+                                </td>
+
+                            </tr>
+
+
+                            <tr>
+
+                                <th>
+                                    Client validates server
+                                </th>
+
+                                <td>
+                                    Yes
+                                </td>
+
+                                <td>
+                                    Yes
+                                </td>
+
+                            </tr>
+
+
+                            <tr>
+
+                                <th>
+                                    Client presents certificate
+                                </th>
+
+                                <td>
+                                    Usually no
+                                </td>
+
+                                <td>
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    Yes
+                                </td>
+
+                            </tr>
+
+
+                            <tr>
+
+                                <th>
+                                    Server validates client
+                                </th>
+
+                                <td>
+                                    Not at TLS certificate layer
+                                </td>
+
+                                <td>
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    Yes
+                                </td>
+
+                            </tr>
+
+
+                            <tr>
+
+                                <th>
+                                    Result
+                                </th>
+
+                                <td>
+                                    Server-authenticated encrypted channel
+                                </td>
+
+                                <td>
+                                    Mutually authenticated encrypted channel
+                                </td>
+
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 3 — CERTIFICATE ANATOMY
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    Certificate Anatomy
+                </div>
+
+
+                <h2 class="x-section-title">
+                    What Is Inside an X.509 Certificate?
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    The certificate is not the private key. It is a signed identity
+                    document containing a public key plus metadata describing the
+                    subject, issuer, validity period and intended usage.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-7">
+
+                        <div class="x-cert">
+
+
+                            <div class="d-flex align-items-center gap-3 mb-4">
+
+                                <div class="x-icon x-icon-blue">
+
+                                    <i class="bi bi-file-earmark-check-fill"></i>
+
+                                </div>
+
+
+                                <div>
+
+                                    <div class="x-label text-primary">
+                                        Example
+                                    </div>
+
+                                    <h3 class="fw-bold mb-0">
+                                        Client Certificate
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="x-cert-field">
+
+                                <div class="x-cert-label">
+                                    Subject
+                                </div>
+
+                                CN=supplier-service, OU=Applications, O=Example Corp
+
+                            </div>
+
+
+                            <div class="x-cert-field">
+
+                                <div class="x-cert-label">
+                                    Issuer
+                                </div>
+
+                                CN=Enterprise-Intermediate-CA, O=Example Corp
+
+                            </div>
+
+
+                            <div class="x-cert-field">
+
+                                <div class="x-cert-label">
+                                    Serial Number
+                                </div>
+
+                                73:21:9A:44:...
+
+                            </div>
+
+
+                            <div class="x-cert-field">
+
+                                <div class="x-cert-label">
+                                    Validity
+                                </div>
+
+                                Not Before → Not After
+
+                            </div>
+
+
+                            <div class="x-cert-field">
+
+                                <div class="x-cert-label">
+                                    Public Key
+                                </div>
+
+                                RSA / EC Public Key
+
+                            </div>
+
+
+                            <div class="x-cert-field">
+
+                                <div class="x-cert-label">
+                                    Key Usage
+                                </div>
+
+                                Digital Signature
+
+                            </div>
+
+
+                            <div class="x-cert-field">
+
+                                <div class="x-cert-label">
+                                    Extended Key Usage
+                                </div>
+
+                                TLS Web Client Authentication
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-5">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+
+                                <div class="x-icon x-icon-red mb-3">
+
+                                    <i class="bi bi-key-fill"></i>
+
+                                </div>
+
+
+                                <div class="x-label text-danger">
+                                    Important Distinction
+                                </div>
+
+
+                                <h3 class="x-card-title h4 mt-2">
+                                    Certificate ≠ Private Key
+                                </h3>
+
+
+                                <p>
+
+                                    The certificate contains the public key.
+
+                                    The corresponding private key remains under the
+                                    control of the client.
+
+                                </p>
+
+
+                                <hr>
+
+
+                                <div class="d-flex gap-3 mb-3">
+
+                                    <i class="bi bi-file-earmark-check text-primary"></i>
+
+                                    <span class="text-muted">
+                                Certificate may be distributed.
+                            </span>
+
+                                </div>
+
+
+                                <div class="d-flex gap-3">
+
+                                    <i class="bi bi-key-fill text-danger"></i>
+
+                                    <span class="text-muted">
+                                Private key must remain protected.
+                            </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 4 — PKI TRUST CHAIN
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    PKI Trust Model
+                </div>
+
+
+                <h2 class="x-section-title">
+                    How Does Keycloak Trust the Certificate?
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    Certificate authentication depends on a chain of trust.
+                    In an enterprise deployment, the client certificate is normally
+                    issued through a trusted Public Key Infrastructure.
+
+                </p>
+
+
+                <div class="x-flow-shell">
+
+
+                    <div class="row g-3 align-items-center">
+
+
+                        <div class="col-lg">
+
+                            <div class="x-flow-node">
+
+                                <i class="bi bi-building text-primary fs-1"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Root CA
+                                </h5>
+
+                                <small class="text-muted">
+                                    Trust anchor
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right x-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="x-flow-node">
+
+                                <i class="bi bi-diagram-3 text-primary fs-1"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Intermediate CA
+                                </h5>
+
+                                <small class="text-muted">
+                                    Issues certificates
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right x-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="x-flow-node">
+
+                                <i class="bi bi-file-earmark-check text-success fs-1"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Client Certificate
+                                </h5>
+
+                                <small class="text-muted">
+                                    Identifies service
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto text-center">
+
+                            <i class="bi bi-arrow-right x-flow-arrow"></i>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="x-flow-node">
+
+                                <i class="bi bi-shield-check text-success fs-1"></i>
+
+                                <h5 class="fw-bold mt-3">
+                                    Keycloak
+                                </h5>
+
+                                <small class="text-muted">
+                                    Validates trust
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 5 — END TO END
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    End-to-End Protocol
+                </div>
+
+
+                <h2 class="x-section-title">
+                    What Happens During X.509 Client Authentication?
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    There are two important layers to understand:
+                    first the TLS connection establishes certificate-based trust;
+                    then the OAuth token request is processed over that authenticated
+                    connection.
+
+                </p>
+
+
+                <div class="x-protocol-shell">
+
+
+                    <!-- 01 -->
+
+                    <div class="x-protocol-row">
+
+                        <div class="x-number">
+                            01
+                        </div>
+
+
+                        <div class="x-protocol-card">
+
+                            <div class="x-label text-primary">
+                                Connection
+                            </div>
+
+                            <h4 class="mt-1">
+                                Client Connects to the HTTPS Endpoint
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The Spring Boot service or another machine client opens
+                                a TLS connection to the Keycloak token endpoint.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 02 -->
+
+                    <div class="x-protocol-row">
+
+                        <div class="x-number">
+                            02
+                        </div>
+
+
+                        <div class="x-protocol-card">
+
+                            <div class="x-label text-primary">
+                                Server Identity
+                            </div>
+
+                            <h4 class="mt-1">
+                                Keycloak Presents Its Server Certificate
+                            </h4>
+
+                            <p class="mb-0">
+
+                                The client validates the server certificate using its
+                                trusted CA store, just as it would during a normal
+                                HTTPS connection.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 03 -->
+
+                    <div class="x-protocol-row">
+
+                        <div class="x-number">
+                            03
+                        </div>
+
+
+                        <div class="x-protocol-card">
+
+                            <div class="x-label text-primary">
+                                Client Authentication
+                            </div>
+
+                            <h4 class="mt-1">
+                                Server Requests a Client Certificate
+                            </h4>
+
+                            <p class="mb-0">
+
+                                In mutual TLS, the server side also requests
+                                certificate credentials from the connecting client.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 04 -->
+
+                    <div class="x-protocol-row">
+
+                        <div class="x-number">
+                            04
+                        </div>
+
+
+                        <div class="x-protocol-card">
+
+                            <div class="x-label text-primary">
+                                Certificate Presentation
+                            </div>
+
+                            <h4 class="mt-1">
+                                Client Sends Its X.509 Certificate
+                            </h4>
+
+                            <p>
+
+                                The client presents its certificate chain.
+
+                                The private key itself is not transmitted.
+
+                            </p>
+
+
+                            <div class="row g-3 mt-2">
+
+
+                                <div class="col-md-6">
+
+                                    <div class="p-4 rounded-3 text-center"
+                                         style="background:#eef8ff;border:1px solid #cfe9fa;">
+
+                                        <i class="bi bi-file-earmark-check fs-2 text-primary"></i>
+
+                                        <div class="fw-bold mt-2">
+                                            Certificate
+                                        </div>
+
+                                        <small class="text-muted">
+                                            Travels across connection
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <div class="p-4 rounded-3 text-center"
+                                         style="background:#fff1f3;border:1px solid #f3ccd2;">
+
+                                        <i class="bi bi-key-fill fs-2 text-danger"></i>
+
+                                        <div class="fw-bold mt-2">
+                                            Private Key
+                                        </div>
+
+                                        <small class="text-muted">
+                                            Remains with client
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 05 -->
+
+                    <div class="x-protocol-row">
+
+                        <div class="x-number">
+                            05
+                        </div>
+
+
+                        <div class="x-protocol-card verify">
+
+                            <div class="x-label text-success">
+                                Proof of Possession
+                            </div>
+
+                            <h4 class="mt-1">
+                                Client Proves It Owns the Private Key
+                            </h4>
+
+                            <p class="mb-0">
+
+                                TLS cryptographic operations prove that the client
+                                possesses the private key corresponding to the public
+                                key contained in its certificate.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 06 -->
+
+                    <div class="x-protocol-row">
+
+                        <div class="x-number">
+                            06
+                        </div>
+
+
+                        <div class="x-protocol-card verify">
+
+                            <div class="x-label text-success">
+                                Certificate Validation
+                            </div>
+
+                            <h4 class="mt-1">
+                                Certificate Trust Is Evaluated
+                            </h4>
+
+
+                            <div class="row row-cols-2 row-cols-lg-5 g-2 mt-3">
+
+
+                                <div class="col">
+                                    <div class="p-3 bg-light border rounded-3 text-center">
+                                        <strong>Issuer</strong>
+                                        <div class="small text-muted">Trusted CA?</div>
+                                    </div>
+                                </div>
+
+
+                                <div class="col">
+                                    <div class="p-3 bg-light border rounded-3 text-center">
+                                        <strong>Validity</strong>
+                                        <div class="small text-muted">Expired?</div>
+                                    </div>
+                                </div>
+
+
+                                <div class="col">
+                                    <div class="p-3 bg-light border rounded-3 text-center">
+                                        <strong>Subject</strong>
+                                        <div class="small text-muted">Expected?</div>
+                                    </div>
+                                </div>
+
+
+                                <div class="col">
+                                    <div class="p-3 bg-light border rounded-3 text-center">
+                                        <strong>Usage</strong>
+                                        <div class="small text-muted">Client auth?</div>
+                                    </div>
+                                </div>
+
+
+                                <div class="col">
+                                    <div class="p-3 bg-light border rounded-3 text-center">
+                                        <strong>Status</strong>
+                                        <div class="small text-muted">Revoked?</div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 07 -->
+
+                    <div class="x-protocol-row">
+
+                        <div class="x-number">
+                            07
+                        </div>
+
+
+                        <div class="x-protocol-card request">
+
+                            <div class="x-label text-primary">
+                                HTTP / OAuth
+                            </div>
+
+                            <h4 class="mt-1">
+                                Client Sends the OAuth Token Request
+                            </h4>
+
+
+                            <pre class="x-code mt-3"><code>curl \
+  --cert client.pem \
+  --key client.key \
+  -X POST \
+  https://localhost:8443/realms/jpa-demo-realm/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=supplier-service"</code></pre>
+
+
+                            <div class="mt-3 text-primary fw-bold">
+
+                                <i class="bi bi-info-circle-fill me-2"></i>
+
+                                No client_secret is included.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 08 -->
+
+                    <div class="x-protocol-row">
+
+                        <div class="x-number">
+                            08
+                        </div>
+
+
+                        <div class="x-protocol-card verify">
+
+                            <div class="x-label text-success">
+                                Keycloak Client Authentication
+                            </div>
+
+                            <h4 class="mt-1">
+                                Keycloak Maps the Certificate to the Client
+                            </h4>
+
+                            <p class="mb-0">
+
+                                Keycloak evaluates the configured X.509 client
+                                authentication rules, including the certificate
+                                identity information such as the Subject DN.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- 09 -->
+
+                    <div class="x-protocol-row">
+
+                        <div class="x-number">
+                            09
+                        </div>
+
+
+                        <div class="x-protocol-card response">
+
+                            <div class="x-label text-primary">
+                                OAuth Response
+                            </div>
+
+                            <h4 class="mt-1">
+                                Keycloak Issues the Access Token
+                            </h4>
+
+
+                            <pre class="x-code mt-3"><code>{
+  "access_token": "eyJhbGciOi...",
+  "expires_in": 300,
+  "token_type": "Bearer"
+}</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 6 — KEYCLOAK CONFIG
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    Keycloak 26
+                </div>
+
+
+                <h2 class="x-section-title">
+                    Configure X.509 Client Authentication
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    Keycloak needs both TLS-level certificate availability and
+                    client-level authentication rules that determine how the
+                    presented certificate identifies the OAuth client.
+
+                </p>
+
+
+                <div class="x-config-shell">
+
+
+                    <div class="x-config-path">
+
+
+                        <div class="x-config-step">
+
+                            <div class="x-label text-primary">
+                                Step 1
+                            </div>
+
+                            <i class="bi bi-grid fs-2 text-primary d-block my-3"></i>
+
+                            <strong>
+                                Clients
+                            </strong>
+
+                        </div>
+
+
+                        <div class="x-config-step">
+
+                            <div class="x-label text-primary">
+                                Step 2
+                            </div>
+
+                            <i class="bi bi-window fs-2 text-primary d-block my-3"></i>
+
+                            <strong>
+                                Select Client
+                            </strong>
+
+                        </div>
+
+
+                        <div class="x-config-step">
+
+                            <div class="x-label text-primary">
+                                Step 3
+                            </div>
+
+                            <i class="bi bi-key fs-2 text-primary d-block my-3"></i>
+
+                            <strong>
+                                Credentials
+                            </strong>
+
+                        </div>
+
+
+                        <div class="x-config-step">
+
+                            <div class="x-label text-primary">
+                                Step 4
+                            </div>
+
+                            <i class="bi bi-shield-check fs-2 text-primary d-block my-3"></i>
+
+                            <strong>
+                                Client Authenticator
+                            </strong>
+
+                        </div>
+
+
+                        <div class="x-config-step active">
+
+                            <div class="x-label text-info">
+                                Step 5
+                            </div>
+
+                            <i class="bi bi-patch-check fs-2 text-info d-block my-3"></i>
+
+                            <strong>
+                                X509 Certificate
+                            </strong>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 7 — SUBJECT DN
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    Identity Mapping
+                </div>
+
+
+                <h2 class="x-section-title">
+                    Subject DN Matching
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    Receiving a trusted certificate is only part of the problem.
+                    Keycloak must determine whether that certificate represents the
+                    OAuth client attempting to authenticate.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+                                <div class="x-label text-primary mb-3">
+                                    Certificate
+                                </div>
+
+                                <h4 class="x-card-title">
+                                    Example Subject DN
+                                </h4>
+
+                                <pre class="x-code mt-4"><code>CN=supplier-service,
+OU=Applications,
+O=Example Corp,
+C=US</code></pre>
+
+                                <p class="mt-4 mb-0">
+
+                                    The Subject Distinguished Name contains identity
+                                    attributes describing the certificate holder.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="x-card x-card-accent">
+
+                            <div class="x-card-body">
+
+                                <div class="x-label text-success mb-3">
+                                    Keycloak
+                                </div>
+
+                                <h4 class="x-card-title">
+                                    Subject DN Rule
+                                </h4>
+
+                                <pre class="x-code mt-4"><code>CN=supplier-service,
+OU=Applications,
+O=Example Corp.*</code></pre>
+
+                                <p class="mt-4 mb-0">
+
+                                    The configured matching rule determines whether
+                                    the presented certificate belongs to the expected
+                                    OAuth client.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 8 — ACCORDION
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    Step-by-Step Walkthrough
+                </div>
+
+
+                <h2 class="x-section-title">
+                    Build and Test the Complete Flow
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    Use this accordion during the demonstration to move from
+                    certificate creation through Keycloak configuration and finally
+                    to the live OAuth token request.
+
+                </p>
+
+
+                <div class="accordion x-accordion"
+                     id="x509Steps">
+
+
+                    <!-- STEP 1 -->
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#xstep1">
+
+                        <span class="x-accordion-number">
+                            01
+                        </span>
+
+                                Understand the Certificate Assets
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="xstep1"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#x509Steps">
+
+                            <div class="accordion-body">
+
+                                The client requires two closely related but very
+                                different assets:
+
+                                <strong>the X.509 certificate</strong> and the
+                                <strong>private key</strong>.
+
+                                <div class="row g-3 mt-3">
+
+                                    <div class="col-md-6">
+
+                                        <div class="p-4 bg-light border rounded-3">
+
+                                            <strong class="text-primary">
+                                                client.pem
+                                            </strong>
+
+                                            <p class="small mt-2 mb-0">
+
+                                                Contains the client certificate and
+                                                therefore the public key and identity
+                                                information.
+
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-md-6">
+
+                                        <div class="p-4 bg-light border rounded-3">
+
+                                            <strong class="text-danger">
+                                                client.key
+                                            </strong>
+
+                                            <p class="small mt-2 mb-0">
+
+                                                Contains the private key.
+                                                This must remain protected by the
+                                                calling service.
+
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STEP 2 -->
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#xstep2">
+
+                        <span class="x-accordion-number">
+                            02
+                        </span>
+
+                                Inspect the Certificate
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="xstep2"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#x509Steps">
+
+                            <div class="accordion-body">
+
+                                Inspect the certificate before configuring Keycloak.
+
+                                <pre class="x-code mt-3"><code>openssl x509 \
+  -in client.pem \
+  -text \
+  -noout</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Review the Subject DN, Issuer, validity period,
+                                    public key, key usage and extended key usage.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STEP 3 -->
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#xstep3">
+
+                        <span class="x-accordion-number">
+                            03
+                        </span>
+
+                                Configure TLS to Request Client Certificates
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="xstep3"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#x509Steps">
+
+                            <div class="accordion-body">
+
+                                The TLS termination point must be configured so that
+                                client certificates are requested and made available
+                                to Keycloak.
+
+                                <div class="alert alert-primary mt-3 mb-0">
+
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+
+                                    If TLS terminates at a reverse proxy, load balancer
+                                    or ingress controller, certificate forwarding and
+                                    trust configuration become part of the
+                                    architecture.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STEP 4 -->
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#xstep4">
+
+                        <span class="x-accordion-number">
+                            04
+                        </span>
+
+                                Configure the Keycloak Client
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="xstep4"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#x509Steps">
+
+                            <div class="accordion-body">
+
+                                Open:
+
+                                <div class="p-3 bg-light border rounded-3 my-3 fw-bold">
+
+                                    Clients
+                                    →
+                                    supplier-service
+                                    →
+                                    Credentials
+
+                                </div>
+
+                                Select the X.509 certificate-based client
+                                authentication option appropriate to your Keycloak
+                                configuration.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STEP 5 -->
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#xstep5">
+
+                        <span class="x-accordion-number">
+                            05
+                        </span>
+
+                                Configure Subject DN Matching
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="xstep5"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#x509Steps">
+
+                            <div class="accordion-body">
+
+                                Configure the certificate identity rule so the
+                                certificate presented by the service maps to the
+                                intended Keycloak client.
+
+                                <pre class="x-code mt-3"><code>Certificate Subject:
+
+CN=supplier-service,
+OU=Applications,
+O=Example Corp</code></pre>
+
+                                <div class="alert alert-warning mt-3 mb-0">
+
+                                    Keep matching rules specific enough that an
+                                    unrelated certificate cannot satisfy the client
+                                    identity rule.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STEP 6 -->
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#xstep6">
+
+                        <span class="x-accordion-number">
+                            06
+                        </span>
+
+                                Send the mTLS Token Request
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="xstep6"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#x509Steps">
+
+                            <div class="accordion-body">
+
+<pre class="x-code"><code>curl \
+  --cert client.pem \
+  --key client.key \
+  -X POST \
+  https://localhost:8443/realms/jpa-demo-realm/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=supplier-service"</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    The certificate and private key participate in the
+                                    TLS connection. There is no reusable
+                                    <code>client_secret</code> parameter in the token
+                                    request.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STEP 7 -->
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#xstep7">
+
+                        <span class="x-accordion-number">
+                            07
+                        </span>
+
+                                Verify the Access Token Response
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="xstep7"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#x509Steps">
+
+                            <div class="accordion-body">
+
+                                Successful client authentication allows Keycloak to
+                                process the client credentials grant and return the
+                                access token.
+
+                                <pre class="x-code mt-3"><code>{
+  "access_token": "eyJhbGciOi...",
+  "expires_in": 300,
+  "token_type": "Bearer"
+}</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 9 — CERTIFICATE LIFECYCLE
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    Enterprise Operations
+                </div>
+
+
+                <h2 class="x-section-title">
+                    Certificate Lifecycle Matters
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    X.509 removes dependency on a conventional OAuth client secret,
+                    but it does not remove credential lifecycle management.
+                    Certificates and their private keys must still be governed.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-blue mb-3">
+                                    <i class="bi bi-file-earmark-plus"></i>
+                                </div>
+
+                                <h4 class="x-card-title">
+                                    Issue
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Create the key pair and obtain a certificate from
+                                    an approved CA.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-green mb-3">
+                                    <i class="bi bi-shield-lock"></i>
+                                </div>
+
+                                <h4 class="x-card-title">
+                                    Protect
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Store the private key in an appropriately protected
+                                    secret store, keystore or hardware-backed system.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-yellow mb-3">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </div>
+
+                                <h4 class="x-card-title">
+                                    Renew
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Replace certificates before expiration and plan
+                                    for controlled key rotation.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-red mb-3">
+                                    <i class="bi bi-x-octagon"></i>
+                                </div>
+
+                                <h4 class="x-card-title">
+                                    Revoke
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Compromised or retired credentials must no longer
+                                    be accepted.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 10 — CRL / OCSP
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    Revocation
+                </div>
+
+
+                <h2 class="x-section-title">
+                    What If a Certificate Is Compromised?
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    Expiration is not enough. An enterprise may need a way to stop
+                    trusting a certificate before its normal expiration date.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-lg-6">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-red mb-3">
+                                    <i class="bi bi-list-check"></i>
+                                </div>
+
+                                <div class="x-label text-danger">
+                                    CRL
+                                </div>
+
+                                <h3 class="x-card-title h4 mt-2">
+                                    Certificate Revocation List
+                                </h3>
+
+                                <p>
+
+                                    A CA can publish a list of certificates that have
+                                    been revoked before their expiration dates.
+
+                                </p>
+
+                                <p class="mb-0">
+
+                                    Certificate validation infrastructure can consult
+                                    that revocation information when deciding whether
+                                    a presented certificate remains trustworthy.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="x-card x-card-accent">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-green mb-3">
+                                    <i class="bi bi-broadcast"></i>
+                                </div>
+
+                                <div class="x-label text-success">
+                                    OCSP
+                                </div>
+
+                                <h3 class="x-card-title h4 mt-2">
+                                    Online Certificate Status Protocol
+                                </h3>
+
+                                <p>
+
+                                    OCSP provides a mechanism for obtaining status
+                                    information about a particular certificate.
+
+                                </p>
+
+                                <p class="mb-0">
+
+                                    The broader PKI architecture determines how
+                                    revocation status is obtained and enforced.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 11 — COMPARISON
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    Architecture Comparison
+                </div>
+
+
+                <h2 class="x-section-title">
+                    Client Secret vs. Signed JWT vs. X.509
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    These mechanisms solve the same high-level problem—OAuth client
+                    authentication—but they place trust and credential management in
+                    different layers.
+
+                </p>
+
+
+                <div class="x-striped-grid">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+
+                            <tr>
+
+                                <th>Characteristic</th>
+                                <th>Client Secret</th>
+                                <th>private_key_jwt</th>
+                                <th>X.509 / mTLS</th>
+
+                            </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+
+                            <tr>
+
+                                <th>
+                                    Primary Credential
+                                </th>
+
+                                <td>
+                                    Shared secret
+                                </td>
+
+                                <td>
+                                    Private signing key
+                                </td>
+
+                                <td>
+                                    Certificate + private key
+                                </td>
+
+                            </tr>
+
+
+                            <tr>
+
+                                <th>
+                                    Proof
+                                </th>
+
+                                <td>
+                                    Knowledge of secret
+                                </td>
+
+                                <td>
+                                    JWT signature
+                                </td>
+
+                                <td>
+                                    TLS proof of private-key possession
+                                </td>
+
+                            </tr>
+
+
+                            <tr>
+
+                                <th>
+                                    Private Credential Sent?
+                                </th>
+
+                                <td>
+                                    Secret is presented
+                                </td>
+
+                                <td>
+                                    Private key is not sent
+                                </td>
+
+                                <td>
+                                    Private key is not sent
+                                </td>
+
+                            </tr>
+
+
+                            <tr>
+
+                                <th>
+                                    Major Trust Layer
+                                </th>
+
+                                <td>
+                                    OAuth application layer
+                                </td>
+
+                                <td>
+                                    OAuth / JWT layer
+                                </td>
+
+                                <td>
+                                    TLS + PKI + OAuth
+                                </td>
+
+                            </tr>
+
+
+                            <tr>
+
+                                <th>
+                                    Infrastructure Dependency
+                                </th>
+
+                                <td>
+                                    Secret management
+                                </td>
+
+                                <td>
+                                    Key management
+                                </td>
+
+                                <td>
+                                    PKI / certificate management
+                                </td>
+
+                            </tr>
+
+
+                            <tr>
+
+                                <th>
+                                    Rotation Object
+                                </th>
+
+                                <td>
+                                    Secret
+                                </td>
+
+                                <td>
+                                    Signing key
+                                </td>
+
+                                <td>
+                                    Certificate / key pair
+                                </td>
+
+                            </tr>
+
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 12 — TROUBLESHOOTING ACCORDION
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    Troubleshooting
+                </div>
+
+
+                <h2 class="x-section-title">
+                    When Authentication Fails, Check the Layers in Order
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    X.509 authentication crosses several architectural boundaries.
+                    Debugging is easier when TLS, PKI, certificate identity and OAuth
+                    are treated as separate layers.
+
+                </p>
+
+
+                <div class="accordion x-accordion"
+                     id="troubleshooting">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble1">
+
+                        <span class="x-accordion-number">
+                            01
+                        </span>
+
+                                Is the TLS Connection Working?
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="trouble1"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#troubleshooting">
+
+                            <div class="accordion-body">
+
+                                First determine whether the client can establish the
+                                TLS connection at all.
+
+                                Certificate authentication cannot reach the Keycloak
+                                client-authentication stage if TLS negotiation fails
+                                first.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble2">
+
+                        <span class="x-accordion-number">
+                            02
+                        </span>
+
+                                Is the Client Certificate Actually Being Presented?
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="trouble2"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshooting">
+
+                            <div class="accordion-body">
+
+                                Verify that the client is configured with the intended
+                                certificate and private key and that the TLS endpoint
+                                requests a client certificate.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble3">
+
+                        <span class="x-accordion-number">
+                            03
+                        </span>
+
+                                Does the Private Key Match the Certificate?
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="trouble3"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshooting">
+
+                            <div class="accordion-body">
+
+                                A certificate and an unrelated private key cannot
+                                successfully establish proof of possession.
+
+                                Confirm that the configured certificate and private
+                                key form the intended pair.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble4">
+
+                        <span class="x-accordion-number">
+                            04
+                        </span>
+
+                                Is the Certificate Trusted?
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="trouble4"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshooting">
+
+                            <div class="accordion-body">
+
+                                Check the certificate chain, issuing CA, intermediate
+                                certificates and the trust configuration at the TLS
+                                termination point.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble5">
+
+                        <span class="x-accordion-number">
+                            05
+                        </span>
+
+                                Is the Certificate Expired or Not Yet Valid?
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="trouble5"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshooting">
+
+                            <div class="accordion-body">
+
+                                Inspect the certificate's
+                                <strong>Not Before</strong> and
+                                <strong>Not After</strong> values.
+
+                                Also verify system clocks when validity errors appear
+                                unexpectedly.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble6">
+
+                        <span class="x-accordion-number">
+                            06
+                        </span>
+
+                                Does the Subject DN Match the Keycloak Rule?
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="trouble6"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshooting">
+
+                            <div class="accordion-body">
+
+                                A cryptographically valid certificate can still fail
+                                client authentication if its identity does not match
+                                the rule configured for the Keycloak client.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#trouble7">
+
+                        <span class="x-accordion-number">
+                            07
+                        </span>
+
+                                Is a Reverse Proxy Terminating TLS?
+
+                            </button>
+
+                        </h2>
+
+
+                        <div id="trouble7"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshooting">
+
+                            <div class="accordion-body">
+
+                                If a reverse proxy, ingress controller or load balancer
+                                terminates TLS before Keycloak, determine where client
+                                certificate validation occurs and how trusted
+                                certificate identity information reaches Keycloak.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 13 — ARCHITECTURAL DECISION
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-kicker mb-3">
+                    Architecture Perspective
+                </div>
+
+
+                <h2 class="x-section-title">
+                    Where X.509 Fits Well
+                </h2>
+
+
+                <p class="x-section-lead mb-5">
+
+                    Certificate-based client authentication is especially natural in
+                    environments that already operate certificate issuance,
+                    rotation and trust infrastructure.
+
+                </p>
+
+
+                <div class="row g-4">
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-blue mb-3">
+                                    <i class="bi bi-cloud"></i>
+                                </div>
+
+                                <h4 class="x-card-title">
+                                    Service Platforms
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Internal service environments where certificates
+                                    are already part of workload identity.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-green mb-3">
+                                    <i class="bi bi-diagram-3"></i>
+                                </div>
+
+                                <h4 class="x-card-title">
+                                    Service Mesh
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Platforms that already establish authenticated
+                                    service-to-service TLS connections.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-blue mb-3">
+                                    <i class="bi bi-building"></i>
+                                </div>
+
+                                <h4 class="x-card-title">
+                                    Enterprise PKI
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Organizations with established CA, issuance,
+                                    revocation and certificate lifecycle processes.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="x-card">
+
+                            <div class="x-card-body">
+
+                                <div class="x-icon x-icon-yellow mb-3">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </div>
+
+                                <h4 class="x-card-title">
+                                    B2B Integration
+                                </h4>
+
+                                <p class="mb-0">
+
+                                    Controlled machine-to-machine integrations where
+                                    certificate trust already forms part of the
+                                    security architecture.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECTION 14 — TAKEAWAY
+             ========================================================= -->
+
+        <section class="x-section">
+
+            <div class="container">
+
+
+                <div class="x-takeaway">
+
+
+                    <div class="row align-items-center g-4">
+
+
+                        <div class="col-lg-2 text-center">
+
+                            <div class="x-icon x-icon-blue mx-auto"
+                                 style="width:90px;height:90px;font-size:2.6rem;">
+
+                                <i class="bi bi-patch-check-fill"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-10">
+
+                            <div class="x-label text-primary mb-2">
+                                Key Takeaway
+                            </div>
+
+
+                            <h2 class="fw-bold"
+                                style="color:#102b69;">
+
+                                The Certificate Establishes Client Identity
+
+                            </h2>
+
+
+                            <p class="lead text-muted">
+
+                                X.509 client authentication combines TLS,
+                                asymmetric cryptography, certificate trust and OAuth
+                                client authentication.
+
+                            </p>
+
+
+                            <p class="text-muted mb-0">
+
+                                The client keeps possession of its private key,
+                                presents its X.509 certificate and proves possession
+                                of the corresponding private key through the TLS
+                                protocol.
+
+                                Keycloak can then use the trusted certificate identity
+                                to authenticate the OAuth client before issuing an
+                                access token.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- BOTTOM NAVIGATION -->
+
+                <div class="d-flex flex-wrap justify-content-between gap-3 mt-5 pt-4"
+                     style="border-top:1px solid rgba(255,255,255,.18);">
+
+
+                    <a href="/training/signed-jwt"
+                       class="btn btn-outline-light btn-lg px-4">
+
+                        <i class="bi bi-arrow-left me-2"></i>
+
+                        Back: Signed JWT
+
+                    </a>
+
+
+                    <a href="/training/signed-jwt-client-secret"
+                       class="btn btn-light btn-lg px-4"
+                       style="color:#12346f;">
+
+                        Next: Signed JWT with Client Secret
+
+                        <i class="bi bi-arrow-right ms-2"></i>
+
+                    </a>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+</body>
+</html>

@@ -1,0 +1,3641 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>JPA Relationships | Training</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/bright-blue.css}">
+
+    <style>
+        :root {
+            --jpa-navy: #06142f;
+            --jpa-navy-2: #0b2455;
+            --jpa-blue: #315df1;
+            --jpa-electric: #19c9f5;
+            --jpa-white: #ffffff;
+            --jpa-panel: rgba(255,255,255,.97);
+            --jpa-text: #17243d;
+            --jpa-heading: #102b69;
+            --jpa-muted: #5d6c80;
+            --jpa-border: #dbe6f2;
+            --jpa-code: #061536;
+            --jpa-green: #15945d;
+            --jpa-red: #d63c4c;
+            --jpa-yellow: #eba900;
+            --jpa-purple: #7256d8;
+        }
+
+        html {
+            min-height: 100%;
+            background: #06142f;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: white;
+
+            background:
+                radial-gradient(
+                    circle at 92% 12%,
+                    rgba(39,103,246,.92) 0,
+                    rgba(39,103,246,.44) 24%,
+                    transparent 44%
+                ),
+                radial-gradient(
+                    circle at 82% 54%,
+                    rgba(24,112,244,.44) 0,
+                    transparent 37%
+                ),
+                linear-gradient(
+                    112deg,
+                    #06142f 0%,
+                    #0b2150 34%,
+                    #173a91 66%,
+                    #315df1 100%
+                );
+
+            background-attachment: fixed;
+        }
+
+        .navbar {
+            position: relative;
+            z-index: 100;
+        }
+
+        .jpa-page,
+        .jpa-section,
+        .jpa-hero {
+            background: transparent !important;
+        }
+
+        .jpa-page {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .jpa-layer {
+            position: relative;
+            z-index: 2;
+        }
+
+        .jpa-section {
+            padding: 5rem 0;
+        }
+
+        .jpa-section + .jpa-section {
+            border-top: 1px solid rgba(255,255,255,.09);
+        }
+
+        .jpa-kicker {
+            color: #45d6ff;
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .19em;
+            text-transform: uppercase;
+        }
+
+        .jpa-section-title {
+            color: white;
+            font-size: clamp(2rem,3vw,3.1rem);
+            font-weight: 800;
+            letter-spacing: -.035em;
+            margin-bottom: 1rem;
+        }
+
+        .jpa-section-lead {
+            max-width: 1000px;
+            color: rgba(255,255,255,.80);
+            font-size: 1.08rem;
+            line-height: 1.8;
+        }
+
+        .jpa-electric {
+            color: #22c8f3;
+        }
+
+        /* =========================================================
+           HERO
+           ========================================================= */
+
+        .jpa-hero {
+            padding: 2.5rem 0 5.5rem;
+        }
+
+        .jpa-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            margin-bottom: 4rem;
+            color: #8ae4ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .jpa-back-link:hover {
+            color: white;
+        }
+
+        .jpa-hero-title {
+            color: white;
+            font-size: clamp(3rem,5vw,5rem);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -.045em;
+        }
+
+        .jpa-hero-lead {
+            max-width: 850px;
+            color: rgba(255,255,255,.82);
+            font-size: 1.14rem;
+            line-height: 1.75;
+        }
+
+        .jpa-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .45rem .88rem;
+            color: white;
+            font-size: .78rem;
+            font-weight: 700;
+            border: 1px solid #21c9f5;
+            border-radius: 999px;
+            background: rgba(4,21,55,.42);
+        }
+
+        /* =========================================================
+           ARCHITECTURE
+           ========================================================= */
+
+        .jpa-architecture {
+            padding: 1.6rem;
+            background: rgba(7,30,77,.72);
+            border: 1px solid #1bc9f5;
+            border-radius: 21px;
+            box-shadow: 0 25px 65px rgba(0,0,0,.18);
+            backdrop-filter: blur(8px);
+        }
+
+        .jpa-architecture-title {
+            color: white;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .jpa-architecture-subtitle {
+            color: rgba(255,255,255,.70);
+        }
+
+        .jpa-arch-node {
+            padding: 1rem;
+            text-align: center;
+            color: white;
+            background: rgba(255,255,255,.055);
+            border: 1px solid rgba(255,255,255,.70);
+            border-radius: 16px;
+        }
+
+        .jpa-arch-node.highlight {
+            border-color: #20c9f4;
+            box-shadow: 0 0 0 1px rgba(32,201,244,.14);
+        }
+
+        .jpa-arrow {
+            color: #1ed0fa;
+            font-size: 1.55rem;
+        }
+
+        /* =========================================================
+           CARDS
+           ========================================================= */
+
+        .jpa-card {
+            height: 100%;
+            color: var(--jpa-text);
+            background: var(--jpa-panel);
+            border: 1px solid var(--jpa-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 45px rgba(1,15,45,.16);
+            overflow: hidden;
+        }
+
+        .jpa-card-accent {
+            border-color: #32c7f2;
+        }
+
+        .jpa-card-body {
+            padding: 1.8rem;
+        }
+
+        .jpa-card-title {
+            color: #111b2e;
+            font-weight: 800;
+        }
+
+        .jpa-card p,
+        .jpa-card li {
+            color: #4f5d70;
+        }
+
+        .jpa-label {
+            font-size: .71rem;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+        .jpa-icon {
+            width: 54px;
+            height: 54px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-size: 1.55rem;
+        }
+
+        .jpa-icon-blue {
+            color: #1479df;
+            background: #e9f7ff;
+        }
+
+        .jpa-icon-green {
+            color: #148e59;
+            background: #eaf9f1;
+        }
+
+        .jpa-icon-red {
+            color: #d93e4e;
+            background: #fff0f2;
+        }
+
+        .jpa-icon-yellow {
+            color: #e5a600;
+            background: #fff6d9;
+        }
+
+        .jpa-icon-purple {
+            color: #7256d8;
+            background: #f0ecff;
+        }
+
+        /* =========================================================
+           CODE
+           ========================================================= */
+
+        .jpa-code {
+            margin: 0;
+            padding: 1.2rem 1.35rem;
+            color: #f8fbff;
+            background: var(--jpa-code);
+            border: 1px solid rgba(66,203,255,.24);
+            border-radius: 12px;
+            font-size: .84rem;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .jpa-inline-code {
+            padding: .2rem .45rem;
+            color: #0d4b86;
+            background: #eaf5ff;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: .9em;
+        }
+
+        /* =========================================================
+           STRIPED TABLE
+           ========================================================= */
+
+        .jpa-striped-grid {
+            overflow: hidden;
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--jpa-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 42px rgba(0,0,0,.14);
+        }
+
+        .jpa-striped-grid table {
+            margin: 0;
+            --bs-table-bg: transparent;
+            --bs-table-color: #27344a;
+            --bs-table-border-color: #e1e8f1;
+        }
+
+        .jpa-striped-grid thead th {
+            padding: 1.2rem;
+            color: white;
+            background: #0b285f;
+            border: 0;
+        }
+
+        .jpa-striped-grid tbody td,
+        .jpa-striped-grid tbody th {
+            padding: 1.05rem 1.2rem;
+            vertical-align: middle;
+        }
+
+        .jpa-striped-grid tbody tr:nth-child(even) {
+            background: #f1f6fc;
+        }
+
+        /* =========================================================
+           RELATIONSHIP DIAGRAMS
+           ========================================================= */
+
+        .relationship-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .entity-box {
+            height: 100%;
+            padding: 1.4rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid #dce7f4;
+            border-radius: 17px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .entity-box h4 {
+            color: #102b69;
+            font-weight: 800;
+        }
+
+        .entity-box .table-name {
+            color: #68768a;
+            font-size: .82rem;
+        }
+
+        .relationship-line {
+            text-align: center;
+            color: white;
+        }
+
+        .relationship-symbol {
+            color: #38d6fa;
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .relationship-label {
+            display: inline-block;
+            padding: .3rem .65rem;
+            color: #063c64;
+            background: #bcefff;
+            border-radius: 999px;
+            font-size: .75rem;
+            font-weight: 800;
+        }
+
+        /* =========================================================
+           TIMELINE
+           ========================================================= */
+
+        .jpa-protocol-shell {
+            padding: 2rem;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 24px;
+            backdrop-filter: blur(7px);
+        }
+
+        .jpa-protocol-row {
+            position: relative;
+            display: grid;
+            grid-template-columns: 58px 1fr;
+            gap: 1.2rem;
+            padding: .8rem 0;
+        }
+
+        .jpa-protocol-row:not(:last-child)::before {
+            content: "";
+            position: absolute;
+            left: 27px;
+            top: 60px;
+            bottom: -8px;
+            width: 2px;
+            background: linear-gradient(
+                #30d0f7,
+                rgba(255,255,255,.22)
+            );
+        }
+
+        .jpa-number {
+            position: relative;
+            z-index: 2;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            background: linear-gradient(135deg,#1765e8,#18c8f4);
+            border: 4px solid rgba(255,255,255,.95);
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(0,0,0,.18);
+        }
+
+        .jpa-protocol-card {
+            padding: 1.45rem;
+            color: var(--jpa-text);
+            background: rgba(255,255,255,.97);
+            border: 1px solid var(--jpa-border);
+            border-radius: 17px;
+            box-shadow: 0 12px 32px rgba(0,0,0,.10);
+        }
+
+        .jpa-protocol-card h4 {
+            color: #10275d;
+            font-weight: 800;
+        }
+
+        .jpa-protocol-card p,
+        .jpa-protocol-card li {
+            color: #536276;
+        }
+
+        /* =========================================================
+           ACCORDION
+           ========================================================= */
+
+        .jpa-accordion {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 18px 45px rgba(0,0,0,.14);
+        }
+
+        .jpa-accordion .accordion-item {
+            border-color: #dbe5f0;
+        }
+
+        .jpa-accordion .accordion-button {
+            padding: 1.25rem 1.4rem;
+            color: #15233e;
+            background: rgba(255,255,255,.98);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .jpa-accordion .accordion-button:not(.collapsed) {
+            color: #0d347a;
+            background: #e9f4ff;
+            box-shadow: none;
+        }
+
+        .jpa-accordion .accordion-button:focus {
+            box-shadow: none;
+        }
+
+        .jpa-accordion .accordion-body {
+            padding: 1.6rem;
+            color: #4e5c70;
+            background: white;
+            line-height: 1.7;
+        }
+
+        .jpa-accordion-number {
+            min-width: 37px;
+            height: 37px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: .9rem;
+            color: white;
+            background: linear-gradient(135deg,#1765e8,#18c8f4);
+            border-radius: 50%;
+            font-size: .78rem;
+            font-weight: 800;
+        }
+
+        /* =========================================================
+           CALLOUT
+           ========================================================= */
+
+        .jpa-callout {
+            padding: 1.6rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.10);
+        }
+
+        .jpa-takeaway {
+            padding: 2.7rem;
+            color: #17243d;
+            background: rgba(255,255,255,.97);
+            border: 1px solid #36cef5;
+            border-radius: 22px;
+            box-shadow: 0 22px 55px rgba(0,0,0,.16);
+        }
+
+        @media (max-width: 991.98px) {
+            .relationship-line {
+                padding: 1rem 0;
+            }
+        }
+    </style>
+</head>
+
+
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+
+<div class="jpa-page">
+    <div class="jpa-layer">
+
+
+        <!-- =========================================================
+             HERO
+             ========================================================= -->
+
+        <header class="jpa-hero">
+
+            <div class="container">
+
+                <a href="/training/post-login-flow"
+                   class="jpa-back-link">
+
+                    <i class="bi bi-arrow-left"></i>
+                    Back: Post-Login Flow
+
+                </a>
+
+
+                <div class="row align-items-center g-5">
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-kicker mb-4">
+                            Episode G • Spring Data JPA • Hibernate • Relational Modeling
+                        </div>
+
+                        <h1 class="jpa-hero-title mb-4">
+
+                            JPA Relationships
+
+                            <span class="d-block jpa-electric">
+                        Follow the Foreign Key.
+                    </span>
+
+                        </h1>
+
+                        <p class="jpa-hero-lead">
+
+                            One-to-One, One-to-Many, Many-to-One and Many-to-Many
+                            can look complicated when we begin with Java annotations.
+
+                        </p>
+
+                        <p class="jpa-hero-lead">
+
+                            Instead, begin with the <strong>relational database</strong>:
+                            identify the foreign key, determine whether it is unique,
+                            and then map that database relationship into JPA.
+
+                        </p>
+
+
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+
+                    <span class="jpa-pill">
+                        <i class="bi bi-database"></i>
+                        SQL Schema
+                    </span>
+
+                            <span class="jpa-pill">
+                        <i class="bi bi-diagram-3"></i>
+                        JPA
+                    </span>
+
+                            <span class="jpa-pill">
+                        <i class="bi bi-boxes"></i>
+                        Hibernate
+                    </span>
+
+                            <span class="jpa-pill">
+                        <i class="bi bi-link-45deg"></i>
+                        Foreign Keys
+                    </span>
+
+                            <span class="jpa-pill">
+                        <i class="bi bi-code-square"></i>
+                        Spring Data
+                    </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-architecture">
+
+                            <div class="jpa-architecture-title">
+                                Database → JPA Mental Model
+                            </div>
+
+                            <div class="jpa-architecture-subtitle small mb-4">
+                                Start with the schema — then choose the mapping
+                            </div>
+
+
+                            <div class="jpa-arch-node">
+
+                                <i class="bi bi-table text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Database Tables
+                                </h5>
+
+                                <small class="text-white-50">
+                                    PK • FK • UNIQUE
+                                </small>
+
+                            </div>
+
+                            <div class="text-center">
+                                <div class="jpa-arrow">↓</div>
+                            </div>
+
+
+                            <div class="jpa-arch-node highlight">
+
+                                <i class="bi bi-link-45deg text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Find the Foreign Key
+                                </h5>
+
+                                <small class="text-white-50">
+                                    Which table stores it?
+                                </small>
+
+                            </div>
+
+                            <div class="text-center">
+                                <div class="jpa-arrow">↓</div>
+                            </div>
+
+
+                            <div class="jpa-arch-node highlight">
+
+                                <i class="bi bi-diagram-3-fill text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Determine Cardinality
+                                </h5>
+
+                                <small class="text-white-50">
+                                    1:1 • 1:N • N:M
+                                </small>
+
+                            </div>
+
+                            <div class="text-center">
+                                <div class="jpa-arrow">↓</div>
+                            </div>
+
+
+                            <div class="jpa-arch-node">
+
+                                <i class="bi bi-filetype-java text-info fs-2"></i>
+
+                                <h5 class="fw-bold mt-2 mb-1">
+                                    Map the Entities
+                                </h5>
+
+                                <small class="text-white-50">
+                                    @JoinColumn • mappedBy • @JoinTable
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =========================================================
+             GOAL
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Goal
+                </div>
+
+                <h2 class="jpa-section-title">
+                    Connect SQL Relationships to Java Objects
+                </h2>
+
+                <p class="jpa-section-lead mb-5">
+
+                    Walk the ecommerce schema in <code>db/schema.sql</code> and
+                    compare each database relationship with its matching entity in
+                    <code>com.rollingstone.demo.entity</code>. Then use the live JPA pages
+                    to see those relationships rendered by the application.
+
+                </p>
+
+
+                <div class="row g-4">
+
+                    <div class="col-lg-3 col-md-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-blue mb-3">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </div>
+
+                                <div class="jpa-label text-primary">
+                                    Relationship 1
+                                </div>
+
+                                <h4 class="jpa-card-title mt-2">
+                                    One-to-One
+                                </h4>
+
+                                <p class="mb-0">
+                                    Customer ↔ CustomerProfile
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-3 col-md-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-green mb-3">
+                                    <i class="bi bi-diagram-2"></i>
+                                </div>
+
+                                <div class="jpa-label text-success">
+                                    Relationship 2
+                                </div>
+
+                                <h4 class="jpa-card-title mt-2">
+                                    One-to-Many
+                                </h4>
+
+                                <p class="mb-0">
+                                    Customer → Orders
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-3 col-md-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-purple mb-3">
+                                    <i class="bi bi-bezier2"></i>
+                                </div>
+
+                                <div class="jpa-label"
+                                     style="color:#7256d8;">
+                                    Relationship 3
+                                </div>
+
+                                <h4 class="jpa-card-title mt-2">
+                                    Many-to-Many
+                                </h4>
+
+                                <p class="mb-0">
+                                    Product ↔ Tag
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-3 col-md-6">
+
+                        <div class="jpa-card jpa-card-accent">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-yellow mb-3">
+                                    <i class="bi bi-node-plus"></i>
+                                </div>
+
+                                <div class="jpa-label text-warning">
+                                    Relationship 4
+                                </div>
+
+                                <h4 class="jpa-card-title mt-2">
+                                    Association Entity
+                                </h4>
+
+                                <p class="mb-0">
+                                    Order → OrderItem ← Product
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             CORE RULE
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Core Mental Model
+                </div>
+
+                <h2 class="jpa-section-title">
+                    First Question: Where Is the Foreign Key?
+                </h2>
+
+                <p class="jpa-section-lead mb-5">
+
+                    Before looking at <code>@OneToOne</code>,
+                    <code>@OneToMany</code> or <code>@ManyToMany</code>, inspect
+                    the database. The physical foreign-key structure tells us how
+                    the relationship is persisted.
+
+                </p>
+
+
+                <div class="row g-4">
+
+                    <div class="col-lg-4">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-blue mb-3">
+                                    <i class="bi bi-key-fill"></i>
+                                </div>
+
+                                <div class="jpa-label text-primary">
+                                    Question 1
+                                </div>
+
+                                <h4 class="jpa-card-title mt-2">
+                                    Where Is the FK?
+                                </h4>
+
+                                <p>
+
+                                    Find the table containing the foreign-key
+                                    column.
+
+                                </p>
+
+                                <pre class="jpa-code"><code>orders.customer_id
+customer_profiles.customer_id
+payments.order_id</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-yellow mb-3">
+                                    <i class="bi bi-fingerprint"></i>
+                                </div>
+
+                                <div class="jpa-label text-warning">
+                                    Question 2
+                                </div>
+
+                                <h4 class="jpa-card-title mt-2">
+                                    Is It Unique?
+                                </h4>
+
+                                <p>
+
+                                    A uniqueness constraint on the FK can change a
+                                    many-to-one database structure into one-to-one.
+
+                                </p>
+
+                                <pre class="jpa-code"><code>customer_id UNIQUE
+
+→ one profile per customer</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="jpa-card jpa-card-accent">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-green mb-3">
+                                    <i class="bi bi-diagram-3"></i>
+                                </div>
+
+                                <div class="jpa-label text-success">
+                                    Question 3
+                                </div>
+
+                                <h4 class="jpa-card-title mt-2">
+                                    Is There a Join Table?
+                                </h4>
+
+                                <p>
+
+                                    Many-to-many relationships require an
+                                    intermediate relational structure.
+
+                                </p>
+
+                                <pre class="jpa-code"><code>product_tags
+-------------
+product_id
+tag_id</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SUMMARY GRID
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Relationship Map
+                </div>
+
+                <h2 class="jpa-section-title">
+                    Ecommerce Schema at a Glance
+                </h2>
+
+
+                <div class="jpa-striped-grid mt-5">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+                            <tr>
+                                <th>Relationship</th>
+                                <th>Database Structure</th>
+                                <th>Owning Entity</th>
+                                <th>Inverse Entity</th>
+                                <th>JPA Mapping</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <th>Customer ↔ CustomerProfile</th>
+                                <td>
+                                    <code>customer_profiles.customer_id</code>
+                                    UNIQUE FK
+                                </td>
+                                <td>CustomerProfile</td>
+                                <td>Customer</td>
+                                <td>
+                                    <code>@OneToOne</code>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Order ↔ Payment</th>
+                                <td>
+                                    <code>payments.order_id</code>
+                                    UNIQUE FK
+                                </td>
+                                <td>Payment</td>
+                                <td>Order</td>
+                                <td>
+                                    <code>@OneToOne</code>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Customer → Orders</th>
+                                <td>
+                                    <code>orders.customer_id</code>
+                                </td>
+                                <td>Order</td>
+                                <td>Customer</td>
+                                <td>
+                                    <code>@ManyToOne</code> /
+                                    <code>@OneToMany</code>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Category → Products</th>
+                                <td>
+                                    FK on Product side
+                                </td>
+                                <td>Product</td>
+                                <td>Category</td>
+                                <td>
+                                    <code>@ManyToOne</code> /
+                                    <code>@OneToMany</code>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Order → OrderItems</th>
+                                <td>
+                                    FK on OrderItem side
+                                </td>
+                                <td>OrderItem</td>
+                                <td>Order</td>
+                                <td>
+                                    <code>@ManyToOne</code> /
+                                    <code>@OneToMany</code>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Product ↔ Tag</th>
+                                <td>
+                                    <code>product_tags</code> join table
+                                </td>
+                                <td>Product</td>
+                                <td>Tag</td>
+                                <td>
+                                    <code>@ManyToMany</code>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Order ↔ Product</th>
+                                <td>
+                                    <code>OrderItem</code> carries relationship data
+                                </td>
+                                <td>OrderItem</td>
+                                <td>Order / Product</td>
+                                <td>
+                                    Two <code>@ManyToOne</code> mappings
+                                </td>
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             ONE TO ONE
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Relationship 1
+                </div>
+
+                <h2 class="jpa-section-title">
+                    One-to-One: Customer ↔ CustomerProfile
+                </h2>
+
+                <p class="jpa-section-lead mb-5">
+
+                    A customer has one profile and a profile belongs to one
+                    customer. The important database detail is that
+                    <code>customer_profiles.customer_id</code> is both a foreign
+                    key and unique.
+
+                </p>
+
+
+                <div class="relationship-shell">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg-5">
+
+                            <div class="entity-box">
+
+                                <div class="jpa-label text-primary">
+                                    Parent Table
+                                </div>
+
+                                <h4 class="mt-2">
+                                    customers
+                                </h4>
+
+                                <pre class="jpa-code"><code>id  PK
+name
+email</code></pre>
+
+                                <div class="mt-3">
+
+                            <span class="badge text-bg-primary">
+                                Customer
+                            </span>
+
+                                    <span class="badge text-bg-light">
+                                inverse side
+                            </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-2 relationship-line">
+
+                            <div class="relationship-symbol">
+                                1 ↔ 1
+                            </div>
+
+                            <span class="relationship-label">
+                        UNIQUE FK
+                    </span>
+
+                        </div>
+
+
+                        <div class="col-lg-5">
+
+                            <div class="entity-box">
+
+                                <div class="jpa-label text-success">
+                                    FK Table
+                                </div>
+
+                                <h4 class="mt-2">
+                                    customer_profiles
+                                </h4>
+
+                                <pre class="jpa-code"><code>id           PK
+customer_id  FK UNIQUE
+loyalty_tier</code></pre>
+
+                                <div class="mt-3">
+
+                            <span class="badge text-bg-success">
+                                CustomerProfile
+                            </span>
+
+                                    <span class="badge text-bg-light">
+                                owning side
+                            </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="row g-4 mt-4">
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-label text-success mb-3">
+                                    Owning Side
+                                </div>
+
+                                <h4 class="jpa-card-title">
+                                    CustomerProfile.java
+                                </h4>
+
+                                <pre class="jpa-code"><code>@OneToOne
+@JoinColumn(
+    name = "customer_id",
+    unique = true
+)
+private Customer customer;</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    <code>CustomerProfile</code> owns the
+                                    relationship because its table contains the
+                                    foreign key.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-label text-primary mb-3">
+                                    Inverse Side
+                                </div>
+
+                                <h4 class="jpa-card-title">
+                                    Customer.java
+                                </h4>
+
+                                <pre class="jpa-code"><code>@OneToOne(mappedBy = "customer")
+private CustomerProfile profile;</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    <code>mappedBy</code> points to the Java field
+                                    on the owning entity.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="jpa-callout mt-4">
+
+                    <div class="row align-items-center g-3">
+
+                        <div class="col-auto">
+
+                            <div class="jpa-icon jpa-icon-blue">
+                                <i class="bi bi-display"></i>
+                            </div>
+
+                        </div>
+
+                        <div class="col">
+
+                            <strong>Live Application</strong>
+
+                            <div class="text-muted mt-1">
+
+                                <a href="/jpa/customers">
+                                    /jpa/customers
+                                </a>
+
+                                displays the loyalty tier through:
+
+                                <code>
+                                    customer.getProfile().getLoyaltyTier()
+                                </code>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SECOND 1:1 EXAMPLE
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Same Pattern, Different Domain
+                </div>
+
+                <h2 class="jpa-section-title">
+                    Order ↔ Payment Is Also One-to-One
+                </h2>
+
+
+                <div class="relationship-shell mt-5">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg-5">
+
+                            <div class="entity-box">
+
+                                <h4>
+                                    orders
+                                </h4>
+
+                                <pre class="jpa-code"><code>id
+customer_id
+order_date
+status</code></pre>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-2 relationship-line">
+
+                            <div class="relationship-symbol">
+                                1 ↔ 1
+                            </div>
+
+                            <span class="relationship-label">
+                        UNIQUE
+                    </span>
+
+                        </div>
+
+
+                        <div class="col-lg-5">
+
+                            <div class="entity-box">
+
+                                <h4>
+                                    payments
+                                </h4>
+
+                                <pre class="jpa-code"><code>id
+order_id  FK UNIQUE
+amount
+status</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="jpa-callout mt-4">
+
+                    <strong>The same relational rule applies:</strong>
+
+                    <span class="text-muted">
+
+                <code>Payment</code> owns the foreign key, while the
+                uniqueness constraint prevents multiple payment rows from
+                referencing the same order.
+
+            </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             ONE TO MANY
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Relationship 2
+                </div>
+
+                <h2 class="jpa-section-title">
+                    One-to-Many: Customer → Orders
+                </h2>
+
+                <p class="jpa-section-lead mb-5">
+
+                    One customer can place many orders. The
+                    <code>orders.customer_id</code> foreign key is not unique, so
+                    multiple order rows can reference the same customer.
+
+                </p>
+
+
+                <div class="relationship-shell">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg-5">
+
+                            <div class="entity-box">
+
+                                <div class="jpa-label text-primary">
+                                    One Side
+                                </div>
+
+                                <h4 class="mt-2">
+                                    customers
+                                </h4>
+
+                                <pre class="jpa-code"><code>id PK
+name
+email</code></pre>
+
+                                <div class="mt-3">
+                            <span class="badge text-bg-light">
+                                Customer
+                            </span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-2 relationship-line">
+
+                            <div class="relationship-symbol">
+                                1 → N
+                            </div>
+
+                            <span class="relationship-label">
+                        NOT UNIQUE
+                    </span>
+
+                        </div>
+
+
+                        <div class="col-lg-5">
+
+                            <div class="entity-box">
+
+                                <div class="jpa-label text-success">
+                                    Many Side
+                                </div>
+
+                                <h4 class="mt-2">
+                                    orders
+                                </h4>
+
+                                <pre class="jpa-code"><code>id           PK
+customer_id  FK
+order_date
+status</code></pre>
+
+                                <div class="mt-3">
+
+                            <span class="badge text-bg-success">
+                                Order
+                            </span>
+
+                                    <span class="badge text-bg-light">
+                                owns FK
+                            </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="row g-4 mt-4">
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-label text-success mb-3">
+                                    Many Side — Owner
+                                </div>
+
+                                <h4 class="jpa-card-title">
+                                    Order.java
+                                </h4>
+
+                                <pre class="jpa-code"><code>@ManyToOne
+@JoinColumn(name = "customer_id")
+private Customer customer;</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Each order stores one
+                                    <code>customer_id</code>, so
+                                    <code>Order</code> owns the relationship.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-label text-primary mb-3">
+                                    One Side — Inverse
+                                </div>
+
+                                <h4 class="jpa-card-title">
+                                    Customer.java
+                                </h4>
+
+                                <pre class="jpa-code"><code>@OneToMany(mappedBy = "customer")
+private List&lt;Order&gt; orders;</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    The collection represents all order rows whose
+                                    foreign key points to this customer.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             ONE TO MANY REPEATS
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Reusable Pattern
+                </div>
+
+                <h2 class="jpa-section-title">
+                    The Same One-to-Many Pattern Repeats
+                </h2>
+
+
+                <div class="row g-4 mt-4">
+
+                    <div class="col-lg-4">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-blue mb-3">
+                                    <i class="bi bi-person"></i>
+                                </div>
+
+                                <h4 class="jpa-card-title">
+                                    Customer → Orders
+                                </h4>
+
+                                <pre class="jpa-code"><code>Customer
+    |
+    | 1
+    |
+    | N
+    v
+Order</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    FK:
+                                    <code>orders.customer_id</code>
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-purple mb-3">
+                                    <i class="bi bi-tags"></i>
+                                </div>
+
+                                <h4 class="jpa-card-title">
+                                    Category → Products
+                                </h4>
+
+                                <pre class="jpa-code"><code>Category
+    |
+    | 1
+    |
+    | N
+    v
+Product</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Product is the many side.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-4">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-green mb-3">
+                                    <i class="bi bi-cart-check"></i>
+                                </div>
+
+                                <h4 class="jpa-card-title">
+                                    Order → OrderItems
+                                </h4>
+
+                                <pre class="jpa-code"><code>Order
+   |
+   | 1
+   |
+   | N
+   v
+OrderItem</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    OrderItem is the many side.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             MANY TO MANY
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Relationship 3
+                </div>
+
+                <h2 class="jpa-section-title">
+                    Many-to-Many: Product ↔ Tag
+                </h2>
+
+                <p class="jpa-section-lead mb-5">
+
+                    One product can have many tags and one tag can belong to many
+                    products. A relational database represents this through the
+                    intermediate <code>product_tags</code> join table.
+
+                </p>
+
+
+                <div class="relationship-shell">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg">
+
+                            <div class="entity-box">
+
+                                <div class="jpa-label text-primary">
+                                    Entity
+                                </div>
+
+                                <h4 class="mt-2">
+                                    products
+                                </h4>
+
+                                <pre class="jpa-code"><code>id PK
+name
+price</code></pre>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto relationship-line">
+
+                            <div class="relationship-symbol">
+                                N →
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="entity-box"
+                                 style="border-color:#32c7f2;">
+
+                                <div class="jpa-label text-success">
+                                    Join Table
+                                </div>
+
+                                <h4 class="mt-2">
+                                    product_tags
+                                </h4>
+
+                                <pre class="jpa-code"><code>product_id  FK
+tag_id      FK
+
+PRIMARY KEY
+(product_id, tag_id)</code></pre>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto relationship-line">
+
+                            <div class="relationship-symbol">
+                                ← N
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="entity-box">
+
+                                <div class="jpa-label"
+                                     style="color:#7256d8;">
+                                    Entity
+                                </div>
+
+                                <h4 class="mt-2">
+                                    tags
+                                </h4>
+
+                                <pre class="jpa-code"><code>id PK
+name</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="row g-4 mt-4">
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-label text-primary mb-3">
+                                    Owning Side
+                                </div>
+
+                                <h4 class="jpa-card-title">
+                                    Product.java
+                                </h4>
+
+                                <pre class="jpa-code"><code>@ManyToMany
+@JoinTable(
+    name = "product_tags",
+    joinColumns =
+        @JoinColumn(name = "product_id"),
+    inverseJoinColumns =
+        @JoinColumn(name = "tag_id")
+)
+private Set&lt;Tag&gt; tags;</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-label"
+                                     style="color:#7256d8;">
+                                    Inverse Side
+                                </div>
+
+                                <h4 class="jpa-card-title">
+                                    Tag.java
+                                </h4>
+
+                                <pre class="jpa-code"><code>@ManyToMany(mappedBy = "tags")
+private Set&lt;Product&gt; products;</code></pre>
+
+                                <p class="mt-3">
+
+                                    The source uses <code>Set</code> rather than
+                                    <code>List</code> for this relationship.
+
+                                </p>
+
+                                <div class="alert alert-primary mb-0">
+
+                                    A Set also expresses that the same tag should
+                                    not appear multiple times in the product's
+                                    collection.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="jpa-callout mt-4">
+
+                    <strong>Live demonstration:</strong>
+
+                    <span class="text-muted">
+
+                open <code>/jpa/products/{id}</code> and show the tag
+                badges populated through the many-to-many relationship.
+
+            </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             ASSOCIATION ENTITY
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Relationship 4
+                </div>
+
+                <h2 class="jpa-section-title">
+                    When Many-to-Many Needs Its Own Data
+                </h2>
+
+                <p class="jpa-section-lead mb-5">
+
+                    An order can contain many products and a product can appear in
+                    many orders. Logically that is many-to-many. But the
+                    relationship itself contains business data:
+                    <code>quantity</code> and
+                    <code>unit_price_at_purchase</code>.
+
+                </p>
+
+
+                <div class="relationship-shell">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg">
+
+                            <div class="entity-box">
+
+                                <div class="jpa-label text-primary">
+                                    Parent
+                                </div>
+
+                                <h4 class="mt-2">
+                                    Order
+                                </h4>
+
+                                <div class="text-muted">
+                                    One order has many line items.
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto relationship-line">
+
+                            <div class="relationship-symbol">
+                                1 → N
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="entity-box"
+                                 style="border:2px solid #32c7f2;">
+
+                                <div class="jpa-label text-success">
+                                    Association Entity
+                                </div>
+
+                                <h4 class="mt-2">
+                                    OrderItem
+                                </h4>
+
+                                <pre class="jpa-code"><code>order_id
+product_id
+quantity
+unit_price_at_purchase</code></pre>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-auto relationship-line">
+
+                            <div class="relationship-symbol">
+                                N ← 1
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg">
+
+                            <div class="entity-box">
+
+                                <div class="jpa-label"
+                                     style="color:#7256d8;">
+                                    Product
+                                </div>
+
+                                <h4 class="mt-2">
+                                    Product
+                                </h4>
+
+                                <div class="text-muted">
+                                    One product can appear in many line items.
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="row g-4 mt-4">
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-label text-success mb-3">
+                                    Order Relationship
+                                </div>
+
+                                <pre class="jpa-code"><code>@ManyToOne
+@JoinColumn(name = "order_id")
+private Order order;</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-label text-primary mb-3">
+                                    Product Relationship
+                                </div>
+
+                                <pre class="jpa-code"><code>@ManyToOne
+@JoinColumn(name = "product_id")
+private Product product;</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="jpa-callout mt-4">
+
+                    <div class="row g-3 align-items-center">
+
+                        <div class="col-auto">
+
+                            <div class="jpa-icon jpa-icon-yellow">
+                                <i class="bi bi-lightbulb-fill"></i>
+                            </div>
+
+                        </div>
+
+                        <div class="col">
+
+                            <strong>
+                                Practical modeling rule
+                            </strong>
+
+                            <div class="text-muted mt-1">
+
+                                When the relationship needs business attributes of
+                                its own, model the join as an entity rather than
+                                hiding it behind a raw
+                                <code>@ManyToMany</code>.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             PURE JOIN VS ASSOCIATION ENTITY
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Important Comparison
+                </div>
+
+                <h2 class="jpa-section-title">
+                    Join Table vs. Association Entity
+                </h2>
+
+
+                <div class="jpa-striped-grid mt-5">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+                            <tr>
+                                <th>Characteristic</th>
+                                <th>Product ↔ Tag</th>
+                                <th>Order ↔ Product</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <th>Logical cardinality</th>
+                                <td>Many-to-Many</td>
+                                <td>Many-to-Many</td>
+                            </tr>
+
+                            <tr>
+                                <th>Intermediate table/entity</th>
+                                <td>
+                                    <code>product_tags</code>
+                                </td>
+                                <td>
+                                    <code>OrderItem</code>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Extra relationship data</th>
+                                <td>
+                                    No
+                                </td>
+                                <td>
+                                    Yes
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Quantity</th>
+                                <td>—</td>
+                                <td>
+                                    <code>quantity</code>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Historical purchase price</th>
+                                <td>—</td>
+                                <td>
+                                    <code>unit_price_at_purchase</code>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>JPA approach</th>
+                                <td>
+                                    <code>@ManyToMany</code>
+                                </td>
+                                <td>
+                                    Association entity with
+                                    <code>@ManyToOne</code>
+                                    relationships
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Java object for relationship row</th>
+                                <td>
+                                    Not required by this mapping
+                                </td>
+                                <td>
+                                    <code>OrderItem</code>
+                                </td>
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             OWNING SIDE
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    JPA Vocabulary
+                </div>
+
+                <h2 class="jpa-section-title">
+                    Owning Side vs. Inverse Side
+                </h2>
+
+                <p class="jpa-section-lead mb-5">
+
+                    This terminology often causes confusion because "owner" does
+                    not mean business ownership. It describes which side controls
+                    persistence of the relationship mapping.
+
+                </p>
+
+
+                <div class="row g-4">
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-card jpa-card-accent">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-green mb-3">
+                                    <i class="bi bi-key"></i>
+                                </div>
+
+                                <div class="jpa-label text-success">
+                                    Owning Side
+                                </div>
+
+                                <h4 class="jpa-card-title mt-2">
+                                    Defines the Relationship Mapping
+                                </h4>
+
+                                <p>
+
+                                    In the foreign-key examples in this POC, the
+                                    owning entity is the entity mapped to the table
+                                    that stores the FK.
+
+                                </p>
+
+                                <pre class="jpa-code"><code>@JoinColumn(name = "customer_id")</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    For the Product ↔ Tag relationship, Product
+                                    defines the join table with
+                                    <code>@JoinTable</code>.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <div class="jpa-card">
+
+                            <div class="jpa-card-body">
+
+                                <div class="jpa-icon jpa-icon-blue mb-3">
+                                    <i class="bi bi-arrow-return-left"></i>
+                                </div>
+
+                                <div class="jpa-label text-primary">
+                                    Inverse Side
+                                </div>
+
+                                <h4 class="jpa-card-title mt-2">
+                                    Uses mappedBy
+                                </h4>
+
+                                <p>
+
+                                    The inverse side points back to the field that
+                                    defines the mapping.
+
+                                </p>
+
+                                <pre class="jpa-code"><code>@OneToMany(mappedBy = "customer")
+
+@OneToOne(mappedBy = "customer")
+
+@ManyToMany(mappedBy = "tags")</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             MAPPED BY
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Common Source of Confusion
+                </div>
+
+                <h2 class="jpa-section-title">
+                    What Does mappedBy Actually Point To?
+                </h2>
+
+
+                <div class="jpa-card mt-5">
+
+                    <div class="jpa-card-body p-lg-5">
+
+                        <div class="row g-5">
+
+                            <div class="col-lg-6">
+
+                                <div class="jpa-label text-success mb-3">
+                                    Order.java
+                                </div>
+
+                                <pre class="jpa-code"><code>@ManyToOne
+@JoinColumn(name = "customer_id")
+private Customer customer;</code></pre>
+
+                            </div>
+
+
+                            <div class="col-lg-6">
+
+                                <div class="jpa-label text-primary mb-3">
+                                    Customer.java
+                                </div>
+
+                                <pre class="jpa-code"><code>@OneToMany(mappedBy = "customer")
+private List&lt;Order&gt; orders;</code></pre>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="alert alert-primary mt-4 mb-0">
+
+                            <strong>Important:</strong>
+
+                            <code>mappedBy = "customer"</code> refers to the
+                            <strong>Java field name</strong>
+                            <code>customer</code> inside <code>Order</code>.
+                            It does not refer to the SQL column name
+                            <code>customer_id</code>.
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             SQL TO OBJECT GRAPH
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    ORM Translation
+                </div>
+
+                <h2 class="jpa-section-title">
+                    Relational Rows Become an Object Graph
+                </h2>
+
+
+                <div class="relationship-shell mt-5">
+
+                    <div class="row g-4">
+
+                        <div class="col-lg-6">
+
+                            <div class="entity-box">
+
+                                <div class="jpa-label text-primary">
+                                    Relational View
+                                </div>
+
+                                <h4 class="mt-2">
+                                    Database
+                                </h4>
+
+                                <pre class="jpa-code"><code>CUSTOMERS
+---------
+id = 101
+name = Alice
+
+
+ORDERS
+------
+id = 5001
+customer_id = 101
+
+id = 5002
+customer_id = 101</code></pre>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-6">
+
+                            <div class="entity-box">
+
+                                <div class="jpa-label text-success">
+                                    Object View
+                                </div>
+
+                                <h4 class="mt-2">
+                                    Java
+                                </h4>
+
+                                <pre class="jpa-code"><code>Customer alice
+   |
+   +-- Order 5001
+   |
+   +-- Order 5002</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    JPA/Hibernate translates between these two
+                                    representations.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             LIVE DEMO
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    On-Screen Demonstration
+                </div>
+
+                <h2 class="jpa-section-title">
+                    Walk the Relationship from SQL to Browser
+                </h2>
+
+
+                <div class="jpa-protocol-shell mt-5">
+
+
+                    <div class="jpa-protocol-row">
+
+                        <div class="jpa-number">01</div>
+
+                        <div class="jpa-protocol-card">
+
+                            <div class="jpa-label text-primary">
+                                Database
+                            </div>
+
+                            <h4>
+                                Open db/schema.sql
+                            </h4>
+
+                            <p class="mb-0">
+
+                                Start with the physical schema. Identify the primary
+                                keys, foreign keys, unique constraints and join
+                                tables.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="jpa-protocol-row">
+
+                        <div class="jpa-number">02</div>
+
+                        <div class="jpa-protocol-card">
+
+                            <div class="jpa-label text-success">
+                                One-to-One
+                            </div>
+
+                            <h4>
+                                Open Customer.java and CustomerProfile.java
+                            </h4>
+
+                            <p>
+
+                                Put them side by side and point out:
+
+                            </p>
+
+                            <pre class="jpa-code"><code>@JoinColumn(name = "customer_id", unique = true)
+
+vs.
+
+@OneToOne(mappedBy = "customer")</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="jpa-protocol-row">
+
+                        <div class="jpa-number">03</div>
+
+                        <div class="jpa-protocol-card">
+
+                            <div class="jpa-label text-primary">
+                                One-to-Many
+                            </div>
+
+                            <h4>
+                                Open Customer.java and Order.java
+                            </h4>
+
+                            <pre class="jpa-code"><code>Customer:
+@OneToMany(mappedBy = "customer")
+
+Order:
+@ManyToOne
+@JoinColumn(name = "customer_id")</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="jpa-protocol-row">
+
+                        <div class="jpa-number">04</div>
+
+                        <div class="jpa-protocol-card">
+
+                            <div class="jpa-label text-primary">
+                                Runtime
+                            </div>
+
+                            <h4>
+                                Browse /jpa/customers/{id}
+                            </h4>
+
+                            <p class="mb-0">
+
+                                Show every order belonging to the selected customer.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="jpa-protocol-row">
+
+                        <div class="jpa-number">05</div>
+
+                        <div class="jpa-protocol-card">
+
+                            <div class="jpa-label text-warning">
+                                Hibernate SQL
+                            </div>
+
+                            <h4>
+                                Enable show-sql
+                            </h4>
+
+                            <pre class="jpa-code"><code>spring:
+  jpa:
+    show-sql: true</code></pre>
+
+                            <p class="mt-3 mb-0">
+
+                                Tail the application console and show the SQL
+                                generated when
+                                <code>CustomerRepository.findWithOrders()</code>
+                                loads the customer relationship.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="jpa-protocol-row">
+
+                        <div class="jpa-number">06</div>
+
+                        <div class="jpa-protocol-card">
+
+                            <div class="jpa-label"
+                                 style="color:#7256d8;">
+                                Many-to-Many
+                            </div>
+
+                            <h4>
+                                Open Product.java and Tag.java
+                            </h4>
+
+                            <p class="mb-0">
+
+                                Show <code>@JoinTable</code> on Product and
+                                <code>mappedBy = "tags"</code> on Tag.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="jpa-protocol-row">
+
+                        <div class="jpa-number">07</div>
+
+                        <div class="jpa-protocol-card">
+
+                            <div class="jpa-label text-success">
+                                Browser
+                            </div>
+
+                            <h4>
+                                Browse /jpa/products/{id}
+                            </h4>
+
+                            <p class="mb-0">
+
+                                Show the product's tag badges populated from the
+                                <code>product_tags</code> join table.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="jpa-protocol-row">
+
+                        <div class="jpa-number">08</div>
+
+                        <div class="jpa-protocol-card">
+
+                            <div class="jpa-label text-warning">
+                                Association Entity
+                            </div>
+
+                            <h4>
+                                Open OrderItem.java
+                            </h4>
+
+                            <p>
+
+                                Contrast OrderItem with Product's raw
+                                <code>@ManyToMany</code> relationship.
+
+                            </p>
+
+                            <pre class="jpa-code"><code>Product ↔ Tag
+    → pure relationship
+
+Order ↔ Product
+    → relationship + quantity + price
+    → OrderItem entity</code></pre>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             ACCORDION
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Relationship Deep Dive
+                </div>
+
+                <h2 class="jpa-section-title">
+                    JPA Relationship Questions
+                </h2>
+
+
+                <div class="accordion jpa-accordion mt-5"
+                     id="jpaRelationshipAccordion">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jpaQ1">
+
+                                <span class="jpa-accordion-number">01</span>
+
+                                What Makes Customer ↔ CustomerProfile One-to-One?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jpaQ1"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#jpaRelationshipAccordion">
+
+                            <div class="accordion-body">
+
+                                The decisive database characteristic is the
+                                uniqueness of
+                                <code>customer_profiles.customer_id</code>.
+
+                                <pre class="jpa-code mt-3"><code>customer_profiles.customer_id
+    FOREIGN KEY
+    UNIQUE</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Without that uniqueness constraint, multiple
+                                    profile rows could reference the same customer,
+                                    which would no longer represent the intended
+                                    one-to-one relationship.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jpaQ2">
+
+                                <span class="jpa-accordion-number">02</span>
+
+                                Why Does Order Own Customer → Orders?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jpaQ2"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#jpaRelationshipAccordion">
+
+                            <div class="accordion-body">
+
+                                The <code>orders</code> table stores
+                                <code>customer_id</code>. Therefore the Order entity
+                                defines the foreign-key mapping:
+
+                                <pre class="jpa-code mt-3"><code>@ManyToOne
+@JoinColumn(name = "customer_id")
+private Customer customer;</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jpaQ3">
+
+                                <span class="jpa-accordion-number">03</span>
+
+                                What Does mappedBy = "customer" Mean?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jpaQ3"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#jpaRelationshipAccordion">
+
+                            <div class="accordion-body">
+
+                                It points to the Java field named
+                                <code>customer</code> on the other entity.
+
+                                <pre class="jpa-code mt-3"><code>Order.java
+
+private Customer customer;
+
+
+Customer.java
+
+@OneToMany(mappedBy = "customer")</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    It is not the database column name.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jpaQ4">
+
+                                <span class="jpa-accordion-number">04</span>
+
+                                Why Does Product ↔ Tag Need product_tags?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jpaQ4"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#jpaRelationshipAccordion">
+
+                            <div class="accordion-body">
+
+                                A product can reference many tags and a tag can
+                                reference many products. Neither table can represent
+                                that relationship with one simple foreign-key
+                                column.
+
+                                <p class="mt-3">
+
+                                    The intermediate table stores each pairing:
+
+                                </p>
+
+                                <pre class="jpa-code"><code>product_tags
+
+product_id | tag_id
+-----------+-------
+101        | 1
+101        | 3
+102        | 1</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jpaQ5">
+
+                                <span class="jpa-accordion-number">05</span>
+
+                                Why Is OrderItem Not a Simple @ManyToMany?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jpaQ5"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#jpaRelationshipAccordion">
+
+                            <div class="accordion-body">
+
+                                Because the Order/Product pairing has data of its
+                                own:
+
+                                <pre class="jpa-code mt-3"><code>quantity
+unit_price_at_purchase</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    That relationship therefore becomes a
+                                    first-class domain object:
+                                    <code>OrderItem</code>.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jpaQ6">
+
+                                <span class="jpa-accordion-number">06</span>
+
+                                Why Store unit_price_at_purchase?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jpaQ6"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#jpaRelationshipAccordion">
+
+                            <div class="accordion-body">
+
+                                This is an important domain-modeling consequence of
+                                making OrderItem an entity.
+
+                                <p>
+
+                                    A product's current price can change after an
+                                    order is placed. The line item can preserve the
+                                    price associated with that transaction rather
+                                    than depending on the product's later price.
+
+                                </p>
+
+                                <pre class="jpa-code"><code>Product.price
+    = current product price
+
+OrderItem.unit_price_at_purchase
+    = transaction-time price</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jpaQ7">
+
+                                <span class="jpa-accordion-number">07</span>
+
+                                Why Use Set&lt;Tag&gt; Instead of List&lt;Tag&gt; Here?
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jpaQ7"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#jpaRelationshipAccordion">
+
+                            <div class="accordion-body">
+
+                                The source deliberately maps Product ↔ Tag using a
+                                <code>Set&lt;Tag&gt;</code>. A Set naturally models
+                                unique membership: a product either has a tag or it
+                                does not.
+
+                                <p class="mt-3 mb-0">
+
+                                    It also avoids representing duplicate tag
+                                    membership in the Java collection.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TROUBLESHOOTING
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Troubleshooting
+                </div>
+
+                <h2 class="jpa-section-title">
+                    Common Relationship Mapping Problems
+                </h2>
+
+
+                <div class="accordion jpa-accordion mt-5"
+                     id="jpaTroubleshootingAccordion">
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jt1">
+
+                                <span class="jpa-accordion-number">01</span>
+
+                                mappedBy References the Wrong Name
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jt1"
+                             class="accordion-collapse collapse show"
+                             data-bs-parent="#jpaTroubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Remember that <code>mappedBy</code> refers to a Java
+                                property on the owning entity.
+
+                                <pre class="jpa-code mt-3"><code>// Order.java
+private Customer customer;
+
+// Customer.java
+@OneToMany(mappedBy = "customer")</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jt2">
+
+                                <span class="jpa-accordion-number">02</span>
+
+                                Both Sides Try to Define the Foreign Key
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jt2"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#jpaTroubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                For the bidirectional relationships demonstrated
+                                here, one side defines the relationship using
+                                <code>@JoinColumn</code> or
+                                <code>@JoinTable</code>; the inverse side uses
+                                <code>mappedBy</code>.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jt3">
+
+                                <span class="jpa-accordion-number">03</span>
+
+                                One-to-One Behaves Like One-to-Many
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jt3"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#jpaTroubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                Inspect the database constraint. The relationship
+                                shown in this POC depends on the FK being unique:
+
+                                <pre class="jpa-code mt-3"><code>customer_id UNIQUE</code></pre>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jt4">
+
+                                <span class="jpa-accordion-number">04</span>
+
+                                Relationship Data Has Nowhere to Go
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jt4"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#jpaTroubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                If a join suddenly needs fields such as quantity,
+                                purchase price or other relationship-specific
+                                attributes, reconsider whether it should remain a
+                                raw many-to-many mapping.
+
+                                <p class="mt-3 mb-0">
+
+                                    <code>OrderItem</code> demonstrates the
+                                    association-entity approach.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="accordion-item">
+
+                        <h2 class="accordion-header">
+
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#jt5">
+
+                                <span class="jpa-accordion-number">05</span>
+
+                                I Cannot See What Hibernate Is Doing
+
+                            </button>
+
+                        </h2>
+
+                        <div id="jt5"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#jpaTroubleshootingAccordion">
+
+                            <div class="accordion-body">
+
+                                For the demonstration, enable SQL output:
+
+                                <pre class="jpa-code mt-3"><code>spring:
+  jpa:
+    show-sql: true</code></pre>
+
+                                <p class="mt-3 mb-0">
+
+                                    Then watch the application console while loading
+                                    the JPA pages.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             DECISION GUIDE
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-kicker mb-3">
+                    Quick Decision Guide
+                </div>
+
+                <h2 class="jpa-section-title">
+                    Which Mapping Should I Reach For?
+                </h2>
+
+
+                <div class="jpa-striped-grid mt-5">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-striped align-middle">
+
+                            <thead>
+                            <tr>
+                                <th>Database / Domain Situation</th>
+                                <th>Typical Mapping</th>
+                                <th>Example in This POC</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+
+                            <tr>
+                                <th>
+                                    One FK and that FK is unique
+                                </th>
+                                <td>
+                                    <code>@OneToOne</code>
+                                </td>
+                                <td>
+                                    Customer ↔ CustomerProfile
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Many rows can reference one parent
+                                </th>
+                                <td>
+                                    <code>@ManyToOne</code> +
+                                    <code>@OneToMany</code>
+                                </td>
+                                <td>
+                                    Customer → Orders
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Pure join table connects two entity types
+                                </th>
+                                <td>
+                                    <code>@ManyToMany</code>
+                                </td>
+                                <td>
+                                    Product ↔ Tag
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>
+                                    Join relationship has business attributes
+                                </th>
+                                <td>
+                                    Association entity
+                                </td>
+                                <td>
+                                    OrderItem
+                                </td>
+                            </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================================
+             TAKEAWAY
+             ========================================================= -->
+
+        <section class="jpa-section">
+
+            <div class="container">
+
+                <div class="jpa-takeaway">
+
+                    <div class="row align-items-center g-4">
+
+                        <div class="col-lg-2 text-center">
+
+                            <div class="jpa-icon jpa-icon-blue mx-auto"
+                                 style="width:90px;height:90px;font-size:2.6rem;">
+
+                                <i class="bi bi-diagram-3-fill"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-lg-10">
+
+                            <div class="jpa-label text-primary mb-2">
+                                Key Takeaway
+                            </div>
+
+                            <h2 class="fw-bold"
+                                style="color:#102b69;">
+
+                                Start with the Database Relationship
+
+                            </h2>
+
+                            <p class="lead text-muted">
+
+                                Do not memorize JPA annotations in isolation.
+                            </p>
+
+                            <p class="text-muted mb-0">
+
+                                Look at the tables. Find the foreign key. Determine
+                                whether it is unique. Look for a join table and ask
+                                whether that relationship has attributes of its own.
+                                Then translate that relational structure into
+                                <code>@OneToOne</code>,
+                                <code>@ManyToOne</code>,
+                                <code>@OneToMany</code>,
+                                <code>@ManyToMany</code>, or an association entity.
+                                In the bidirectional examples in this application,
+                                the side defining <code>@JoinColumn</code> or
+                                <code>@JoinTable</code> is the owning side, while
+                                the inverse side uses <code>mappedBy</code>.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="d-flex flex-wrap justify-content-between gap-3
+                    mt-5 pt-4"
+                     style="border-top:1px solid rgba(255,255,255,.18);">
+
+                    <a href="/training/post-login-flow"
+                       class="btn btn-outline-light btn-lg px-4">
+
+                        <i class="bi bi-arrow-left me-2"></i>
+
+                        Back: Post-Login Flow
+
+                    </a>
+
+
+                    <a href="/jpa/customers"
+                       class="btn btn-light btn-lg px-4"
+                       style="color:#12346f;">
+
+                        Try it Live: /jpa/customers
+
+                        <i class="bi bi-arrow-right ms-2"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

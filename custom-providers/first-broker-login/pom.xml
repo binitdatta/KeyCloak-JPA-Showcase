@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.havi.kc</groupId>
+    <artifactId>entra-broker-sync-ext</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+    <name>entra-broker-sync-ext</name>
+    <description>
+        Keycloak 26 SPI providers for the Entra ID SAML broker: (1)
+        ExtendedEntraCreateUserAuthenticator, bound to the IdP's First Login
+        Flow, which extracts profile/role/group claims from the SAML
+        assertion and upserts them into the keycloak-jpa-demo MySQL schema;
+        and (2) EntraPostLoginRoleGroupSyncAuthenticator, bound to the IdP's
+        Post Login Flow, which runs on every subsequent login and reconciles
+        role/group grants and revocations between the assertion and MySQL.
+    </description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <keycloak.version>26.0.7</keycloak.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-server-spi</artifactId>
+            <version>${keycloak.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-server-spi-private</artifactId>
+            <version>${keycloak.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-services</artifactId>
+            <version>${keycloak.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-core</artifactId>
+            <version>${keycloak.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- NOT on Keycloak's classpath by default — compile scope here, and
+             the built JAR (or the driver JAR alongside it) must be dropped
+             into KEYCLOAK_HOME/providers/ too, see deployment notes. -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.4.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>havi-entra-broker-sync-ext</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

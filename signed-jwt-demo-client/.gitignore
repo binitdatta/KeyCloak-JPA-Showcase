@@ -1,0 +1,5 @@
+target/
+keys/*.p12
+keys/*.jks
+*.class
+.DS_Store
