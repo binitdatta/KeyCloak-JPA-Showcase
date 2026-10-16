@@ -21,6 +21,12 @@ public class X509UiController {
         return "training/x509-certificate-demo";
     }
 
+    @GetMapping("/training/x509-explain")
+    public String explain1() {
+        return "training/x509-mtls-complete-step-by-step-guide";
+    }
+
+
     @GetMapping("/training/x509-mtls-concepts-java-commands")
     public String explain() {
         return "training/x509-mtls-concepts-java-commands";

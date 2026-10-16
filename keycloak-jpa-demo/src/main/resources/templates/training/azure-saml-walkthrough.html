@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Microsoft Entra ID + Keycloak SAML 2.0 | Visual Configuration Walkthrough</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" th:href="@{/css/bright-blue.css}" href="/css/bright-blue.css">
+<style>
+:root{--navy:#06142f;--blue:#315df1;--cyan:#19c9f5}
+html{scroll-behavior:smooth}
+body{color:white;background:radial-gradient(circle at 93% 11%,rgba(39,103,246,.75),transparent 40%),linear-gradient(112deg,#06142f,#0b2150 42%,#173a91 78%,#315df1);background-attachment:fixed;min-height:100vh}
+.page-hero{padding:4.5rem 0 3.5rem}.kicker,.section-kicker{color:#54d9ff;letter-spacing:.16em;text-transform:uppercase;font-size:.79rem;font-weight:800}
+.page-hero h1{font-size:clamp(2.6rem,5vw,4.8rem);line-height:1.06;letter-spacing:-.04em;font-weight:800}
+.hero-lead,.section-lead{color:rgba(255,255,255,.84);font-size:1.08rem;max-width:960px;line-height:1.75}
+.pill{display:inline-block;border:1px solid #38cef8;padding:.42rem .9rem;border-radius:30px;margin:0 .45rem .45rem 0;background:#071b4699}
+.phase-nav{background:#ffffffee;border-radius:18px;padding:1.3rem;box-shadow:0 14px 40px #0002}.phase-nav a{display:inline-block;text-decoration:none;background:#eaf4ff;color:#103c86;padding:.6rem .9rem;margin:.25rem;border-radius:10px;font-weight:700}
+.guide-section{padding:3.5rem 0;border-top:1px solid #ffffff30}.guide-section h2{font-weight:800;font-size:clamp(1.8rem,3vw,2.6rem);margin:.6rem 0 1rem}
+.steps{display:flex;flex-direction:column;gap:2rem;margin-top:2rem}
+.step-card{background:#fff;color:#1a2941;border:1px solid #dce8f7;border-radius:20px;padding:clamp(1rem,3vw,2rem);box-shadow:0 18px 48px #0003;scroll-margin-top:5.5rem}
+.step-top{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}.step-no{background:linear-gradient(110deg,#1765e8,#12b6e8);color:#fff;border-radius:24px;padding:.4rem .85rem;font-weight:800}
+.step-file{font-family:monospace;font-size:.86rem;color:#5a6d82}.step-card h3{font-size:1.5rem;font-weight:800;color:#0d2d68}.step-card p{color:#536579;line-height:1.7}
+.step-image{display:block;width:100%;height:auto;border:1px solid #d3deea;border-radius:12px;background:white}
+.step-card>a{display:block;cursor:zoom-in}
+.image-footer{margin-top:1rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;color:#607187;font-size:.87rem}.image-footer a{font-weight:700}
+.notice{background:#ffffffed;border-radius:18px;padding:1.2rem 1.5rem;color:#24344e}
+footer{padding:2.5rem 0 4rem;color:#dde9ff}
+@media(max-width:600px){.page-hero{padding:2.5rem 0}.step-card h3{font-size:1.2rem}}
+</style>
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<header class="page-hero container">
+<a href="/training" class="text-info text-decoration-none"><i class="bi bi-arrow-left"></i> Training Index</a>
+<p class="kicker mt-4">Keycloak 26 · Microsoft Entra ID · SAML 2.0 · Hands-on Lab</p>
+<h1>Microsoft Entra ID &amp; Keycloak<br><span style="color:#46d6ff">SAML 2.0 Integration</span></h1>
+<p class="hero-lead mt-4">An end-to-end visual walkthrough of enterprise application registration, SAML configuration, user attributes and claims, role assignments, and Keycloak identity brokering. Screenshots are presented in the same numerical order as the files in your lab.</p>
+<div class="mt-4"><span class="pill">62 Azure screenshots</span><span class="pill">6 Keycloak IdP screenshots</span><span class="pill">68 illustrated steps</span><span class="pill">Original resolution images</span></div>
+</header>
+<div class="container mb-5"><nav class="phase-nav" aria-label="Jump to a chapter">
+<a href="#phase-01">01 · Azure SAML setup</a><a href="#phase-02">02 · Claims</a><a href="#phase-03">03 · Users</a>
+<a href="#phase-04">04 · Graph + Roles</a><a href="#phase-05">05 · Keycloak Broker</a><a href="#phase-06">06 · Keycloak IdP Details</a>
+</nav>
+<div class="notice mt-4"><strong><i class="bi bi-shield-check text-primary"></i> Publication security:</strong> These illustrations assume the screenshots stored in <code>static/images/azure-saml/</code> have already been fully redacted. Review all filenames and image content before publishing; this page serves the original image files without further sanitization.</div></div>
+<section class="guide-section container" id="phase-01"><div class="section-kicker">PHASE 01 · SCREENSHOTS 1–15</div><h2>Microsoft Entra ID: Application and SAML Foundations</h2><p class="section-lead">Set up the enterprise application, federation settings, certificates and initial claims.</p><div class="steps">
+<article class="step-card" id="azure-1">
+ <div class="step-top"><span class="step-no">Step 01</span><span class="step-file">1_azure_saml.png</span></div>
+ <h3>Azure portal and tenant introduction</h3><p>Introduces the Azure environment used to configure Microsoft Entra ID and the Keycloak SAML lab.</p>
+ <a href="/images/azure-saml/1_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 1_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/1_azure_saml.png" loading="lazy" decoding="async" alt="Azure portal and tenant introduction screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/1_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-2">
+ <div class="step-top"><span class="step-no">Step 02</span><span class="step-file">2_auzre_saml.png</span></div>
+ <h3>Microsoft Entra tenant overview</h3><p>Shows the directory context and entry points for managing enterprise identity.</p>
+ <a href="/images/azure-saml/2_auzre_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 2_auzre_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/2_auzre_saml.png" loading="lazy" decoding="async" alt="Microsoft Entra tenant overview screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/2_auzre_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-3">
+ <div class="step-top"><span class="step-no">Step 03</span><span class="step-file">3_azure_saml.png</span></div>
+ <h3>Enterprise application inventory</h3><p>Reviews existing Enterprise Applications before creating a SAML integration.</p>
+ <a href="/images/azure-saml/3_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 3_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/3_azure_saml.png" loading="lazy" decoding="async" alt="Enterprise application inventory screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/3_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-4">
+ <div class="step-top"><span class="step-no">Step 04</span><span class="step-file">4_auzre_saml.png</span></div>
+ <h3>Microsoft Entra application gallery</h3><p>Shows where to begin adding an application for federated single sign-on.</p>
+ <a href="/images/azure-saml/4_auzre_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 4_auzre_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/4_auzre_saml.png" loading="lazy" decoding="async" alt="Microsoft Entra application gallery screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/4_auzre_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-5">
+ <div class="step-top"><span class="step-no">Step 05</span><span class="step-file">5_auzre_saml.png</span></div>
+ <h3>Create a non-gallery application</h3><p>Creates the Keycloak_JPA_Lab_SAML enterprise application using the non-gallery integration option.</p>
+ <a href="/images/azure-saml/5_auzre_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 5_auzre_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/5_auzre_saml.png" loading="lazy" decoding="async" alt="Create a non-gallery application screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/5_auzre_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-6">
+ <div class="step-top"><span class="step-no">Step 06</span><span class="step-file">6_auzre_saml.png</span></div>
+ <h3>Enterprise application overview</h3><p>Shows the application&#x27;s identification fields and initial configuration entry points.</p>
+ <a href="/images/azure-saml/6_auzre_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 6_auzre_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/6_auzre_saml.png" loading="lazy" decoding="async" alt="Enterprise application overview screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/6_auzre_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-7">
+ <div class="step-top"><span class="step-no">Step 07</span><span class="step-file">7_azure_saml.png</span></div>
+ <h3>Choose the SAML SSO method</h3><p>Selects SAML as the enterprise application&#x27;s single sign-on method.</p>
+ <a href="/images/azure-saml/7_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 7_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/7_azure_saml.png" loading="lazy" decoding="async" alt="Choose the SAML SSO method screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/7_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-8">
+ <div class="step-top"><span class="step-no">Step 08</span><span class="step-file">8_azure_saml.png</span></div>
+ <h3>Choose the sign-on method</h3><p>Compares available SSO methods and selects the SAML workflow.</p>
+ <a href="/images/azure-saml/8_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 8_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/8_azure_saml.png" loading="lazy" decoding="async" alt="Choose the sign-on method screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/8_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-9">
+ <div class="step-top"><span class="step-no">Step 09</span><span class="step-file">9_azure_saml.png</span></div>
+ <h3>SAML setup overview</h3><p>Introduces Basic SAML Configuration, Attributes &amp; Claims, and SAML signing certificates.</p>
+ <a href="/images/azure-saml/9_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 9_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/9_azure_saml.png" loading="lazy" decoding="async" alt="SAML setup overview screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/9_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-10">
+ <div class="step-top"><span class="step-no">Step 10</span><span class="step-file">10_azure_saml.png</span></div>
+ <h3>Configure Keycloak SP identifiers</h3><p>Enters the Keycloak realm&#x27;s service-provider Entity ID and Assertion Consumer Service (reply) URL.</p>
+ <a href="/images/azure-saml/10_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 10_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/10_azure_saml.png" loading="lazy" decoding="async" alt="Configure Keycloak SP identifiers screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/10_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-11">
+ <div class="step-top"><span class="step-no">Step 11</span><span class="step-file">11_azure_saml.png</span></div>
+ <h3>Review saved SAML endpoints</h3><p>Confirms the Entity ID and ACS endpoint and displays the rest of the SAML setup.</p>
+ <a href="/images/azure-saml/11_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 11_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/11_azure_saml.png" loading="lazy" decoding="async" alt="Review saved SAML endpoints screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/11_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-12">
+ <div class="step-top"><span class="step-no">Step 12</span><span class="step-file">12_auzre_saml.png</span></div>
+ <h3>Inspect SAML signing certificates</h3><p>Shows certificate status, certificate downloads and federation metadata links.</p>
+ <a href="/images/azure-saml/12_auzre_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 12_auzre_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/12_auzre_saml.png" loading="lazy" decoding="async" alt="Inspect SAML signing certificates screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/12_auzre_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-13">
+ <div class="step-top"><span class="step-no">Step 13</span><span class="step-file">13_azure_saml.png</span></div>
+ <h3>Review initial SAML attribute mappings</h3><p>Displays default claims sent by Microsoft Entra in SAML assertions.</p>
+ <a href="/images/azure-saml/13_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 13_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/13_azure_saml.png" loading="lazy" decoding="async" alt="Review initial SAML attribute mappings screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/13_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-14">
+ <div class="step-top"><span class="step-no">Step 14</span><span class="step-file">14_azure_saml.png</span></div>
+ <h3>Review SAML configuration and claims</h3><p>Revisits the configured URLs, mapped claims and certificate section.</p>
+ <a href="/images/azure-saml/14_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 14_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/14_azure_saml.png" loading="lazy" decoding="async" alt="Review SAML configuration and claims screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/14_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-15">
+ <div class="step-top"><span class="step-no">Step 15</span><span class="step-file">15_azure_saml.png</span></div>
+ <h3>Inspect Attributes &amp; Claims</h3><p>Shows required NameID and default SAML attribute/claim mappings.</p>
+ <a href="/images/azure-saml/15_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 15_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/15_azure_saml.png" loading="lazy" decoding="async" alt="Inspect Attributes &amp; Claims screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/15_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+</div></section>
+<section class="guide-section container" id="phase-02"><div class="section-kicker">PHASE 02 · SCREENSHOTS 16–26</div><h2>Microsoft Entra ID: Custom Claim Mapping</h2><p class="section-lead">Build the user-profile mappings consumed by the federated Keycloak identity.</p><div class="steps">
+<article class="step-card" id="azure-16">
+ <div class="step-top"><span class="step-no">Step 16</span><span class="step-file">16_azure_saml.png</span></div>
+ <h3>Map the first-name claim</h3><p>Creates a firstName claim from the user.givenname directory attribute.</p>
+ <a href="/images/azure-saml/16_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 16_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/16_azure_saml.png" loading="lazy" decoding="async" alt="Map the first-name claim screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/16_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-17">
+ <div class="step-top"><span class="step-no">Step 17</span><span class="step-file">17_azure_saml.png</span></div>
+ <h3>Map the last-name claim</h3><p>Creates a lastName claim from the user.surname directory attribute.</p>
+ <a href="/images/azure-saml/17_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 17_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/17_azure_saml.png" loading="lazy" decoding="async" alt="Map the last-name claim screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/17_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-18">
+ <div class="step-top"><span class="step-no">Step 18</span><span class="step-file">18_azure_saml.png</span></div>
+ <h3>Map the email claim</h3><p>Creates an email claim from the user.mail directory attribute.</p>
+ <a href="/images/azure-saml/18_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 18_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/18_azure_saml.png" loading="lazy" decoding="async" alt="Map the email claim screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/18_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-19">
+ <div class="step-top"><span class="step-no">Step 19</span><span class="step-file">19_azure_saml.png</span></div>
+ <h3>Map the telephone claim</h3><p>Maps phoneNumber from user.mobilephone.</p>
+ <a href="/images/azure-saml/19_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 19_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/19_azure_saml.png" loading="lazy" decoding="async" alt="Map the telephone claim screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/19_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-20">
+ <div class="step-top"><span class="step-no">Step 20</span><span class="step-file">20_azure_saml.png</span></div>
+ <h3>Map the street address claim</h3><p>Maps streetAddress from user.streetaddress.</p>
+ <a href="/images/azure-saml/20_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 20_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/20_azure_saml.png" loading="lazy" decoding="async" alt="Map the street address claim screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/20_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-21">
+ <div class="step-top"><span class="step-no">Step 21</span><span class="step-file">21_azure_saml.png</span></div>
+ <h3>Map the city claim</h3><p>Configures a city claim using user.city.</p>
+ <a href="/images/azure-saml/21_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 21_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/21_azure_saml.png" loading="lazy" decoding="async" alt="Map the city claim screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/21_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-22">
+ <div class="step-top"><span class="step-no">Step 22</span><span class="step-file">22_azure_saml.png</span></div>
+ <h3>Map the state claim</h3><p>Configures a state claim using user.state.</p>
+ <a href="/images/azure-saml/22_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 22_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/22_azure_saml.png" loading="lazy" decoding="async" alt="Map the state claim screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/22_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-23">
+ <div class="step-top"><span class="step-no">Step 23</span><span class="step-file">23_azure_saml.png</span></div>
+ <h3>Map the postal-code claim</h3><p>Configures postalCode using user.postalcode.</p>
+ <a href="/images/azure-saml/23_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 23_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/23_azure_saml.png" loading="lazy" decoding="async" alt="Map the postal-code claim screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/23_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-24">
+ <div class="step-top"><span class="step-no">Step 24</span><span class="step-file">24_azure_saml.png</span></div>
+ <h3>Map the country claim</h3><p>Configures a country claim using user.country.</p>
+ <a href="/images/azure-saml/24_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 24_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/24_azure_saml.png" loading="lazy" decoding="async" alt="Map the country claim screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/24_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-25">
+ <div class="step-top"><span class="step-no">Step 25</span><span class="step-file">25_azure_saml.png</span></div>
+ <h3>Map the date-of-birth claim</h3><p>Demonstrates a custom dateOfBirth claim sourced from an extension attribute.</p>
+ <a href="/images/azure-saml/25_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 25_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/25_azure_saml.png" loading="lazy" decoding="async" alt="Map the date-of-birth claim screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/25_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-26">
+ <div class="step-top"><span class="step-no">Step 26</span><span class="step-file">26_azure_saml.png</span></div>
+ <h3>Review expanded claims</h3><p>Displays the consolidated claim list after adding custom mappings.</p>
+ <a href="/images/azure-saml/26_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 26_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/26_azure_saml.png" loading="lazy" decoding="async" alt="Review expanded claims screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/26_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+</div></section>
+<section class="guide-section container" id="phase-03"><div class="section-kicker">PHASE 03 · SCREENSHOTS 27–39</div><h2>Directory Users and Test Accounts</h2><p class="section-lead">Prepare and inspect Entra users and profile attributes.</p><div class="steps">
+<article class="step-card" id="azure-27">
+ <div class="step-top"><span class="step-no">Step 27</span><span class="step-file">27_azure_saml.png</span></div>
+ <h3>Examine Microsoft Entra directory</h3><p>Shows tenant context and directory administration before user provisioning.</p>
+ <a href="/images/azure-saml/27_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 27_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/27_azure_saml.png" loading="lazy" decoding="async" alt="Examine Microsoft Entra directory screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/27_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-28">
+ <div class="step-top"><span class="step-no">Step 28</span><span class="step-file">28_azure_saml.png</span></div>
+ <h3>List existing directory users</h3><p>Reviews the user list and distinguishes members and guests.</p>
+ <a href="/images/azure-saml/28_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 28_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/28_azure_saml.png" loading="lazy" decoding="async" alt="List existing directory users screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/28_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-29">
+ <div class="step-top"><span class="step-no">Step 29</span><span class="step-file">29_azure_saml.png</span></div>
+ <h3>Create a new directory user</h3><p>Opens the New user menu to begin adding a lab identity.</p>
+ <a href="/images/azure-saml/29_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 29_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/29_azure_saml.png" loading="lazy" decoding="async" alt="Create a new directory user screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/29_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-30">
+ <div class="step-top"><span class="step-no">Step 30</span><span class="step-file">30_azure_saml.png</span></div>
+ <h3>Enter new-user details</h3><p>Illustrates the identity fields, directory domain, display name and password options.</p>
+ <a href="/images/azure-saml/30_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 30_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/30_azure_saml.png" loading="lazy" decoding="async" alt="Enter new-user details screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/30_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-31">
+ <div class="step-top"><span class="step-no">Step 31</span><span class="step-file">31_azure_saml.png</span></div>
+ <h3>Review new-user form</h3><p>Shows the completed basics for the new Entra test account.</p>
+ <a href="/images/azure-saml/31_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 31_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/31_azure_saml.png" loading="lazy" decoding="async" alt="Review new-user form screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/31_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-32">
+ <div class="step-top"><span class="step-no">Step 32</span><span class="step-file">32_azure_saml.png</span></div>
+ <h3>Review and create the user</h3><p>Confirms the new user&#x27;s basic properties before creation.</p>
+ <a href="/images/azure-saml/32_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 32_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/32_azure_saml.png" loading="lazy" decoding="async" alt="Review and create the user screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/32_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-33">
+ <div class="step-top"><span class="step-no">Step 33</span><span class="step-file">33_azure_saml.png</span></div>
+ <h3>Confirm updated users list</h3><p>Shows the created account in the directory user inventory.</p>
+ <a href="/images/azure-saml/33_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 33_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/33_azure_saml.png" loading="lazy" decoding="async" alt="Confirm updated users list screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/33_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-34">
+ <div class="step-top"><span class="step-no">Step 34</span><span class="step-file">34_azure_saml.png</span></div>
+ <h3>Inspect directory users</h3><p>Demonstrates how user display names and principal names appear in the Users table.</p>
+ <a href="/images/azure-saml/34_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 34_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/34_azure_saml.png" loading="lazy" decoding="async" alt="Inspect directory users screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/34_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-35">
+ <div class="step-top"><span class="step-no">Step 35</span><span class="step-file">35_azure_saml.png</span></div>
+ <h3>Inspect user account overview</h3><p>Examines the user&#x27;s directory account, object metadata and account state.</p>
+ <a href="/images/azure-saml/35_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 35_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/35_azure_saml.png" loading="lazy" decoding="async" alt="Inspect user account overview screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/35_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-36">
+ <div class="step-top"><span class="step-no">Step 36</span><span class="step-file">36_azure_saml.png</span></div>
+ <h3>Review user contact information</h3><p>Shows the contact-properties editor containing address and communication fields.</p>
+ <a href="/images/azure-saml/36_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 36_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/36_azure_saml.png" loading="lazy" decoding="async" alt="Review user contact information screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/36_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-37">
+ <div class="step-top"><span class="step-no">Step 37</span><span class="step-file">37_azure_saml.png</span></div>
+ <h3>Inspect user identity properties</h3><p>Explains the Identity section, User Principal Name and Object ID fields.</p>
+ <a href="/images/azure-saml/37_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 37_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/37_azure_saml.png" loading="lazy" decoding="async" alt="Inspect user identity properties screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/37_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-38">
+ <div class="step-top"><span class="step-no">Step 38</span><span class="step-file">38_azure_saml.png</span></div>
+ <h3>Review populated contact properties</h3><p>Illustrates populated address, phone and email profile attributes.</p>
+ <a href="/images/azure-saml/38_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 38_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/38_azure_saml.png" loading="lazy" decoding="async" alt="Review populated contact properties screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/38_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-39">
+ <div class="step-top"><span class="step-no">Step 39</span><span class="step-file">39_azure_saml.png</span></div>
+ <h3>Review finalized user properties</h3><p>Shows identity and contact data that can be used as claim sources.</p>
+ <a href="/images/azure-saml/39_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 39_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/39_azure_saml.png" loading="lazy" decoding="async" alt="Review finalized user properties screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/39_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+</div></section>
+<section class="guide-section container" id="phase-04"><div class="section-kicker">PHASE 04 · SCREENSHOTS 40–55</div><h2>Microsoft Graph, Application Roles and Assignments</h2><p class="section-lead">Review Graph permissions, app roles and enterprise application assignments.</p><div class="steps">
+<article class="step-card" id="azure-40">
+ <div class="step-top"><span class="step-no">Step 40</span><span class="step-file">40_azure_saml.png</span></div>
+ <h3>Open Microsoft Graph Explorer</h3><p>Introduces Graph Explorer as a tool for calling Microsoft Graph APIs.</p>
+ <a href="/images/azure-saml/40_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 40_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/40_azure_saml.png" loading="lazy" decoding="async" alt="Open Microsoft Graph Explorer screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/40_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-41">
+ <div class="step-top"><span class="step-no">Step 41</span><span class="step-file">41_azure_saml.png</span></div>
+ <h3>Inspect Graph API permissions</h3><p>Shows a PATCH request targeting a user and the associated delegated permissions.</p>
+ <a href="/images/azure-saml/41_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 41_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/41_azure_saml.png" loading="lazy" decoding="async" alt="Inspect Graph API permissions screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/41_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-42">
+ <div class="step-top"><span class="step-no">Step 42</span><span class="step-file">42_azure_saml.png</span></div>
+ <h3>Review write permission consent</h3><p>Highlights permissions required to modify a user through Microsoft Graph.</p>
+ <a href="/images/azure-saml/42_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 42_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/42_azure_saml.png" loading="lazy" decoding="async" alt="Review write permission consent screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/42_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-43">
+ <div class="step-top"><span class="step-no">Step 43</span><span class="step-file">43_azure_saml.png</span></div>
+ <h3>Confirm claims before roles mapping</h3><p>Displays the SAML and JWT claims configured for the enterprise application.</p>
+ <a href="/images/azure-saml/43_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 43_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/43_azure_saml.png" loading="lazy" decoding="async" alt="Confirm claims before roles mapping screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/43_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-44">
+ <div class="step-top"><span class="step-no">Step 44</span><span class="step-file">44_azure_saml.png</span></div>
+ <h3>Review app registrations</h3><p>Lists registered applications and the identifiers assigned to each.</p>
+ <a href="/images/azure-saml/44_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 44_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/44_azure_saml.png" loading="lazy" decoding="async" alt="Review app registrations screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/44_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-45">
+ <div class="step-top"><span class="step-no">Step 45</span><span class="step-file">45_azure_saml.png</span></div>
+ <h3>Inspect application registration</h3><p>Shows application, object and tenant identifiers and application settings.</p>
+ <a href="/images/azure-saml/45_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 45_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/45_azure_saml.png" loading="lazy" decoding="async" alt="Inspect application registration screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/45_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-46">
+ <div class="step-top"><span class="step-no">Step 46</span><span class="step-file">46_azure_saml.png</span></div>
+ <h3>Review application roles</h3><p>Displays the initial app-role definitions exposed by the registration.</p>
+ <a href="/images/azure-saml/46_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 46_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/46_azure_saml.png" loading="lazy" decoding="async" alt="Review application roles screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/46_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-47">
+ <div class="step-top"><span class="step-no">Step 47</span><span class="step-file">47_azure_saml.png</span></div>
+ <h3>Define enterprise role values</h3><p>Demonstrates additional order-processing and business-group roles.</p>
+ <a href="/images/azure-saml/47_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 47_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/47_azure_saml.png" loading="lazy" decoding="async" alt="Define enterprise role values screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/47_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-48">
+ <div class="step-top"><span class="step-no">Step 48</span><span class="step-file">48_azure_saml.png</span></div>
+ <h3>Include assigned roles in SAML claims</h3><p>Maps a roles claim to user.assignedroles.</p>
+ <a href="/images/azure-saml/48_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 48_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/48_azure_saml.png" loading="lazy" decoding="async" alt="Include assigned roles in SAML claims screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/48_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-49">
+ <div class="step-top"><span class="step-no">Step 49</span><span class="step-file">49_azure_saml.png</span></div>
+ <h3>Inspect enterprise application summary</h3><p>Shows the app&#x27;s overview and the path to users, groups and SSO.</p>
+ <a href="/images/azure-saml/49_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 49_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/49_azure_saml.png" loading="lazy" decoding="async" alt="Inspect enterprise application summary screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/49_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-50">
+ <div class="step-top"><span class="step-no">Step 50</span><span class="step-file">50_azure_saml.png</span></div>
+ <h3>Select an enterprise application user</h3><p>Chooses an Entra user to assign to the Keycloak enterprise application.</p>
+ <a href="/images/azure-saml/50_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 50_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/50_azure_saml.png" loading="lazy" decoding="async" alt="Select an enterprise application user screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/50_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-51">
+ <div class="step-top"><span class="step-no">Step 51</span><span class="step-file">51_azure_saml.png</span></div>
+ <h3>Assign an application role</h3><p>Selects an app role for a user under Users and groups.</p>
+ <a href="/images/azure-saml/51_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 51_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/51_azure_saml.png" loading="lazy" decoding="async" alt="Assign an application role screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/51_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-52">
+ <div class="step-top"><span class="step-no">Step 52</span><span class="step-file">52_azure_saml.png</span></div>
+ <h3>Confirm user-role assignments</h3><p>Lists the application roles assigned to the selected user.</p>
+ <a href="/images/azure-saml/52_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 52_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/52_azure_saml.png" loading="lazy" decoding="async" alt="Confirm user-role assignments screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/52_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-53">
+ <div class="step-top"><span class="step-no">Step 53</span><span class="step-file">53_azure_saml.png</span></div>
+ <h3>Assign order-approver role</h3><p>Illustrates assigning an additional enterprise application role.</p>
+ <a href="/images/azure-saml/53_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 53_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/53_azure_saml.png" loading="lazy" decoding="async" alt="Assign order-approver role screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/53_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-54">
+ <div class="step-top"><span class="step-no">Step 54</span><span class="step-file">54_azure_saml.png</span></div>
+ <h3>Review successful user assignments</h3><p>Shows the assigned account and its role entries after a successful assignment.</p>
+ <a href="/images/azure-saml/54_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 54_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/54_azure_saml.png" loading="lazy" decoding="async" alt="Review successful user assignments screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/54_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-55">
+ <div class="step-top"><span class="step-no">Step 55</span><span class="step-file">55_azure_saml.png</span></div>
+ <h3>Verify role assignments</h3><p>Checks the role-assignment table after provisioning the test user.</p>
+ <a href="/images/azure-saml/55_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 55_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/55_azure_saml.png" loading="lazy" decoding="async" alt="Verify role assignments screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/55_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+</div></section>
+<section class="guide-section container" id="phase-05"><div class="section-kicker">PHASE 05 · SCREENSHOTS 56–62</div><h2>Keycloak: Broker Configuration and Attribute Import</h2><p class="section-lead">Create the Keycloak SAML broker and map incoming claims to local attributes.</p><div class="steps">
+<article class="step-card" id="azure-56">
+ <div class="step-top"><span class="step-no">Step 56</span><span class="step-file">56_azure_saml.png</span></div>
+ <h3>Inspect the Keycloak realm</h3><p>Opens Keycloak realm settings and identifies the realm used for brokering.</p>
+ <a href="/images/azure-saml/56_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 56_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/56_azure_saml.png" loading="lazy" decoding="async" alt="Inspect the Keycloak realm screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/56_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-57">
+ <div class="step-top"><span class="step-no">Step 57</span><span class="step-file">57_azure_saml.png</span></div>
+ <h3>Choose a SAML identity provider</h3><p>Shows Keycloak&#x27;s supported IdP types and the SAML v2.0 option.</p>
+ <a href="/images/azure-saml/57_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 57_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/57_azure_saml.png" loading="lazy" decoding="async" alt="Choose a SAML identity provider screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/57_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-58">
+ <div class="step-top"><span class="step-no">Step 58</span><span class="step-file">58_azure_saml.png</span></div>
+ <h3>Create Keycloak&#x27;s SAML broker</h3><p>Introduces the SAML provider alias, display name, SP identifiers and IdP metadata descriptor.</p>
+ <a href="/images/azure-saml/58_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 58_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/58_azure_saml.png" loading="lazy" decoding="async" alt="Create Keycloak&#x27;s SAML broker screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/58_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-59">
+ <div class="step-top"><span class="step-no">Step 59</span><span class="step-file">59_azure_saml.png</span></div>
+ <h3>Review imported federation metadata</h3><p>Shows how IdP Entity ID and single sign-on/logout URLs are populated from federation metadata.</p>
+ <a href="/images/azure-saml/59_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 59_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/59_azure_saml.png" loading="lazy" decoding="async" alt="Review imported federation metadata screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/59_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-60">
+ <div class="step-top"><span class="step-no">Step 60</span><span class="step-file">60_azure_saml.png</span></div>
+ <h3>Create an identity-provider mapper</h3><p>Maps an incoming SAML first-name attribute into a Keycloak user attribute.</p>
+ <a href="/images/azure-saml/60_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 60_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/60_azure_saml.png" loading="lazy" decoding="async" alt="Create an identity-provider mapper screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/60_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-61">
+ <div class="step-top"><span class="step-no">Step 61</span><span class="step-file">61_azure_saml.png</span></div>
+ <h3>Map the telephone attribute</h3><p>Creates an Attribute Importer mapper for an incoming phoneNumber claim.</p>
+ <a href="/images/azure-saml/61_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 61_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/61_azure_saml.png" loading="lazy" decoding="async" alt="Map the telephone attribute screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/61_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="azure-62">
+ <div class="step-top"><span class="step-no">Step 62</span><span class="step-file">62_azure_saml.png</span></div>
+ <h3>Review configured broker mappers</h3><p>Lists the resulting SAML attribute importers for name, location, roles and contact fields.</p>
+ <a href="/images/azure-saml/62_azure_saml.png" target="_blank" rel="noopener" aria-label="Open full-size 62_azure_saml.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/62_azure_saml.png" loading="lazy" decoding="async" alt="Review configured broker mappers screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/62_azure_saml.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+</div></section>
+<section class="guide-section container" id="phase-06"><div class="section-kicker">PHASE 06 · KEYCLOAK IDP 1–6</div><h2>Keycloak SAML Identity Provider — Detailed Settings</h2><p class="section-lead">Inspect another set of Keycloak SAML broker screens covering protocol controls, federation metadata, signature validation and advanced options.</p><div class="steps">
+<article class="step-card" id="idp-1">
+ <div class="step-top"><span class="step-no">Keycloak 1</span><span class="step-file">keycloak-idp-1.png</span></div>
+ <h3>Open Keycloak SAML IdP settings</h3><p>Reviews the SAML identity provider configuration in a Keycloak broker realm.</p>
+ <a href="/images/azure-saml/keycloak-idp-1.png" target="_blank" rel="noopener" aria-label="Open full-size keycloak-idp-1.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/keycloak-idp-1.png" loading="lazy" decoding="async" alt="Open Keycloak SAML IdP settings screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/keycloak-idp-1.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="idp-2">
+ <div class="step-top"><span class="step-no">Keycloak 2</span><span class="step-file">keycloak-idp-2.png</span></div>
+ <h3>Review SAML identity-provider URLs</h3><p>Examines the IdP Entity ID and sign-on/logout endpoint configuration.</p>
+ <a href="/images/azure-saml/keycloak-idp-2.png" target="_blank" rel="noopener" aria-label="Open full-size keycloak-idp-2.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/keycloak-idp-2.png" loading="lazy" decoding="async" alt="Review SAML identity-provider URLs screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/keycloak-idp-2.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="idp-3">
+ <div class="step-top"><span class="step-no">Keycloak 3</span><span class="step-file">keycloak-idp-3.png</span></div>
+ <h3>Configure SAML protocol switches</h3><p>Reviews NameID, POST binding and signature-related toggles.</p>
+ <a href="/images/azure-saml/keycloak-idp-3.png" target="_blank" rel="noopener" aria-label="Open full-size keycloak-idp-3.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/keycloak-idp-3.png" loading="lazy" decoding="async" alt="Configure SAML protocol switches screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/keycloak-idp-3.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="idp-4">
+ <div class="step-top"><span class="step-no">Keycloak 4</span><span class="step-file">keycloak-idp-4.png</span></div>
+ <h3>Review signing and certificate settings</h3><p>Shows signature validation, federation metadata descriptor and X.509 certificate settings.</p>
+ <a href="/images/azure-saml/keycloak-idp-4.png" target="_blank" rel="noopener" aria-label="Open full-size keycloak-idp-4.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/keycloak-idp-4.png" loading="lazy" decoding="async" alt="Review signing and certificate settings screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/keycloak-idp-4.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="idp-5">
+ <div class="step-top"><span class="step-no">Keycloak 5</span><span class="step-file">keycloak-idp-5.png</span></div>
+ <h3>Configure authentication context constraints</h3><p>Reviews AuthnContext options and comparison rules.</p>
+ <a href="/images/azure-saml/keycloak-idp-5.png" target="_blank" rel="noopener" aria-label="Open full-size keycloak-idp-5.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/keycloak-idp-5.png" loading="lazy" decoding="async" alt="Configure authentication context constraints screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/keycloak-idp-5.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+<article class="step-card" id="idp-6">
+ <div class="step-top"><span class="step-no">Keycloak 6</span><span class="step-file">keycloak-idp-6.png</span></div>
+ <h3>Review advanced identity-broker options</h3><p>Examines token storage, first login flow, sync mode and account-linking settings.</p>
+ <a href="/images/azure-saml/keycloak-idp-6.png" target="_blank" rel="noopener" aria-label="Open full-size keycloak-idp-6.png">
+ <img class="step-image img-fluid" src="/images/azure-saml/keycloak-idp-6.png" loading="lazy" decoding="async" alt="Review advanced identity-broker options screenshot"/>
+ </a>
+ <div class="image-footer"><span><i class="bi bi-zoom-in"></i> Click image to view original resolution</span><a href="/images/azure-saml/keycloak-idp-6.png" target="_blank" rel="noopener">Open image <i class="bi bi-box-arrow-up-right"></i></a></div></article>
+</div></section>
+<footer class="container"><p class="mb-1 fw-bold">SAML 2.0 identity federation — reference walkthrough</p>
+<p>Microsoft Entra ID acts as the external SAML identity provider; Keycloak acts as the identity broker and consumes the assertion.</p>
+<a href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;" class="text-info">Return to top <i class="bi bi-arrow-up"></i></a></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body></html>

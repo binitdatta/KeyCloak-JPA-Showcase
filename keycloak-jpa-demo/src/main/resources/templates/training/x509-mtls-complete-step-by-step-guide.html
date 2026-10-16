@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X.509 mTLS — Complete Keycloak & Spring Boot Training Guide</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" th:href="@{/css/bright-blue.css}">
+<style>
+:root{--ink:#10254c;--muted:#50637e;--line:#dce9fa;--blue:#1761da;--navy:#071b3a}
+html{scroll-behavior:smooth}body{background:#f3f8ff;color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.hero-area{background:linear-gradient(116deg,#071b3a,#113b91 69%,#2274eb);color:white;padding:4.8rem 0 3.6rem}
+.hero-area h1{font-weight:800;letter-spacing:-.045em;font-size:clamp(2.2rem,4.3vw,4.3rem)}
+.hero-area p{color:#dcecff;font-size:1.08rem;line-height:1.75;max-width:760px}
+.hero-kicker{color:#76dfff;font-weight:800;letter-spacing:.16em;font-size:.8rem}
+.hero-stat{border:1px solid #709dd7;background:#ffffff16;border-radius:1.1rem;padding:1.2rem;margin-bottom:.8rem;color:white}
+.guide-bar{background:white;position:sticky;top:0;z-index:99;border-bottom:1px solid var(--line);box-shadow:0 5px 15px #0616380c}
+.guide-bar .nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
+.guide-bar .nav-link{white-space:nowrap;color:#284871;font-weight:650;font-size:.83rem;padding:1rem .8rem}
+.guide-bar .nav-link:hover{color:#1261d9;background:#eef5ff}
+.learning-section{padding:4rem 0;scroll-margin-top:72px;border-bottom:1px solid #dce7f5}
+.learning-section:nth-of-type(2n){background:#eaf3ff}
+.section-head{margin-bottom:1.5rem}.section-head h2{font-size:clamp(1.7rem,3.1vw,2.65rem);font-weight:800;letter-spacing:-.035em;margin-top:.75rem}
+.section-desc{color:var(--muted);line-height:1.78;max-width:1000px;font-size:1.04rem}
+.kicker{color:#1a67c5;text-transform:uppercase;letter-spacing:.13em;font-weight:800;font-size:.72rem;margin-left:.75rem}
+.step-pill{color:white;background:#1265db;font-weight:800;font-size:.7rem;border-radius:100px;padding:.5rem .7rem}
+.info-card{background:white;border:1px solid var(--line);border-radius:17px;padding:1.35rem;height:100%;box-shadow:0 12px 22px #09255c0a}
+.info-card h3{font-size:1.15rem;font-weight:800;color:#103c86;margin-bottom:1rem}.info-card p{color:#4a5f7b;line-height:1.7}
+.info-card p:last-child{margin-bottom:0}.table-wrap{margin:1.4rem 0;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 12px 25px #09255c0b}
+.table thead th{background:#0d316d;color:white;font-weight:750;border:none;padding:1rem}.table tbody td{color:#294161;padding:1rem;line-height:1.6;border-color:#e1ebf5}.table tbody tr:nth-child(even){background:#f6faff}
+.note{border-left:4px solid #1e92df;border-radius:0 12px 12px 0;padding:1.05rem 1.3rem;background:#e0f2ff;color:#204467;line-height:1.75;margin:1.4rem 0}
+.code-head{margin-top:1.25rem;background:#142c55;color:#c4e6ff;padding:.7rem 1rem;display:flex;align-items:center;justify-content:space-between;border-radius:12px 12px 0 0;font-size:.78rem;font-weight:750;letter-spacing:.08em}
+.code{background:#071b39;color:#e7f1ff;border:1px solid #1c406b;border-top:none;border-radius:0 0 12px 12px;padding:1.2rem 1.35rem;overflow-x:auto;white-space:pre;font: .83rem/1.68 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-height:660px}
+.copy-btn{border:1px solid #739ccf;background:#ffffff14;color:white;border-radius:7px;padding:.3rem .6rem;font-size:.75rem}.copy-btn:hover{background:#ffffff2d}
+.guide-accordion .accordion-item{border:1px solid var(--line);margin-bottom:.55rem;border-radius:12px!important;overflow:hidden}.guide-accordion .accordion-button{font-weight:750;color:#163b77}.guide-accordion .accordion-button:not(.collapsed){background:#dbeeff;color:#123d83}.guide-accordion .accordion-body{line-height:1.7;color:#38516e}
+.tiny-num{background:#1c68db;color:white;border-radius:50%;width:29px;height:29px;display:inline-flex;justify-content:center;align-items:center;margin-right:1rem;font-size:.8rem;flex-shrink:0}
+.flow-line{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}.flow-line span{padding:.7rem;border-radius:.6rem;background:#e8f3ff;font-weight:750;color:#16488b}.flow-line i{color:#1e88cc}.small-muted{font-size:.85rem;color:#647794;margin-top:1rem}.source-title{font-size:1.28rem;margin-top:2.3rem;font-weight:800}
+.timeline{margin:1.5rem 0;position:relative}.timeline-item{display:flex;gap:1rem;align-items:flex-start;position:relative;padding-bottom:1rem}.timeline-item:before{content:"";position:absolute;top:35px;left:16px;bottom:-2px;border-left:2px solid #bad8ff}.timeline-item:last-child:before{display:none}.timeline-item>span{width:34px;height:34px;background:#216add;color:white;border-radius:50%;font-weight:800;display:grid;place-items:center;flex:0 0 34px;z-index:1}.timeline-item>div{background:white;border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;flex:1}.timeline-item strong{color:#103a7e}.timeline-item p{color:#57708e;margin:.3rem 0 0;line-height:1.65}
+.footer{background:#071b39;color:#b8d4ff;padding:2rem 0}code:not(pre code){color:#0758a2;background:#e4f0ff;border-radius:4px;padding:.12rem .32rem;overflow-wrap:anywhere}
+@media(max-width:767px){.hero-area{padding:3rem 0}.learning-section{padding:2.7rem 0}.code{font-size:.74rem}.table tbody td,.table thead th{padding:.7rem}}
+</style></head>
+<body>
+<!-- Preserve the existing application's shared Thymeleaf navbar exactly -->
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<header class="hero-area"><div class="container"><div class="row g-4 align-items-center"><div class="col-lg-8"><div class="hero-kicker mb-3">KEYCLOAK 26 · X.509 · JAVA · OAUTH 2.0</div><h1>Certificate Authentication<br><span style="color:#75e5ff">from First Principles to Java Code</span></h1><p class="mt-4">An end-to-end, dependency-ordered learning experience: certificates and keys → OpenSSL commands → Keycloak client → server startup → Spring Boot JAR → SSLContext → token exchange → MVC controller.</p><a href="#concepts" class="btn btn-light btn-lg fw-bold mt-2">Begin with concepts <i class="bi bi-arrow-down ms-2"></i></a></div><div class="col-lg-4"><div class="hero-stat"><i class="bi bi-shield-lock me-2"></i><b>Identity proof:</b> TLS client certificate</div><div class="hero-stat"><i class="bi bi-key me-2"></i><b>OAuth grant:</b> client_credentials</div><div class="hero-stat"><i class="bi bi-hdd-network me-2"></i><b>Keycloak:</b> https://localhost:8443</div><div class="hero-stat"><i class="bi bi-window me-2"></i><b>Spring Boot:</b> localhost:8091</div></div></div></div></header>
+<div class="guide-bar"><div class="container"><nav class="nav" aria-label="Guide sections"><a class="nav-link" href="#concepts">1 Concepts</a><a class="nav-link" href="#certificate-generation">2 Certificates</a><a class="nav-link" href="#keycloak-client">3 Client Setup</a><a class="nav-link" href="#keycloak-start">4 Keycloak Start</a><a class="nav-link" href="#java-launch">5 Java JAR</a><a class="nav-link" href="#configuration">6 YAML</a><a class="nav-link" href="#factory">7 SSL Factory</a><a class="nav-link" href="#service">8 Service</a><a class="nav-link" href="#controller">9 Controller</a><a class="nav-link" href="#execution">10 Execution</a><a class="nav-link" href="#checks">11 Troubleshooting</a></nav></div></div>
+<main><section id="concepts" class="learning-section"><div class="container"><div class="section-head"><span class="step-pill">STEP 01</span><span class="kicker">Foundations</span><h2>Understand the cryptography before running commands</h2><p class="section-desc">Start at the lowest dependency: a private key, public key, signed X.509 certificate, a trust anchor, and the difference between server TLS and mutual TLS.</p></div><div class="row g-3"><div class="col-lg-4"><article class="info-card"><h3><i class="bi bi-key me-2"></i>Asymmetric key pair</h3><p><b>Private key:</b> secret material retained by its owner; proves possession in a TLS handshake.</p><p><b>Public key:</b> part of a certificate; enables peers to verify that proof.</p></article></div><div class="col-lg-4"><article class="info-card"><h3><i class="bi bi-patch-check me-2"></i>Certificate authority (CA)</h3><p>The lab CA issues and signs the Keycloak server and Spring Boot client certificates. Truststores contain a trusted CA certificate, not the CA private key.</p></article></div><div class="col-lg-4"><article class="info-card"><h3><i class="bi bi-file-earmark-lock me-2"></i>X.509 certificate</h3><p>Contains a subject DN, issuer, serial number, public key, validity dates, and signature. The Spring Boot client has subject <code>CN=x509-cert-client</code>.</p></article></div></div><div class="row g-3 mt-1"><div class="col-md-6"><article class="info-card"><h3><i class="bi bi-person-vcard me-2"></i>Keystore (identity)</h3><p><code>x509-cert-client-keystore.p12</code> packages the Spring Boot client certificate and its private key. A Java <code>KeyManager</code> uses it to present client identity.</p></article></div><div class="col-md-6"><article class="info-card"><h3><i class="bi bi-shield-lock me-2"></i>Truststore (trust)</h3><p><code>truststore.p12</code> holds the lab CA certificate. A Java <code>TrustManager</code> uses it to verify the Keycloak server; Keycloak uses its configured trust material to validate client certificates.</p></article></div></div><div class="table-responsive table-wrap"><table class="table align-middle mb-0"><thead><tr><th>Question</th><th>Ordinary HTTPS</th><th>Mutual TLS (mTLS)</th></tr></thead><tbody><tr><td>Who shows a certificate?</td><td>Server</td><td>Server and client</td></tr><tr><td>Who validates a certificate?</td><td>Client validates server</td><td>Both parties validate peer certificates</td></tr><tr><td>Is the client private key transmitted?</td><td>No</td><td>No</td></tr><tr><td>Where is application authorization decided?</td><td>After TLS</td><td>After TLS and OAuth client authentication</td></tr></tbody></table></div><div class="note"><strong>Two separate checks:</strong> Keycloak first needs to trust the client certificate cryptographically; its X.509 OAuth client authenticator then matches that certificate to <code>x509-cert-client</code>. A trusted certificate does not automatically have permission to obtain every token.</div></div></section><section id="certificate-generation" class="learning-section"><div class="container"><div class="section-head"><span class="step-pill">STEP 02</span><span class="kicker">OpenSSL + keytool</span><h2>Generate the lab CA, Keycloak identity, and Spring Boot client identity</h2><p class="section-desc">The uploaded original guide contains the following example commands. They assume OpenSSL, Java keytool, and a shell supporting process substitution (such as Bash). Run them from your project’s mtls directory.</p></div><article class="info-card"><h3><i class="bi bi-diagram-3 me-2"></i>Certificate dependency chain</h3><div class="flow-line"><span>Lab CA key + certificate</span><i class="bi bi-arrow-right"></i><span>Keycloak server key + certificate</span><i class="bi bi-arrow-right"></i><span>Spring Boot client key + certificate</span><i class="bi bi-arrow-right"></i><span>PKCS#12 stores</span></div><p class="small-muted mb-0">The commands below reproduce the example documented in your earlier training page; they do not independently prove how the existing on-disk certificates were originally created.</p></article><div class="accordion guide-accordion mt-3" id="certAccordion"><div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cert1" aria-expanded="true"><span class="tiny-num">1</span>Create the local Certificate Authority</button></h3><div id="cert1" class="accordion-collapse collapse show" data-bs-parent="#certAccordion"><div class="accordion-body"><p>The CA private key signs lab certificates. The self-issued CA certificate is the trust anchor.</p><div class="code-head"><span><i class="bi bi-terminal me-2"></i>BASH</span><button type="button" class="copy-btn" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copy</button></div><pre class="code"><code>openssl genrsa -out ca-key.pem 4096
+openssl req -x509 -new -nodes -key ca-key.pem -sha256 -days 3650 \
+  -out ca-cert.pem -subj &quot;/CN=jpa-demo-lab-ca&quot;</code></pre><p class="mb-0"><b>Outputs:</b> <code>ca-key.pem</code> (secret) and <code>ca-cert.pem</code> (shareable trust anchor).</p></div></div></div><div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cert2" aria-expanded="false"><span class="tiny-num">2</span>Generate the Keycloak HTTPS server certificate</button></h3><div id="cert2" class="accordion-collapse collapse" data-bs-parent="#certAccordion"><div class="accordion-body"><p>Create a private key, then a certificate signing request (CSR), then sign it with the lab CA. Subject Alternative Names allow hostname verification for localhost.</p><div class="code-head"><span><i class="bi bi-terminal me-2"></i>BASH</span><button type="button" class="copy-btn" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copy</button></div><pre class="code"><code>openssl genrsa -out kc-server-key.pem 2048
+openssl req -new -key kc-server-key.pem -out kc-server.csr -subj &quot;/CN=localhost&quot;
+openssl x509 -req -in kc-server.csr -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial \
+  -out kc-server-cert.pem -days 825 -sha256 \
+  -extfile &lt;(printf &quot;subjectAltName=DNS:localhost,IP:127.0.0.1&quot;)</code></pre><p class="mb-0"><b>Outputs:</b> <code>kc-server-key.pem</code>, <code>kc-server.csr</code>, and <code>kc-server-cert.pem</code>. Keycloak reads the key and certificate at startup.</p></div></div></div><div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cert3" aria-expanded="false"><span class="tiny-num">3</span>Generate the Spring Boot OAuth client certificate</button></h3><div id="cert3" class="accordion-collapse collapse" data-bs-parent="#certAccordion"><div class="accordion-body"><p>Give the certificate the Subject DN expected by the Keycloak client authenticator.</p><div class="code-head"><span><i class="bi bi-terminal me-2"></i>BASH</span><button type="button" class="copy-btn" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copy</button></div><pre class="code"><code>openssl genrsa -out x509-cert-client-key.pem 2048
+openssl req -new -key x509-cert-client-key.pem -out x509-cert-client.csr -subj &quot;/CN=x509-cert-client&quot;
+openssl x509 -req -in x509-cert-client.csr -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial \
+  -out x509-cert-client-cert.pem -days 825 -sha256</code></pre><p class="mb-0"><b>Outputs:</b> <code>x509-cert-client-key.pem</code> and <code>x509-cert-client-cert.pem</code>. In a production certificate profile, include suitable <code>clientAuth</code> Extended Key Usage and appropriate key usages.</p></div></div></div><div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cert4" aria-expanded="false"><span class="tiny-num">4</span>Package the client key and certificate in PKCS#12</button></h3><div id="cert4" class="accordion-collapse collapse" data-bs-parent="#certAccordion"><div class="accordion-body"><p>The Java KeyManagerFactory loads PKCS#12 to obtain the key material needed for TLS client authentication.</p><div class="code-head"><span><i class="bi bi-terminal me-2"></i>BASH</span><button type="button" class="copy-btn" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copy</button></div><pre class="code"><code>openssl pkcs12 -export \
+  -inkey x509-cert-client-key.pem \
+  -in x509-cert-client-cert.pem \
+  -certfile ca-cert.pem \
+  -name x509-cert-client \
+  -out x509-cert-client-keystore.p12 \
+  -passout pass:changeit</code></pre><p class="mb-0"><b>Output:</b> <code>x509-cert-client-keystore.p12</code> with alias <code>x509-cert-client</code>.</p></div></div></div><div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cert5" aria-expanded="false"><span class="tiny-num">5</span>Create the PKCS#12 CA truststore</button></h3><div id="cert5" class="accordion-collapse collapse" data-bs-parent="#certAccordion"><div class="accordion-body"><p>Import the CA public certificate. Both Spring Boot and Keycloak refer to a truststore at different filesystem locations.</p><div class="code-head"><span><i class="bi bi-terminal me-2"></i>BASH</span><button type="button" class="copy-btn" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copy</button></div><pre class="code"><code>keytool -importcert -alias jpa-demo-lab-ca \
+  -file ca-cert.pem -keystore truststore.p12 \
+  -storetype PKCS12 -storepass changeit -noprompt</code></pre><p class="mb-0"><b>Output:</b> <code>truststore.p12</code>. It contains trusted certificates—not the client or server private key.</p></div></div></div></div><div class="note mt-3"><strong>Practical checks:</strong> <code>openssl x509 -in kc-server-cert.pem -text -noout</code> inspects server SANs; <code>openssl x509 -in x509-cert-client-cert.pem -subject -issuer -noout</code> inspects identity; <code>keytool -list -v -keystore truststore.p12 -storetype PKCS12</code> shows trusted entries. Keep CA and server/client private keys private.</div></div></section><section id="keycloak-client" class="learning-section"><div class="container"><div class="section-head"><span class="step-pill">STEP 03</span><span class="kicker">Identity provider settings</span><h2>Register the X.509 machine client in Keycloak</h2><p class="section-desc">In realm jpa-demo-realm, the client credentials grant depends on a confidential, service-account-enabled OpenID Connect client and an X.509 client authenticator.</p></div><div class="table-responsive table-wrap"><table class="table align-middle mb-0"><thead><tr><th>Keycloak client setting</th><th>Value / action</th><th>Why it matters</th></tr></thead><tbody><tr><td>Client ID</td><td><code>x509-cert-client</code></td><td>Matches the client ID sent in the token request</td></tr><tr><td>Client authentication</td><td>On</td><td>Require the configured client credential</td></tr><tr><td>Service accounts roles</td><td>On</td><td>Allows client credentials grant</td></tr><tr><td>Client authenticator</td><td>X509 Certificate</td><td>Selects certificate-based OAuth client authentication</td></tr><tr><td>Allow regex pattern comparison</td><td>On in your screenshot</td><td>Subject DN is interpreted as a pattern</td></tr><tr><td>Subject DN</td><td><code>CN=x509-cert-client</code></td><td>Identifies the certificate subject expected by Keycloak</td></tr></tbody></table></div><div class="note"><strong>Regex consideration:</strong> When regex mode is enabled, <code>CN=x509-cert-client</code> is a pattern, not a strict whole-string comparison. A full-string expression such as <code>^CN=x509-cert-client$</code> is more restrictive if it matches the exact DN format Keycloak receives. The screenshot shows the authenticator settings, not the Service Accounts toggle; verify that toggle in your client Settings.</div></div></section><section id="keycloak-start" class="learning-section"><div class="container"><div class="section-head"><span class="step-pill">STEP 04</span><span class="kicker">Server process</span><h2>Start Keycloak 26 with an HTTPS listener capable of mTLS</h2><p class="section-desc">Start this command from your Keycloak installation directory, where bin/kc.sh exists. The CIBA option is retained because it is part of your existing combined lab.</p></div><div class="code-head"><span><i class="bi bi-terminal me-2"></i>BASH</span><button type="button" class="copy-btn" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copy</button></div><pre class="code"><code>bin/kc.sh start-dev \
+  --spi-ciba-auth-channel-ciba-http-auth-channel-http-authentication-channel-uri=http://localhost:8092/ciba/notify \
+  --https-certificate-file=/Users/binitdatta/Development/KeyCloak-JPA-Showcase/keycloak-jpa-demo/mtls/kc-server-cert.pem \
+  --https-certificate-key-file=/Users/binitdatta/Development/KeyCloak-JPA-Showcase/keycloak-jpa-demo/mtls/kc-server-key.pem \
+  --https-client-auth=request \
+  --https-trust-store-file=/Users/binitdatta/Development/KeyCloak-JPA-Showcase/keycloak-jpa-demo/mtls/truststore.p12 \
+  --https-trust-store-password=changeit</code></pre><div class="table-responsive table-wrap"><table class="table align-middle mb-0"><thead><tr><th>Argument</th><th>Purpose</th><th>Effect in this lab</th></tr></thead><tbody><tr><td><code>bin/kc.sh start-dev</code></td><td>Development-mode Keycloak startup</td><td>Local development; not a production deployment</td></tr><tr><td><code>--spi-ciba-auth-channel-ciba-http-auth-channel-http-authentication-channel-uri=...</code></td><td>HTTP authentication-channel endpoint for CIBA</td><td>Points to <code>http://localhost:8092/ciba/notify</code>; unrelated to this X.509 client credentials flow</td></tr><tr><td><code>--https-certificate-file=...</code></td><td>Keycloak HTTPS public certificate/chain</td><td>Keycloak presents this certificate to Spring Boot</td></tr><tr><td><code>--https-certificate-key-file=...</code></td><td>Keycloak HTTPS server private key</td><td>Keycloak proves possession of its server identity</td></tr><tr><td><code>--https-client-auth=request</code></td><td>Request, but do not globally require, client certificates</td><td>Browser/other HTTPS clients may connect without certs; X.509 OAuth client still needs one</td></tr><tr><td><code>--https-trust-store-file=...</code></td><td>Trust material for TLS peer certificates</td><td>Enables Keycloak to validate the Spring Boot client certificate chain</td></tr><tr><td><code>--https-trust-store-password=changeit</code></td><td>Password used to open the truststore</td><td>Local demonstration password; not an OAuth client secret</td></tr></tbody></table></div><div class="note"><strong>Why <code>request</code> instead of <code>required</code>?</strong> With <code>request</code>, client certificates are optional at the TLS listener level. Keycloak still enforces X.509 authentication for <code>x509-cert-client</code> at the OAuth token endpoint. Setting <code>required</code> would impose a certificate requirement on every connection to that HTTPS listener.</div></div></section><section id="java-launch" class="learning-section"><div class="container"><div class="section-head"><span class="step-pill">STEP 05</span><span class="kicker">JVM process</span><h2>Launch your Spring Boot executable JAR with TLS trust settings</h2><p class="section-desc">Run this from the project root after building the JAR. Java system properties must precede <code>-jar</code> so the JVM sees them.</p></div><div class="code-head"><span><i class="bi bi-terminal me-2"></i>BASH</span><button type="button" class="copy-btn" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copy</button></div><pre class="code"><code>java -Djavax.net.ssl.trustStore=mtls/truststore.p12 \
+     -Djavax.net.ssl.trustStorePassword=changeit \
+     -Djavax.net.ssl.trustStoreType=PKCS12 \
+     -jar target/keycloak-jpa-demo-1.0.0.jar</code></pre><div class="table-responsive table-wrap"><table class="table align-middle mb-0"><thead><tr><th>Part</th><th>What it does</th><th>Where it is used</th></tr></thead><tbody><tr><td><code>java</code></td><td>Starts the Java Virtual Machine</td><td>Runs the Spring Boot application process</td></tr><tr><td><code>-Djavax.net.ssl.trustStore=mtls/truststore.p12</code></td><td>Sets the JVM default truststore path</td><td>Used by Java TLS clients that rely on the default JSSE SSL configuration</td></tr><tr><td><code>-Djavax.net.ssl.trustStorePassword=changeit</code></td><td>Allows Java to load the JVM default truststore</td><td>Not the private-key password nor a client secret</td></tr><tr><td><code>-Djavax.net.ssl.trustStoreType=PKCS12</code></td><td>Selects PKCS#12 store format</td><td>Makes truststore type explicit</td></tr><tr><td><code>-jar target/keycloak-jpa-demo-1.0.0.jar</code></td><td>Executes the packaged Spring Boot application</td><td>Expected to serve your app at <code>http://localhost:8091</code></td></tr></tbody></table></div><div class="note"><strong>Important distinction:</strong> The <code>-Djavax.net.ssl.*</code> properties configure the <em>JVM default</em> TLS trust settings, which are relevant to Spring Security issuer discovery, OAuth login, and other default HTTPS clients. Your X.509 token call does <em>not</em> simply inherit this truststore: <code>X509MtlsContextFactory</code> explicitly loads the truststore and client keystore from <code>x509-demo.*</code> and builds its own <code>SSLContext</code>. The launch arguments do not themselves configure a client private key.</div></div></section><section id="configuration" class="learning-section"><div class="container"><div class="section-head"><span class="step-pill">STEP 06</span><span class="kicker">Dependency injection</span><h2>Connect application.yml to the Java services</h2><p class="section-desc">The Spring Boot application is on port 8091. The certificate-based token and UserInfo calls target Keycloak on HTTPS port 8443.</p></div><div class="code-head"><span><i class="bi bi-terminal me-2"></i>YAML</span><button type="button" class="copy-btn" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copy</button></div><pre class="code"><code>x509-demo:
+  client-id: x509-cert-client
+  keystore-path: mtls/x509-cert-client-keystore.p12
+  keystore-password: changeit
+  key-alias: x509-cert-client
+  truststore-path: mtls/truststore.p12
+  truststore-password: changeit
+  token-endpoint: https://localhost:8443/realms/jpa-demo-realm/protocol/openid-connect/token
+  userinfo-endpoint: https://localhost:8443/realms/jpa-demo-realm/protocol/openid-connect/userinfo</code></pre><div class="row g-3"><div class="col-lg-6"><article class="info-card"><h3><i class="bi bi-people me-2"></i>Why two different client IDs?</h3><p>Your normal Spring Security browser login uses <code>jpa-demo-web</code>. The mTLS proof of concept specifically authenticates <code>x509-cert-client</code>. These are different OAuth clients with different credentials and purposes.</p></article></div><div class="col-lg-6"><article class="info-card"><h3><i class="bi bi-hdd-network me-2"></i>Why :8443, not :8080?</h3><p>The token exchange requires the HTTPS listener that requests TLS client certificates. Using consistent HTTPS issuer and endpoint URLs also avoids token issuer mismatches.</p></article></div></div></div></section><section id="factory" class="learning-section"><div class="container"><div class="section-head"><span class="step-pill">STEP 07</span><span class="kicker">Java class 1 of 3</span><h2>X509MtlsContextFactory — build the two-way TLS context</h2><p class="section-desc">This Spring component is responsible for loading certificate stores and constructing the SSLContext consumed by the outbound HTTP client.</p></div><div class="table-responsive table-wrap"><table class="table align-middle mb-0"><thead><tr><th>Class operation</th><th>Java API</th><th>Explanation</th></tr></thead><tbody><tr><td>Inject keystore/truststore configuration</td><td><code>@Value("${x509-demo.*}")</code></td><td>Reads paths, passwords, and display alias from YAML</td></tr><tr><td>Open client identity store</td><td><code>KeyStore.getInstance("PKCS12")</code></td><td>Loads client certificate plus private key</td></tr><tr><td>Initialize client key managers</td><td><code>KeyManagerFactory.init(...)</code></td><td>Makes client identity available during TLS</td></tr><tr><td>Open CA truststore</td><td><code>trustStore.load(...)</code></td><td>Loads trusted CA certificates</td></tr><tr><td>Initialize trust managers</td><td><code>TrustManagerFactory.init(...)</code></td><td>Enables Keycloak certificate validation</td></tr><tr><td>Build TLS context</td><td><code>SSLContext.init(keyManagers, trustManagers, null)</code></td><td>Combines both sides of mTLS</td></tr><tr><td>Read display certificate</td><td><code>keyStore.getCertificate(keyAlias)</code></td><td>Obtains certificate metadata for the educational UI</td></tr></tbody></table></div><div class="note"><strong>Subtle Java point:</strong> The class uses <code>keyAlias</code> only to read the display certificate. It does not force the <code>KeyManagerFactory</code> to use that alias for the handshake. With multiple eligible private keys, alias selection needs additional control.</div><h3 class="source-title">Uploaded source: X509MtlsContextFactory.java</h3><div class="code-head"><span><i class="bi bi-terminal me-2"></i>JAVA</span><button type="button" class="copy-btn" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copy</button></div><pre class="code"><code>package com.rollingstone.demo.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
+
+/**
+ * Builds the SSLContext used for the one outbound call that actually needs
+ * mutual TLS: the token request. The keystore holds x509-cert-client&#x27;s
+ * private key + certificate (presented to Keycloak during the TLS
+ * handshake — this certificate IS the credential, there&#x27;s no secret or
+ * signed assertion involved). The truststore holds the lab CA, so this JVM
+ * trusts Keycloak&#x27;s self-signed HTTPS server certificate.
+ */
+@Component
+public class X509MtlsContextFactory {
+
+    private final String keystorePath;
+    private final String keystorePassword;
+    private final String truststorePath;
+    private final String truststorePassword;
+    private final String keyAlias;
+
+    public X509MtlsContextFactory(@Value(&quot;${x509-demo.keystore-path}&quot;) String keystorePath,
+                                  @Value(&quot;${x509-demo.keystore-password}&quot;) String keystorePassword,
+                                  @Value(&quot;${x509-demo.truststore-path}&quot;) String truststorePath,
+                                  @Value(&quot;${x509-demo.truststore-password}&quot;) String truststorePassword,
+                                  @Value(&quot;${x509-demo.key-alias}&quot;) String keyAlias) {
+        this.keystorePath = keystorePath;
+        this.keystorePassword = keystorePassword;
+        this.truststorePath = truststorePath;
+        this.truststorePassword = truststorePassword;
+        this.keyAlias = keyAlias;
+    }
+
+    public SSLContext buildSslContext() throws Exception {
+        KeyStore keyStore = KeyStore.getInstance(&quot;PKCS12&quot;);
+        try (FileInputStream fis = new FileInputStream(keystorePath)) {
+            keyStore.load(fis, keystorePassword.toCharArray());
+        }
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(keyStore, keystorePassword.toCharArray());
+
+        KeyStore trustStore = KeyStore.getInstance(&quot;PKCS12&quot;);
+        try (FileInputStream fis = new FileInputStream(truststorePath)) {
+            trustStore.load(fis, truststorePassword.toCharArray());
+        }
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(trustStore);
+
+        SSLContext sslContext = SSLContext.getInstance(&quot;TLS&quot;);
+        sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+        return sslContext;
+    }
+
+    /** Used by the UI to show which certificate is about to be presented, before the call happens. */
+    public X509Certificate loadClientCertificate() throws Exception {
+        KeyStore keyStore = KeyStore.getInstance(&quot;PKCS12&quot;);
+        try (FileInputStream fis = new FileInputStream(keystorePath)) {
+            keyStore.load(fis, keystorePassword.toCharArray());
+        }
+        return (X509Certificate) keyStore.getCertificate(keyAlias);
+    }
+}</code></pre></div></section><section id="service" class="learning-section"><div class="container"><div class="section-head"><span class="step-pill">STEP 08</span><span class="kicker">Java class 2 of 3</span><h2>X509DemoService — perform certificate-based OAuth authentication</h2><p class="section-desc">The service runs the entire demonstration. The TLS certificate is the OAuth client credential, so the token request sends no client secret and no JWT client assertion.</p></div><div class="row g-3"><div class="col-md-6"><article class="info-card"><h3><i class="bi bi-file-earmark-text me-2"></i>1. Inspect certificate</h3><p>Load the client certificate and capture Subject DN, Issuer DN, serial number, Not Before, and Not After.</p></article></div><div class="col-md-6"><article class="info-card"><h3><i class="bi bi-diagram-2 me-2"></i>2. Build the HTTPS client</h3><p>Create <code>HttpClient</code> with the custom SSLContext and a five-second connection timeout; adapt it into Spring <code>RestClient</code>.</p></article></div><div class="col-md-6"><article class="info-card"><h3><i class="bi bi-key me-2"></i>3. Request the OAuth token</h3><p>POST <code>grant_type=client_credentials</code>, <code>client_id=x509-cert-client</code>, and <code>scope=openid</code> to Keycloak over mTLS.</p></article></div><div class="col-md-6"><article class="info-card"><h3><i class="bi bi-braces me-2"></i>4. Capture and decode JWT</h3><p>Read <code>access_token</code>; parse its claims with Nimbus SignedJWT. Parsing here does not verify signature or issuer.</p></article></div><div class="col-md-6"><article class="info-card"><h3><i class="bi bi-person-badge me-2"></i>5. Call UserInfo</h3><p>GET the UserInfo endpoint with <code>Authorization: Bearer &lt;token&gt;</code>. A client credentials token may not be accepted as a human user token.</p></article></div><div class="col-md-6"><article class="info-card"><h3><i class="bi bi-clipboard-check me-2"></i>6. Return result or failure</h3><p>Populate X509RunResult with data or the failing step; mark success only after all current steps complete.</p></article></div></div><div class="note mt-3"><strong>Improvement for teaching:</strong> Separate “mTLS client authentication + token issued” from the optional UserInfo step. OIDC UserInfo is intended for end-user claims and is not guaranteed to succeed with client-credentials service-account tokens. A better enterprise follow-up is to call a protected Resource Server API.</div><h3 class="source-title">Uploaded source: X509DemoService.java</h3><div class="code-head"><span><i class="bi bi-terminal me-2"></i>JAVA</span><button type="button" class="copy-btn" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copy</button></div><pre class="code"><code>package com.rollingstone.demo.service;
+
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import com.rollingstone.demo.dto.X509RunResult;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
+
+import java.net.http.HttpClient;
+import java.security.cert.X509Certificate;
+import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * Runs the X509 client-authentication flow: load the client certificate
+ * (just to show what&#x27;s about to be presented), open an mTLS connection to
+ * Keycloak&#x27;s token endpoint presenting that certificate during the TLS
+ * handshake itself (no client_secret, no client_assertion — the certificate
+ * IS the proof of identity), decode the resulting access token, then call
+ * userinfo with it.
+ *
+ * Both calls go to the :8443 mTLS listener, not :8080 — the access token&#x27;s
+ * &quot;iss&quot; claim is set to whichever host:port issued it, and Keycloak&#x27;s
+ * userinfo endpoint rejects a token whose issuer doesn&#x27;t match the endpoint
+ * being called. userinfo itself doesn&#x27;t require a client certificate
+ * (https-client-auth=request only asks, never requires), so reusing the
+ * same mTLS-capable RestClient for both calls is simplest and correct.
+ */
+@Service
+public class X509DemoService {
+
+    private final X509MtlsContextFactory mtlsContextFactory;
+    private final String clientId;
+    private final String tokenEndpoint;
+    private final String userinfoEndpoint;
+
+    public X509DemoService(X509MtlsContextFactory mtlsContextFactory,
+                           @Value(&quot;${x509-demo.client-id}&quot;) String clientId,
+                           @Value(&quot;${x509-demo.token-endpoint}&quot;) String tokenEndpoint,
+                           @Value(&quot;${x509-demo.userinfo-endpoint}&quot;) String userinfoEndpoint) {
+        this.mtlsContextFactory = mtlsContextFactory;
+        this.clientId = clientId;
+        this.tokenEndpoint = tokenEndpoint;
+        this.userinfoEndpoint = userinfoEndpoint;
+    }
+
+    public X509RunResult run() {
+        X509RunResult result = new X509RunResult();
+
+        try {
+            X509Certificate cert = mtlsContextFactory.loadClientCertificate();
+            result.setCertSubjectDn(cert.getSubjectX500Principal().getName());
+            result.setCertIssuerDn(cert.getIssuerX500Principal().getName());
+            result.setCertSerialNumber(cert.getSerialNumber().toString(16));
+            result.setCertNotBefore(cert.getNotBefore().toString());
+            result.setCertNotAfter(cert.getNotAfter().toString());
+        } catch (Exception e) {
+            result.setErrorStep(&quot;Load the client certificate&quot;);
+            result.setErrorMessage(e.getMessage());
+            return result;
+        }
+
+        RestClient mtlsRestClient;
+        try {
+            HttpClient httpClient = HttpClient.newBuilder()
+                    .sslContext(mtlsContextFactory.buildSslContext())
+                    .connectTimeout(Duration.ofSeconds(5))
+                    .build();
+            mtlsRestClient = RestClient.builder()
+                    .requestFactory(new JdkClientHttpRequestFactory(httpClient))
+                    .build();
+        } catch (Exception e) {
+            result.setErrorStep(&quot;Build the mTLS-capable HTTP client&quot;);
+            result.setErrorMessage(e.getMessage());
+            return result;
+        }
+
+        String accessToken;
+        try {
+            MultiValueMap&lt;String, String&gt; form = new LinkedMultiValueMap&lt;&gt;();
+            form.add(&quot;grant_type&quot;, &quot;client_credentials&quot;);
+            form.add(&quot;client_id&quot;, clientId);
+            form.add(&quot;scope&quot;, &quot;openid&quot;);
+
+            @SuppressWarnings(&quot;unchecked&quot;)
+            Map&lt;String, Object&gt; tokenResponse = mtlsRestClient.post()
+                    .uri(tokenEndpoint)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(form)
+                    .retrieve()
+                    .body(Map.class);
+
+            accessToken = (String) tokenResponse.get(&quot;access_token&quot;);
+            result.setAccessToken(accessToken);
+            result.setAccessTokenClaims(decodeClaims(accessToken));
+        } catch (RestClientResponseException e) {
+            result.setErrorStep(&quot;Exchange via mTLS at Keycloak&#x27;s token endpoint&quot;);
+            result.setErrorMessage(&quot;HTTP &quot; + e.getStatusCode() + &quot; - &quot; + e.getResponseBodyAsString());
+            return result;
+        } catch (Exception e) {
+            result.setErrorStep(&quot;Exchange via mTLS at Keycloak&#x27;s token endpoint&quot;);
+            result.setErrorMessage(e.getMessage());
+            return result;
+        }
+
+        try {
+            String userinfo = mtlsRestClient.get()
+                    .uri(userinfoEndpoint)
+                    .header(HttpHeaders.AUTHORIZATION, &quot;Bearer &quot; + accessToken)
+                    .retrieve()
+                    .body(String.class);
+            result.setUserinfo(userinfo);
+        } catch (RestClientResponseException e) {
+            result.setErrorStep(&quot;Call userinfo with the access token&quot;);
+            result.setErrorMessage(&quot;HTTP &quot; + e.getStatusCode() + &quot; - &quot; + e.getResponseBodyAsString());
+            return result;
+        } catch (Exception e) {
+            result.setErrorStep(&quot;Call userinfo with the access token&quot;);
+            result.setErrorMessage(e.getMessage());
+            return result;
+        }
+
+        result.setSuccess(true);
+        return result;
+    }
+
+    private Map&lt;String, Object&gt; decodeClaims(String compactJwt) throws java.text.ParseException {
+        SignedJWT jwt = SignedJWT.parse(compactJwt);
+        JWTClaimsSet claims = jwt.getJWTClaimsSet();
+        return new LinkedHashMap&lt;&gt;(claims.getClaims());
+    }
+}</code></pre></div></section><section id="controller" class="learning-section"><div class="container"><div class="section-head"><span class="step-pill">STEP 09</span><span class="kicker">Java class 3 of 3</span><h2>X509UiController — connect the browser to the demonstration</h2><p class="section-desc">The Thymeleaf UI does not itself perform the certificate handshake. Its controller starts the server-side service, attaches the result model, and returns the template.</p></div><div class="table-responsive table-wrap"><table class="table align-middle mb-0"><thead><tr><th>Mapping</th><th>Spring behavior</th><th>Purpose</th></tr></thead><tbody><tr><td><code>GET /training/x509-certificate-demo</code></td><td>Returns <code>training/x509-certificate-demo</code></td><td>Show the main demo page</td></tr><tr><td><code>GET /training/x509-mtls-concepts-java-commands</code></td><td>Returns <code>training/x509-mtls-concepts-java-commands</code></td><td>Show this educational guide</td></tr><tr><td><code>POST /training/x509-certificate-demo/run</code></td><td>Invokes <code>x509DemoService.run()</code></td><td>Initiate server-side mTLS OAuth token exchange</td></tr><tr><td>Model attribute <code>result</code></td><td>Holds <code>X509RunResult</code></td><td>Display certificate, token claims, and diagnostics</td></tr></tbody></table></div><div class="note">The DTO <code>X509RunResult</code> carries success/failure, certificate metadata, the raw access token, decoded claims, and UserInfo content. Avoid showing complete bearer tokens in publicly accessible environments.</div><h3 class="source-title">Uploaded source: X509UiController.java</h3><div class="code-head"><span><i class="bi bi-terminal me-2"></i>JAVA</span><button type="button" class="copy-btn" onclick="copyCode(this)"><i class="bi bi-clipboard"></i> Copy</button></div><pre class="code"><code>package com.rollingstone.demo.controller;
+
+import com.rollingstone.demo.dto.X509RunResult;
+import com.rollingstone.demo.service.X509DemoService;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+
+@Controller
+public class X509UiController {
+
+    private final X509DemoService x509DemoService;
+
+    public X509UiController(X509DemoService x509DemoService) {
+        this.x509DemoService = x509DemoService;
+    }
+
+    @GetMapping(&quot;/training/x509-certificate-demo&quot;)
+    public String show() {
+        return &quot;training/x509-certificate-demo&quot;;
+    }
+
+    @GetMapping(&quot;/training/x509-mtls-concepts-java-commands&quot;)
+    public String explain() {
+        return &quot;training/x509-mtls-concepts-java-commands&quot;;
+    }
+
+
+
+    @PostMapping(&quot;/training/x509-certificate-demo/run&quot;)
+    public String run(Model model) {
+        X509RunResult result = x509DemoService.run();
+        model.addAttribute(&quot;result&quot;, result);
+        return &quot;training/x509-certificate-demo&quot;;
+    }
+}</code></pre></div></section><section id="execution" class="learning-section"><div class="container"><div class="section-head"><span class="step-pill">STEP 10</span><span class="kicker">Run the proof of concept</span><h2>Follow the HTTP request from browser to token</h2><p class="section-desc">This is the full execution chain after Keycloak and the Spring Boot JAR are running.</p></div><div class="timeline"><div class="timeline-item"><span>1</span><div><strong>Browser opens the demo page</strong><p>GET /training/x509-certificate-demo on Spring Boot :8091.</p></div></div><div class="timeline-item"><span>2</span><div><strong>Browser submits the demo form</strong><p>POST /training/x509-certificate-demo/run to the MVC controller.</p></div></div><div class="timeline-item"><span>3</span><div><strong>Controller calls the service</strong><p>X509UiController invokes X509DemoService.run().</p></div></div><div class="timeline-item"><span>4</span><div><strong>Service loads certificate stores</strong><p>X509MtlsContextFactory builds SSLContext with client identity + server trust.</p></div></div><div class="timeline-item"><span>5</span><div><strong>TLS handshake to Keycloak :8443</strong><p>Java checks Keycloak’s server certificate; Keycloak requests and verifies the Java client certificate.</p></div></div><div class="timeline-item"><span>6</span><div><strong>OAuth client authentication</strong><p>Keycloak matches the trusted certificate Subject DN to the registered x509-cert-client.</p></div></div><div class="timeline-item"><span>7</span><div><strong>Token issuance</strong><p>Keycloak processes client_credentials, scopes, and service-account permissions, then returns a token.</p></div></div><div class="timeline-item"><span>8</span><div><strong>Read JWT claims</strong><p>X509DemoService parses claims for display; it does not cryptographically validate the JWT.</p></div></div><div class="timeline-item"><span>9</span><div><strong>Optional UserInfo call</strong><p>Service sends a Bearer token to UserInfo; success depends on whether the token qualifies for that endpoint.</p></div></div><div class="timeline-item"><span>10</span><div><strong>Render the UI</strong><p>Controller returns the Thymeleaf view with X509RunResult.</p></div></div></div></div></section><section id="checks" class="learning-section"><div class="container"><div class="section-head"><span class="step-pill">STEP 11</span><span class="kicker">Troubleshooting</span><h2>Match failures to the dependency that failed</h2><p class="section-desc">Certificate problems, OAuth client identity problems, and downstream access problems occur at different layers.</p></div><div class="table-responsive table-wrap"><table class="table align-middle mb-0"><thead><tr><th>Failure / symptom</th><th>Most likely layer</th><th>What to inspect</th></tr></thead><tbody><tr><td>Server certificate error or PKIX failure</td><td>Server TLS trust</td><td>Java truststore CA, localhost SAN, server certificate validity</td></tr><tr><td>TLS certificate rejection</td><td>Client TLS trust</td><td>Keycloak truststore, client certificate chain, expiry, and intended client usage</td></tr><tr><td>HTTP 400 <code>invalid_client</code></td><td>OAuth client authentication</td><td>Keycloak X.509 authenticator, Subject DN, client ID, service-account settings</td></tr><tr><td>Token issued but UserInfo fails</td><td>OAuth / OIDC semantics</td><td>Client credentials tokens do not necessarily represent a logged-in end user</td></tr><tr><td>Web login fails before demo</td><td>JVM default trust / Spring Security</td><td><code>-Djavax.net.ssl.trustStore*</code>, issuer URL, Spring Security client setup</td></tr><tr><td>Cannot locate .p12 file</td><td>Filesystem</td><td>Working directory and relative <code>mtls/</code> path</td></tr></tbody></table></div><div class="note"><strong>Production checklist:</strong> Replace development mode and test passwords; manage private keys with strong access controls; use properly profiled TLS certificates; harden certificate rotation/revocation policies; validate JWTs at resource servers; and keep bearer tokens out of logs and UI.</div></div></section></main><footer class="footer"><div class="container"><div class="fw-bold mb-2">X.509 mTLS + OAuth 2.0 — Keycloak / Spring Boot training</div><div>Development POC. Keep production secrets, private keys, and bearer tokens protected.</div></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>function copyCode(btn){const el=btn.parentElement.nextElementSibling;const text=el.innerText;if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(()=>{btn.innerHTML='<i class="bi bi-check2"></i> Copied';setTimeout(()=>{btn.innerHTML='<i class="bi bi-clipboard"></i> Copy'},1700)}).catch(()=>{btn.textContent='Select text to copy'})}else{btn.textContent='Select text to copy'}}</script></body></html>

@@ -252,13 +252,11 @@ bin/kc.sh start-dev \
   
 ``` 
 
-java -Djavax.net.ssl.trustStore=mtls/truststore.p12      -Djavax.net.ssl.trustStorePassword=changeit      -Djavax.net.ssl.trustStoreType=PKCS12      -jar target/keycloak-jpa-demo-1.0.0.jar
+java -Djavax.net.ssl.trustStore=mtls/truststore.p12      
+-Djavax.net.ssl.trustStorePassword=changeit      
+-Djavax.net.ssl.trustStoreType=PKCS12      
+-jar target/keycloak-jpa-demo-1.0.0.jar
 
-git init
-git add README.md
-git commit -m "first commit"
-git branch -M main
-git remote add origin https://github.com/binitdatta/KeyCloak-JPA-Showcase.git
-git push -u origin main
+
 
 ```
