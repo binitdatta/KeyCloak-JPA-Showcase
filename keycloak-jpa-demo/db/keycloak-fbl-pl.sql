@@ -52,3 +52,15 @@ CREATE TABLE idp_sync_audit (
     CONSTRAINT fk_idp_sync_audit_user FOREIGN KEY (idp_user_id) REFERENCES idp_user(id) ON DELETE CASCADE,
     KEY idx_idp_sync_audit_user (idp_user_id, event_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+# Extract the new HTML and architecture image
+unzip -o ~/Downloads/Keycloak_Entra_Brokered_SSO_Training.zip \
+  src/main/resources/templates/training/keycloak-entra-brokered-sso.html \
+  src/main/resources/static/images/azure-saml/oidc_and_saml_brokered_sso_flow.png
+
+# Extract the controller and navbar instructions
+unzip -o ~/Downloads/Keycloak_Entra_Brokered_SSO_Training.zip \
+  src/main/java/com/example/keycloakjpa/controller/KeycloakEntraBrokeredSsoController.java \
+  NAVBAR-ADD.html \
+  README.txt

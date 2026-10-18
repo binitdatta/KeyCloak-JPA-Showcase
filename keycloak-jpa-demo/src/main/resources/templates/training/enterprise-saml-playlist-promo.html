@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An end-to-end practical enterprise SSO video series on Spring Boot 3.5.9, Spring Security 6, Keycloak 26, Microsoft Entra ID, SAML 2.0, custom broker flows, live testing, and HAR analysis.">
+  <title>Enterprise SAML 2.0 SSO — Complete Practical Video Series</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" th:href="@{/css/bright-blue.css}">
+  <style>
+    :root{--navy:#071a3d;--deep:#07122a;--blue:#126fe6;--sky:#28c9f5;--ink:#142846;--muted:#52647e;--line:#dfe9f5;--soft:#eff6ff;--violet:#7765e9;--green:#0a987a}
+    html{scroll-behavior:smooth}
+    body{background:linear-gradient(116deg,#07132d 0%,#092859 48%,#1359c5 100%);background-attachment:fixed;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+    section[id]{scroll-margin-top:88px}
+    .hero{position:relative;padding:5.5rem 0 3.5rem;overflow:hidden}
+    .hero:before{content:"";position:absolute;right:-10vw;top:-11vw;width:42vw;height:42vw;border-radius:50%;background:radial-gradient(circle,rgba(35,199,245,.26),transparent 65%);pointer-events:none}
+    .eyebrow{color:#78e6ff;letter-spacing:.18em;text-transform:uppercase;font-size:.78rem;font-weight:800}
+    .hero h1{font-size:clamp(2.6rem,5vw,5rem);line-height:1.08;letter-spacing:-.05em;font-weight:850;max-width:1030px}
+    .hero h1 em{font-style:normal;color:#62e0ff}
+    .hero .lead{color:#dfedff;max-width:930px;line-height:1.75;font-size:1.15rem}
+    .chip{display:inline-flex;align-items:center;gap:.4rem;border:1px solid rgba(148,212,255,.4);background:rgba(255,255,255,.08);padding:.48rem .9rem;border-radius:99px;font-size:.82rem;font-weight:650;margin:.2rem}
+    .headline-strip{background:linear-gradient(90deg,rgba(12,100,240,.38),rgba(15,201,232,.12));border:1px solid rgba(153,225,255,.3);border-radius:18px;padding:1.3rem 1.6rem;margin-top:2rem}
+    .section-space{padding:2.5rem 0}
+    .section-kicker{text-transform:uppercase;letter-spacing:.13em;font-size:.78rem;font-weight:800;color:#76e0ff;margin-bottom:.55rem}
+    .section-title{font-weight:820;letter-spacing:-.035em;font-size:clamp(1.8rem,3vw,2.75rem)}
+    .section-intro{color:#d8e8ff;max-width:920px;line-height:1.75}
+    .panel{background:white;border:1px solid #e4ecf6;border-radius:19px;color:var(--ink);box-shadow:0 16px 40px rgba(4,16,41,.17);overflow:hidden}
+    .panel-pad{padding:1.65rem}
+    .selling-card{height:100%;padding:1.65rem}
+    .selling-card h3{font-size:1.12rem;font-weight:800;margin:1rem 0 .65rem}
+    .selling-card p{color:var(--muted);line-height:1.72;margin:0}
+    .icon-disc{width:50px;height:50px;display:flex;align-items:center;justify-content:center;background:#eaf5ff;color:#0969cf;border-radius:14px;font-size:1.55rem}
+    .arch-card{padding:1.5rem}
+    .arch-node{padding:1.2rem;border:1px solid #d4e4f6;border-radius:14px;background:#f4f9ff;text-align:center;min-height:125px;display:flex;flex-direction:column;justify-content:center}
+    .arch-node i{font-size:1.6rem;color:#156cdb}
+    .arch-node strong{display:block;margin:.5rem 0 .25rem}
+    .arch-node small{color:var(--muted)}
+    .arch-arrow{font-size:1.6rem;color:#50bded;text-align:center}
+    .module-grid .card{height:100%;background:white;color:var(--ink);border:1px solid #e0ebf7;border-radius:16px;overflow:hidden;box-shadow:0 8px 26px rgba(0,0,0,.08)}
+    .module-grid .card-body{padding:1.5rem}
+    .module-number{color:#096dd8;font-size:.77rem;font-weight:850;letter-spacing:.14em}
+    .module-grid h3{font-size:1.08rem;font-weight:820;margin:.5rem 0}
+    .module-grid p{color:#5a6880;line-height:1.67;font-size:.94rem;margin-bottom:0}
+    .module-tag{font-size:.72rem;color:#255b9f;background:#eaf4ff;padding:.27rem .55rem;border-radius:5px;display:inline-block;margin-top:1rem;font-weight:650}
+    .feature-list{list-style:none;padding:0;margin:0}
+    .feature-list li{display:flex;gap:.75rem;margin:0 0 1rem;line-height:1.65;color:#37506c}
+    .feature-list li i{color:var(--green);font-size:1.2rem;flex:0 0 auto}
+    .quote{border-left:5px solid #37c8f0;background:#f1f9ff;padding:1.2rem 1.4rem;border-radius:8px;color:#184678;font-weight:650;line-height:1.75}
+    .diagram{width:100%;height:auto;border:1px solid #dfe8f3;border-radius:12px;background:white}
+    .fine{font-size:.83rem;color:#5a6b81;line-height:1.65}
+    .accordion-button{font-weight:750;color:#163562}
+    .accordion-button:not(.collapsed){background:#edf6ff;color:#125bb1;box-shadow:none}
+    .accordion-body{color:#4a607b;line-height:1.75}
+    .cta-panel{padding:2.3rem;background:linear-gradient(110deg,#fff,#eaf7ff);color:#123160}
+    .cta-panel p{color:#415b7e;line-height:1.7}
+    .source-links a{color:#bbebff}
+    .footer-note{color:#bfd4f1;font-size:.82rem;line-height:1.75}
+    @media(max-width:767px){.hero{padding:3.5rem 0 2rem}.arch-arrow{transform:rotate(90deg);padding:.3rem 0}.panel-pad,.selling-card{padding:1.2rem}}
+    @media print{body{background:white;color:#13253e}.hero,.section-intro,.section-kicker{color:#13253e}.panel{box-shadow:none}.module-grid .card{break-inside:avoid}}
+  </style>
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<main id="top">
+  <header class="hero">
+    <div class="container position-relative">
+      <p class="eyebrow mb-3"><i class="bi bi-shield-lock me-2"></i>Enterprise Identity &amp; Access Management · Video Playlist</p>
+      <h1>Enterprise SAML 2.0 SSO, <em>from the first configuration to the last HTTP redirect.</em></h1>
+      <p class="lead mt-4 mb-4">A real-world, end-to-end learning series connecting <strong>Spring Boot 3.5.9 and Spring Security 6</strong>, <strong>Keycloak 26</strong>, and <strong>Microsoft Entra ID</strong>. See how federation is configured, how identity attributes and application roles move between platforms, how custom Java authenticators govern first-time and returning users, and how to diagnose the entire journey.</p>
+      <div class="mb-4">
+        <span class="chip"><i class="bi bi-layers"></i>10 connected topics</span>
+        <span class="chip"><i class="bi bi-code-slash"></i>Custom Java code</span>
+        <span class="chip"><i class="bi bi-play-circle"></i>Live working demo</span>
+        <span class="chip"><i class="bi bi-filetype-xml"></i>SAML XML explained</span>
+        <span class="chip"><i class="bi bi-diagram-3"></i>Browser / HAR troubleshooting</span>
+      </div>
+      <a href="#curriculum" class="btn btn-info btn-lg fw-bold me-2 mb-2"><i class="bi bi-collection-play me-2"></i>Explore the Playlist Curriculum</a>
+      <a href="#why-now" class="btn btn-outline-light btn-lg mb-2"><i class="bi bi-graph-up-arrow me-2"></i>Why This Matters</a>
+      <div class="headline-strip"><div class="row align-items-center g-3"><div class="col-lg-3"><strong class="fs-5">The learning proposition</strong></div><div class="col-lg-9">Understand one complete enterprise integration—not ten disconnected product tutorials. <strong>Spring Security talks OIDC to Keycloak; Keycloak brokers SAML 2.0 to Microsoft Entra ID.</strong> The browser carries federation messages across trust boundaries.</div></div></div>
+    </div>
+  </header>
+
+  <section class="section-space" id="why-now">
+    <div class="container">
+      <div class="section-kicker">Why the demand is durable</div>
+      <h2 class="section-title mb-3">Why enterprise SAML skills are worth learning</h2>
+      <p class="section-intro mb-4">SAML 2.0 is a mature standard, yet it remains central to many established enterprise SaaS and workforce SSO integrations. Its relevance comes from the installed base of enterprise systems, not from being the newest protocol. OIDC and OAuth 2.0 are also essential—and production architectures frequently combine them.</p>
+      <div class="row g-4">
+        <div class="col-md-6 col-xl-3"><div class="panel selling-card"><span class="icon-disc"><i class="bi bi-buildings"></i></span><h3>Real enterprise installed base</h3><p>Organizations depend on federated access across internally built apps, third-party SaaS products, suppliers, partners, and legacy platforms. SAML interoperability remains an operational necessity.</p></div></div>
+        <div class="col-md-6 col-xl-3"><div class="panel selling-card"><span class="icon-disc"><i class="bi bi-microsoft"></i></span><h3>Entra ID at enterprise scale</h3><p>Microsoft Entra ID is a major enterprise identity platform with a large catalog of integrated enterprise applications and documented SAML SSO support.</p></div></div>
+        <div class="col-md-6 col-xl-3"><div class="panel selling-card"><span class="icon-disc"><i class="bi bi-intersect"></i></span><h3>Keycloak's broker value</h3><p>Keycloak is an established open-source IAM platform that can bridge application-facing OIDC and upstream SAML identity providers—enabling centralized policy and user lifecycle control.</p></div></div>
+        <div class="col-md-6 col-xl-3"><div class="panel selling-card"><span class="icon-disc"><i class="bi bi-journal-code"></i></span><h3>The documentation gap</h3><p>Official guides and books teach individual products and protocols. Fewer learning resources follow this exact multi-product combination all the way through custom authenticators, code, testing, and HTTP evidence.</p></div></div>
+      </div>
+      <p class="mt-3 mb-0" style="color:#cedefa;font-size:.83rem">Positioning note: The course does not depend on an unverified claim that SAML represents a majority of every enterprise SSO deployment or that no books exist. Its value is the breadth and continuity of the implementation.</p>
+    </div>
+  </section>
+
+  <section class="section-space" id="architecture">
+    <div class="container">
+      <div class="section-kicker">End-to-end reference design</div>
+      <h2 class="section-title mb-3">Four layers. Two federation protocols. One cohesive SSO experience.</h2>
+      <div class="panel arch-card">
+        <div class="row g-2 align-items-center">
+          <div class="col-md"><div class="arch-node"><i class="bi bi-person-workspace"></i><strong>Browser / User</strong><small>Follows redirects and carries SAML messages</small></div></div>
+          <div class="col-md-auto arch-arrow"><i class="bi bi-arrow-left-right"></i></div>
+          <div class="col-md"><div class="arch-node"><i class="bi bi-filetype-java"></i><strong>Spring Boot + Security</strong><small>OIDC client, callback, application session</small></div></div>
+          <div class="col-md-auto arch-arrow"><i class="bi bi-arrow-left-right"></i></div>
+          <div class="col-md"><div class="arch-node"><i class="bi bi-shield-lock"></i><strong>Keycloak 26</strong><small>OIDC provider + SAML identity broker</small></div></div>
+          <div class="col-md-auto arch-arrow"><i class="bi bi-arrow-left-right"></i></div>
+          <div class="col-md"><div class="arch-node"><i class="bi bi-building-check"></i><strong>Microsoft Entra ID</strong><small>Corporate SAML IdP, MFA, conditional access</small></div></div>
+        </div>
+        <p class="fine mt-3 mb-0"><strong>Important:</strong> Spring Boot in this reference design authenticates using OAuth 2.0 Authorization Code + OIDC through Keycloak. The <strong>SAML 2.0 federation</strong> is between Keycloak (acting as the SAML SP/broker) and Microsoft Entra ID (acting as the SAML IdP). The browser transports SAML redirects and HTML POST responses between them.</p>
+      </div>
+      <div class="panel mt-4 panel-pad">
+        <h3 class="h5 fw-bold mb-3"><i class="bi bi-diagram-3-fill text-primary me-2"></i>Illustrated authentication journey</h3>
+        <a th:href="@{/images/azure-saml/saml-flow.png}" href="/images/azure-saml/saml-flow.png" target="_blank" rel="noopener" title="Open architecture diagram in full resolution">
+          <img th:src="@{/images/azure-saml/saml-flow.png}" src="/images/azure-saml/saml-flow.png" class="diagram" alt="Reference architecture for browser-mediated Keycloak SAML federation with Microsoft Entra ID and Spring Security OIDC login" loading="lazy">
+        </a>
+        <p class="fine mt-2 mb-0">Uses your existing <code>src/main/resources/static/images/azure-saml/saml-flow.png</code>. Select the image to view the full resolution. Diagram is a teaching aid; exact endpoints and bindings depend on the deployed application.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-space" id="curriculum">
+    <div class="container">
+      <div class="section-kicker">The complete practical playlist</div>
+      <h2 class="section-title mb-3">Ten episodes that build on each other</h2>
+      <p class="section-intro mb-4">Every topic moves the same proof of concept forward. Viewers learn configuration, understand design decisions, see the custom Java extensions, and verify actual behavior—not merely memorize SAML terminology.</p>
+      <div class="row g-3 module-grid">
+        <div class="col-lg-6"><article class="card"><div class="card-body"><span class="module-number">A · FOUNDATION</span><h3>Spring Boot 3.5.9 + Spring Security 6</h3><p>Protect browser routes, configure the OIDC client, understand authorization-code redirects and callbacks, and explain how application sessions relate to Keycloak sessions.</p><span class="module-tag">SecurityFilterChain · OIDC · Session</span></div></article></div>
+        <div class="col-lg-6"><article class="card"><div class="card-body"><span class="module-number">B · IDENTITY PLATFORM</span><h3>Keycloak 26 as identity provider and broker</h3><p>Learn realms, clients, user models, login flows, and why Keycloak can act as the application-facing OIDC provider while brokering external SAML authentication.</p><span class="module-tag">Realms · Clients · Broker Trust</span></div></article></div>
+        <div class="col-lg-6"><article class="card"><div class="card-body"><span class="module-number">C · MICROSOFT ENTRA</span><h3>Build a SAML 2.0 Enterprise Application</h3><p>Create the Enterprise Application, choose SAML SSO, understand the difference between app registrations and service principals, and establish the federation relationship.</p><span class="module-tag">Enterprise Apps · SAML SSO</span></div></article></div>
+        <div class="col-lg-6"><article class="card"><div class="card-body"><span class="module-number">D · FEDERATION TRUST</span><h3>Configure SAML 2.0 between Entra and Keycloak</h3><p>Map Entity ID, Reply URL/ACS, login endpoints, federation metadata, X.509 signing certificates, bindings, and signature validation; understand each field's purpose.</p><span class="module-tag">Issuer · ACS · Metadata · Certificates</span></div></article></div>
+        <div class="col-lg-6"><article class="card"><div class="card-body"><span class="module-number">E · ATTRIBUTES &amp; CLAIMS</span><h3>Configure user attributes and application roles in Entra</h3><p>Work through NameID, first and last name, email, phone, address, custom extension attributes, and role claims. Learn the distinction between attributes and authorization.</p><span class="module-tag">SAML Claims · NameID · App Roles</span></div></article></div>
+        <div class="col-lg-6"><article class="card"><div class="card-body"><span class="module-number">F · DIRECTORY LIFECYCLE</span><h3>Create and assign users in Microsoft Entra ID</h3><p>Walk through user creation, profile/contact fields, group and application assignment, and the identity attributes available for first broker login and user import.</p><span class="module-tag">Users · Assignment · Provisioning Context</span></div></article></div>
+        <div class="col-lg-6"><article class="card"><div class="card-body"><span class="module-number">G · KEYCLOAK BROKER SETTINGS</span><h3>Configure the SAML Identity Provider in Keycloak</h3><p>Explain Entity IDs, SSO/SLO endpoints, NameID format, HTTP bindings, signature validation, clock skew, attribute importers, synchronization, and broker session behavior.</p><span class="module-tag">Identity Provider · Mappers · Sessions</span></div></article></div>
+        <div class="col-lg-6"><article class="card"><div class="card-body"><span class="module-number">H · ADVANCED JAVA EXTENSIONS</span><h3>Custom First Broker Login and Post Login authenticators</h3><p>Explore Keycloak's authentication SPI, custom Java authenticator code, first-login user linking, identity governance, post-login checks, error paths, and deployment/test implications.</p><span class="module-tag">Authentication SPI · Java · Broker Flows</span></div></article></div>
+        <div class="col-lg-6"><article class="card"><div class="card-body"><span class="module-number">I · REAL WORLD VERIFICATION</span><h3>Live end-to-end authentication demo</h3><p>Start with a protected Spring Boot page, redirect through Keycloak and Entra, complete sign-in, inspect resulting user state and claims, and discuss logout expectations.</p><span class="module-tag">Browser Demo · End-to-End SSO</span></div></article></div>
+        <div class="col-lg-6"><article class="card"><div class="card-body"><span class="module-number">J · PROTOCOL FORENSICS</span><h3>HTTP Archive (HAR) analysis and troubleshooting</h3><p>Use browser developer tools to explain each observed redirect, SAML AuthnRequest/Response where captured, the HTML POST relay, OIDC callback, sessions, and safe trace handling.</p><span class="module-tag">HAR · SAML XML · Redirects · HTTP POST</span></div></article></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-space" id="differentiators">
+    <div class="container">
+      <div class="section-kicker">What makes this series different</div>
+      <h2 class="section-title mb-4">From theoretical SAML concepts to production-minded implementation</h2>
+      <div class="row g-4 align-items-stretch">
+        <div class="col-lg-7"><div class="panel panel-pad h-100"><h3 class="h4 fw-bold mb-4">You will see more than configuration screens</h3><ul class="feature-list">
+          <li><i class="bi bi-check-circle-fill"></i><span><strong>A single traceable architecture:</strong> understand exactly which system is the IdP, SP, broker, and OIDC client at each hop.</span></li>
+          <li><i class="bi bi-check-circle-fill"></i><span><strong>Protocol-level fluency:</strong> SAML XML, Entity IDs, NameID, signatures, assertion audience, ACS, and the browser's actual role.</span></li>
+          <li><i class="bi bi-check-circle-fill"></i><span><strong>Identity lifecycle understanding:</strong> external users, first-login linking, attribute imports, and custom validation.</span></li>
+          <li><i class="bi bi-check-circle-fill"></i><span><strong>Real Java engineering:</strong> custom Keycloak authenticator logic rather than relying solely on administration UI screens.</span></li>
+          <li><i class="bi bi-check-circle-fill"></i><span><strong>Operational confidence:</strong> identify broken trust, claim mismatches, redirect issues, certificate problems, and incomplete HAR evidence.</span></li>
+        </ul></div></div>
+        <div class="col-lg-5"><div class="panel panel-pad h-100"><div class="icon-disc mb-3"><i class="bi bi-mortarboard"></i></div><h3 class="h4 fw-bold">Who should watch?</h3><p class="text-secondary lh-lg">Enterprise architects, IAM engineers, Spring Boot and Java developers, cybersecurity practitioners, platform engineering teams, consultants, technical leads, and professionals modernizing applications that must participate in corporate SSO.</p><div class="quote mt-3">“Understand the real integration, inspect the messages, read the code, and be able to explain why each trust boundary exists.”</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-space" id="questions">
+    <div class="container">
+      <div class="section-kicker">Questions this series answers</div>
+      <h2 class="section-title mb-4">The questions enterprise teams actually ask</h2>
+      <div class="accordion" id="iamFaq">
+        <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">Why do we need Keycloak when Microsoft Entra ID already authenticates employees?</button></h3><div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#iamFaq"><div class="accordion-body">An enterprise may use Keycloak as the common application-facing identity layer to integrate multiple upstream identity sources, centralize application client configuration, enrich imported identities, and implement application-specific authentication checks. Whether the extra layer is justified depends on the organization's architecture and operational requirements.</div></div></div>
+        <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">Does Spring Security speak SAML directly to Microsoft Entra in this POC?</button></h3><div id="faq2" class="accordion-collapse collapse" data-bs-parent="#iamFaq"><div class="accordion-body">No. Spring Security is an OAuth2/OIDC client of Keycloak. Keycloak is the SAML service provider toward Entra ID and the OIDC provider toward Spring Boot. That protocol boundary is a central part of the course.</div></div></div>
+        <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">How does the browser carry the SAML response back to Keycloak?</button></h3><div id="faq3" class="accordion-collapse collapse" data-bs-parent="#iamFaq"><div class="accordion-body">Under HTTP-POST binding, Entra typically returns an HTML form containing a Base64-encoded SAMLResponse and optional RelayState. The browser submits this form to Keycloak's broker Assertion Consumer Service (ACS). The course illustrates the sequence and teaches how to verify it from appropriate captures.</div></div></div>
+        <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">Does importing an Entra application role automatically grant a Keycloak role?</button></h3><div id="faq4" class="accordion-collapse collapse" data-bs-parent="#iamFaq"><div class="accordion-body">No. An Attribute Importer can store a SAML role claim as a user attribute, but authorization requires an explicit mapping or policy that turns trusted claim data into recognized Keycloak roles or application permissions.</div></div></div>
+        <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">Why aren't a live demo and one HAR file always enough to prove every step?</button></h3><div id="faq5" class="accordion-collapse collapse" data-bs-parent="#iamFaq"><div class="accordion-body">A browser HAR can omit navigation requests, POST bodies, redirects, service-to-service token exchanges, or backend-side user provisioning. The course separates observed evidence from expected protocol behavior and explains how to capture a fuller trace safely without publishing session cookies or tokens.</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-space" id="watch">
+    <div class="container">
+      <div class="panel cta-panel">
+        <div class="row align-items-center g-4"><div class="col-lg-9"><p class="eyebrow" style="color:#1469b5">A hands-on enterprise SSO masterclass</p><h2 class="section-title">Move beyond protocol definitions. Learn the integration that enterprises have to make work.</h2><p class="mb-0">Follow the complete journey from Spring Boot's protected endpoint to Entra authentication, Keycloak's identity broker and custom Java flows, and finally an evidence-based review of the HTTP traffic. Built for engineers and architects who want implementation depth—not just slides.</p></div><div class="col-lg-3 text-lg-end"><a href="#curriculum" class="btn btn-primary btn-lg fw-bold"><i class="bi bi-play-btn-fill me-2"></i>See all ten topics</a><p class="fine mt-2 mb-0">Add the YouTube playlist URL here once published.</p></div></div>
+      </div>
+      <div class="mt-4 footer-note source-links"><strong>Technical references:</strong> <a href="https://learn.microsoft.com/en-us/entra/architecture/auth-saml" target="_blank" rel="noopener">Microsoft Entra SAML architecture</a> · <a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/add-application-portal-setup-sso" target="_blank" rel="noopener">Entra Enterprise Application SSO</a> · <a href="https://www.keycloak.org/docs/26.2.5/server_admin/" target="_blank" rel="noopener">Keycloak 26 Server Administration Guide</a> · <a href="https://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html" target="_blank" rel="noopener">OASIS SAML 2.0 Technical Overview</a>. Product coverage and learning-resource comparisons are qualitative, not audited market-share or bibliographic claims.</div>
+    </div>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

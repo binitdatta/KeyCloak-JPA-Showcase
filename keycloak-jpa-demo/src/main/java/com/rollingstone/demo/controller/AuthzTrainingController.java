@@ -10,4 +10,13 @@ public class AuthzTrainingController {
     public String show() {
         return "training/fine-grained-authz-explained";
     }
+
+    /** Presents the Keycloak 26 / Entra SAML brokerage training page. */
+    @Controller
+    public static class KeycloakEntraBrokeredSsoController {
+        @GetMapping("/training/keycloak-entra-brokered-sso")
+        public String brokeredSso() {
+            return "training/keycloak-entra-brokered-sso";
+        }
+    }
 }
